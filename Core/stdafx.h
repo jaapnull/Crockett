@@ -8,7 +8,6 @@
 #include <list>
 #include <string>
 #include <assert.h>
-#include <hash_map>
 #include <fstream>
 #include <Math.h>
 #include <algorithm>

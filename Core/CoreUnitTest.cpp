@@ -3,83 +3,60 @@
 
 #include "stdafx.h"
 #include "CCore/Array.h"
+#include "CCore/String.h"
 
-// Test object for recording events happening during the unittests (creation/deletion etc)
-struct TestEvent
-{
-	enum class Type
-	{
-		teAssignment,
-		teCopyConstruct,
-		teDefaultConstruct,
-		teDestroy,
-		teInvalid
-	};
-	
-	TestEvent() : mValue(-1) , mType(Type::teInvalid) {}
-	TestEvent(Type inType, int inValue) 
-		: mValue(inValue), 
-		mType(inType) {}
-
-	int		mValue;
-	Type	mType;
-
-};
-Array<TestEvent> gEvents;
 
 class Test
 {
 public:
 
-	Test(const Test& inSource) : mCreationID(inSource.mCreationID) 
+	Test(const Test& inSource)
 	{
-		gEvents.Append(TestEvent(TestEvent::Type::teCopyConstruct, mCreationID)); 
+		mIdentifier = inSource.mIdentifier;
+		sAlive++;
 	}
 
 	void operator=(const Test& inSource) 
 	{
-		mCreationID = inSource.mCreationID;
-		gEvents.Append(TestEvent(TestEvent::Type::teAssignment, mCreationID)); 
+		mIdentifier= inSource.mIdentifier;
 	}
 
 	Test() 
 	{ 
-		mCreationID = sCreated; 
-		gEvents.Append(TestEvent(TestEvent::Type::teDefaultConstruct, mCreationID)); 
-		sCreated++; 
 		sAlive++; 
 	}
 	~Test() 
 	{ 
 		sAlive--; 
-		sDeleted++; 
-		gEvents.Append(TestEvent(TestEvent::Type::teDestroy, mCreationID)); 
 	}
 	static int		sAlive;
-	static int		sDeleted;
-	static int		sCreated;
+
 private:
-	int				mCreationID;
+	int				mIdentifier;
 };
 
 int Test::sAlive		= 0;
-int Test::sDeleted		= 0;
-int Test::sCreated		= 0;
 
-int main( int argc, char* argv[] )
+
+int main(int argc, char* argv[])
 {
 	Array<Test> a;
 	Array<Test> b;
 
+	a.Reserve(3);
+	gAssert(Test::sAlive == 0);
+	a.Resize(1);
+	gAssert(Test::sAlive == 1);
+	a.Resize(5);
+	gAssert(Test::sAlive == 5);
 	a.Reserve(6);
-	a.Resize(3);
-	a.Resize(8);
-	a.Reserve(10);
+	gAssert(Test::sAlive == 5);
 	a.Resize(2);
+	gAssert(Test::sAlive == 2);
 	b = a;
+	gAssert(Test::sAlive == 4);
 	b.Resize(11);
-	
+	gAssert(Test::sAlive == 13);
 
 
-	std::wcout << L"Test";
 }

@@ -52,6 +52,19 @@ public:
 	void Shrink(size64 inShrinkage)							{ Resize(mElementCount - inShrinkage); }	// Shrinks amount of elements by inShrinkage, destructing elements
 	void Pop()												{ Resize(mElementCount - 1); }				// Shrinks elements by one, destructing last element
 
+	bool operator==(const Array& inOther) const
+	{
+		if (GetLength() != inOther.GetLength())
+			return false;
+
+		for (size64 e = 0; e < mElementCount; e++)
+		{
+			if (!(mData[e] == inOther[e]))
+				return false;
+		}
+		return true;
+	}
+
 	// --------------------------------------------------------------------------------------------------------
 	// Clear entire array of elements
 	// In constrast to a Resize(0), this also releases memory if inKeepMemory is false
