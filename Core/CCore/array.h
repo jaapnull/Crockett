@@ -23,16 +23,6 @@ public:
 	// destructor (only frees any allocated memory, leaves invalid state!)
 	~Array()												{ if (mData) LinearAllocator<T>::sFreeAndDestruct(mData, mElementCount); }
 
-	//static void sConstructFromExternalBuffer(void* ioArray, void* inData, size64 inElements)
-	//{
-	//	// use Array<byte> as placeholder to get the correct field offsets
-	//	Array<byte>* dummy_array = static_cast<Array<byte>*>(ioArray);
-	//	dummy_array->Clear();
-	//	dummy_array->mData = (byte*)inData;
-	//	dummy_array->mElementCount = inElements;
-	//	dummy_array->mReservedCount = inElements;
-	//}
-
 	size64 GetLength()								const	{ return mElementCount; }					// Amount of active/initialized elements	
 	size64 GetReserved()							const	{ return mReserverdCount; }					// Get Allocated elements (data size is sizeof(T)*GetReserved())
 	T* GetData()											{ return mData; }							// Getter to raw data block

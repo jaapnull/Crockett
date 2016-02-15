@@ -1,6 +1,7 @@
 // Memory util functions; at the moment builds upon RTL malloc functions
+#pragma once
 #include "../CCore/types.h"
-
+#include "../CCore/Assert.h"
 
 /// Allocated piece of memory of [inDataSize] bytes, aligned on [inAlignment] bytes
 inline void* gAllocAligned(size64 inDataSize, size64 inAlignment)
@@ -57,7 +58,7 @@ inline void* gOffsetPointer<void>(void* inPointer, size64 inBytes)
 
 // ------------------------------------------------------------------------------------------------------------
 // Static util class with the (re)allocation and resizing of linear element arrays
-// An allocation consists of three main properties:
+// An allocation consists of three main properties:	
 // This allocator should fully call proper ctor/dtor on all elements at all times
 // No objects will be implicitely moved in memory
 // ------------------------------------------------------------------------------------------------------------
@@ -83,7 +84,7 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	static void sRawFree(T* inData)			// frees memory for T without DTOR
 	{
-		assert(inData != 0);
+		gAssert(inData != 0);
 		gFreeAligned(inData);
 	}
 
@@ -99,9 +100,9 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	static T* sRealloc(T* inPrevData, size64 inActiveCount, size64 inNewAllocCount)
 	{
-		assert(inNewAllocCount > 0);								// cannot realloc a zero array to zero because by definition a zero-length allocation would be a null pointer
-		assert(inActiveCount <= inNewAllocCount);					// sRealloc cannot realloc to a smaller space because it does by definition only move, not delete objects (no move operator as of yet)
-		assert(inPrevData != 0 || inActiveCount == 0);				// previous elements should be zero only when 
+		gAssert(inNewAllocCount > 0);								// cannot realloc a zero array to zero because by definition a zero-length allocation would be a null pointer
+		gAssert(inActiveCount <= inNewAllocCount);					// sRealloc cannot realloc to a smaller space because it does by definition only move, not delete objects (no move operator as of yet)
+		gAssert(inPrevData != 0 || inActiveCount == 0);				// previous elements should be zero only when 
 		
 		if (inActiveCount == inNewAllocCount) return inPrevData;	// no size change means we can early out
 		T* new_array = sRawAlloc(inNewAllocCount);					// allocate array of bytes with appropriate new size
@@ -120,7 +121,7 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	static T* sAllocAndConstruct(size64 inNewAllocCount)
 	{
-		assert(inNewAllocCount > 0);					// cannot alloc zero size
+		gAssert(inNewAllocCount > 0);					// cannot alloc zero size
 		T* new_array = sRawAlloc(inNewAllocCount);		// allocate array of bytes with appropriate size
 		for (size64 c = 0; c < inNewAllocCount; c++)		// Construct new elements	
 		{
@@ -134,7 +135,7 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	static void sFreeAndDestruct(T* inData, size64 inElementCount)
 	{
-		assert(inData != 0);							// cannot destruct null pointer
+		gAssert(inData != 0);							// cannot destruct null pointer
 		for (size64 c = 0; c < inElementCount; c++)		// Delete all elements
 		{
 			inData[c].~T();									// Call destructor
@@ -148,8 +149,8 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	static T* sAllocAndCopyConstruct(size64 inNewAllocCount, const T* inInitData, size64 inInitCount)
 	{
-		assert(inInitCount <= inNewAllocCount);				// Cannot init with more than allocated
-		assert(inInitData != 0 || inInitCount == 0);		// previous elements should be zero only when 
+		gAssert(inInitCount <= inNewAllocCount);				// Cannot init with more than allocated
+		gAssert(inInitData != 0 || inInitCount == 0);		// previous elements should be zero only when 
 
 		T* new_array = sRawAlloc(inNewAllocCount);			// allocate array of bytes with appropriate size
 		for (size64 c = 0; c < inInitCount; c++)				// Initalize elements

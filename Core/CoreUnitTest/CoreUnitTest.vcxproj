@@ -74,17 +74,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="..\CCore\array.h" />
+    <ClInclude Include="..\CCore\Assert.h" />
     <ClInclude Include="..\CCore\Memory.h" />
+    <ClInclude Include="..\CCore\String.h" />
+    <ClInclude Include="..\CCore\Types.h" />
+    <ClInclude Include="..\CMath\Math.h" />
     <ClInclude Include="..\Core.h" />
+    <ClInclude Include="..\CUtils\StringUtils.h" />
     <ClInclude Include="..\stdafx.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Core.cpp" />
     <ClCompile Include="..\CoreUnitTest.cpp" />
+    <ClCompile Include="..\CUtils\StringUtils.cpp" />
     <ClCompile Include="..\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
