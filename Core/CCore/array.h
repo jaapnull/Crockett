@@ -2,9 +2,9 @@
 // Standard Array implementation
 // ------------------------------------------------------------------------------------------------------------
 #pragma once
-#include "../CCore/Memory.h"
-#include "../CHash/MurmurHash3.h"
-#include "../CUtils/EnumMask.h"
+#include <CCore/Memory.h>
+#include <CHash/MurmurHash3.h>
+#include <CUtils/EnumMask.h>
 
 // -----------------------------------------------------------------------------------------------------------
 // Array is the base linear array implementation with all the default stuff like resizing etc.

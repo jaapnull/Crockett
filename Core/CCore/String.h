@@ -1,6 +1,6 @@
 #pragma once
-#include "../stdafx.h"
-#include "Array.h"
+#include <stdafx.h>
+#include <CCore/Array.h>
 
 template<typename T>
 class BaseString : protected LinearAllocator<T>
@@ -162,7 +162,7 @@ public:
 			mData = LinearAllocator<T>::sRealloc(mData, mElementCount, inNewElementCount + 1);
 			mReservedCount = inNewElementCount;
 		}
-		LinearAllocator<T>::sResize(mData, mElementCount, inNewElementCount);
+		LinearAllocator<T>::sResizeWithinAlloc(mData, mElementCount, inNewElementCount);
 
 		// Reconstruct trailing zero
 		new (mData + inNewElementCount) T(0);
@@ -235,20 +235,24 @@ protected:
 typedef BaseString<char> String;
 typedef BaseString<wchar_t> WString;
 
-inline std::wostream& operator<<(std::wostream& ioStream, const WString& inWstr)
+inline std::ostream& operator<<(std::ostream& ioStream, const WString& inWstr)
 {
 	return ioStream << inWstr.GetCString();
 }
 
-inline std::wostream& operator<<(std::wostream& ioStream, const String& inStr)
+inline std::ostream& operator<<(std::ostream& ioStream, const String& inStr)
 {
 	return ioStream << inStr.GetCString();
 }
 
 
-template<typename T>
-size_t hash_value(const BaseString<T>& inArray)
+
+template <typename T>
+struct std::hash<BaseString<T>>
 {
-	return inArray.GetHash();
-}
+	std::size_t operator()(const BaseString<T>& k) const
+	{
+		return k.GetHash();
+	}
+};
 

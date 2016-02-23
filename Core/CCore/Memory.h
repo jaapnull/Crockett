@@ -1,7 +1,7 @@
 // Memory util functions; at the moment builds upon RTL malloc functions
 #pragma once
-#include "../CCore/types.h"
-#include "../CCore/Assert.h"
+#include <CCore/types.h>
+#include <CCore/Assert.h>
 
 /// Allocated piece of memory of [inDataSize] bytes, aligned on [inAlignment] bytes
 inline void* gAllocAligned(size64 inDataSize, size64 inAlignment)

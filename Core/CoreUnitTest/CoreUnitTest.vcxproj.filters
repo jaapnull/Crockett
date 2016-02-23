@@ -1,20 +1,80 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClInclude Include="..\CCore\array.h" />
-    <ClInclude Include="..\Core.h" />
-    <ClInclude Include="..\CCore\Memory.h" />
     <ClInclude Include="..\stdafx.h" />
-    <ClInclude Include="..\CCore\String.h" />
-    <ClInclude Include="..\CUtils\StringUtils.h" />
-    <ClInclude Include="..\CCore\Types.h" />
-    <ClInclude Include="..\CMath\Math.h" />
-    <ClInclude Include="..\CCore\Assert.h" />
+    <ClInclude Include="..\CCore\array.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CCore\Assert.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CCore\Memory.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CCore\String.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CCore\Types.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CUtils\StringUtils.h">
+      <Filter>CUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CMath\Math.h">
+      <Filter>CMath</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CCore\Streams.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CFile\File.h">
+      <Filter>CFile</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CReflection\Reflection.h">
+      <Filter>CReflection</Filter>
+    </ClInclude>
+    <ClInclude Include="..\CHash\MurmurHash3.h">
+      <Filter>CHash</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Core.cpp" />
-    <ClCompile Include="..\CoreUnitTest.cpp" />
     <ClCompile Include="..\stdafx.cpp" />
-    <ClCompile Include="..\CUtils\StringUtils.cpp" />
+    <ClCompile Include="..\CUtils\StringUtils.cpp">
+      <Filter>CUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="CoreUnitTest.cpp">
+      <Filter>CoreUnitTest</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CFile\File.cpp">
+      <Filter>CFile</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CReflection\Reflection.cpp">
+      <Filter>CReflection</Filter>
+    </ClCompile>
+    <ClCompile Include="..\CHash\MurmurHash3.cpp">
+      <Filter>CHash</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CCore">
+      <UniqueIdentifier>{22055c70-fa9f-44f4-9c33-785bf031e788}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CUtils">
+      <UniqueIdentifier>{a76c2ef4-cf02-4a39-b2b5-39a47b9cb738}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CMath">
+      <UniqueIdentifier>{aaac9b3c-ee78-42f1-83b6-0d48d63cdb5e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CoreUnitTest">
+      <UniqueIdentifier>{60c01b61-090e-40d4-a103-beb406b16e9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CFile">
+      <UniqueIdentifier>{c76e50e9-e715-46ef-9f06-440eee8f53dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CReflection">
+      <UniqueIdentifier>{fea75b85-6ab2-41d7-84d7-01be3d9f6722}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CHash">
+      <UniqueIdentifier>{0134fd79-4ce9-45df-9f30-a8c46e272506}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

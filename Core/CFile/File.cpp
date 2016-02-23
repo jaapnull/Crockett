@@ -1,7 +1,7 @@
-#include "stdafx.h"
-#include "FileSystem.h"
+#include <stdafx.h>
+#include <CFile/File.h>
 
-void File::Open(const Path& inPath, EnumMask<MFileOpenMode> inMode)
+void File::Open(const Path& inPath, EnumMask<EFileOpenMode> inMode)
 {
 	assert(inMode.Contains(fomRead) || inMode.Contains(fomWrite));		// read or write at least
 	assert(!inMode.Contains(fomDiscard) || inMode.Contains(fomWrite));	// discard only makes sense if we have write access		
@@ -29,6 +29,7 @@ size64 File::GetLength() const
 {
 	fseek(mFileHandle, 0, SEEK_END);
 	size64 file_size = ftell(mFileHandle);
+	fseek(mFileHandle, 0, SEEK_SET);
 	return file_size;
 }
 
