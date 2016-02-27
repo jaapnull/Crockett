@@ -1,8 +1,13 @@
 #pragma once
 
+<<<<<<< Updated upstream:Core/CCore/Streams.h
 #include <stdafx.h>
 #include <stdio.h>
 
+=======
+#include <CorePCH.h>
+#include <stdio.h>
+>>>>>>> Stashed changes:Core/CReflect/Streams.h
 #include <CCore/types.h>
 #include <CCore/array.h>
 #include <CCore/string.h>

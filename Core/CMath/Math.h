@@ -2,8 +2,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <math.h>
-#include "../CCore/Types.h"
-#include "../CCore/Assert.h"
+#include <CCore/Types.h>
+#include <CCore/Assert.h>
 
 // Define PI and some other stuff
 static const float	cPi_f = 3.14159265358979323846f;

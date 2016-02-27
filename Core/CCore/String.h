@@ -1,5 +1,9 @@
 #pragma once
+<<<<<<< Updated upstream
 #include <stdafx.h>
+=======
+#include "CorePCH.h"
+>>>>>>> Stashed changes
 #include <CCore/Array.h>
 
 template<typename T>

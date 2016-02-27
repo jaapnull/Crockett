@@ -1,5 +1,5 @@
-#include <stdafx.h>
-#include "StringUtils.h"
+#include "CorePCH.h"
+#include <CUtils/StringUtils.h>
 
 bool		gIsNumeric(const char& inChar)			{ return inChar >= '0' && inChar <= '9'; }
 bool		gIsWhiteSpace(const char& inChar)		{ return inChar == '\t' || inChar == ' ' || inChar == '\r' || inChar == '\n'; }
@@ -44,20 +44,20 @@ String gToString(float inFloat)
 	return String(buffer);
 }
 
-offset64 gFindInString(const String& inCorpus, const String& inSearchTerm)
+offset64 gFindInString(const String& inCorpus, const String& inSearchTerm, offset64 inStartOffset)
 {
 	if (inCorpus.IsEmpty() || inSearchTerm.IsEmpty() || inCorpus.GetLength() < inSearchTerm.GetLength())
 		return cMaxSize64;
 	offset64 start_pos_max = inCorpus.GetLength() - inSearchTerm.GetLength();
 	offset64 matched_length = 0;
-	for (offset64 c = 0; c <= start_pos_max; c++)
+	for (offset64 c = inStartOffset; c <= start_pos_max; c++)
 	{
 		char current_char = inCorpus[c];
-		matched_length =	(inSearchTerm[c] == current_char) ? matched_length + 1 :
+		matched_length =	(inSearchTerm[matched_length] == current_char) ? matched_length + 1 :
 							(inSearchTerm[0] == current_char) ? 1 : 0;
 
 		if (matched_length == inSearchTerm.GetLength())
-			return c;
+			return c-matched_length+1;
 	}
 	return cMaxSize64;
 }

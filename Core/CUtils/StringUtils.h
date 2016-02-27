@@ -4,19 +4,20 @@
 
 //utility functions (char-string only)
 
-bool		gIsNumeric(const char& inChar);
-bool		gIsWhiteSpace(const char& inChar);
-char		gToUpper(const char& inChar);
-void		gToUpper(String& inString);
-char		gToLower(const char& inChar);
-void		gToLower(String& inString);
+extern bool		gIsNumeric(const char& inChar);
+extern bool		gIsWhiteSpace(const char& inChar);
+extern char		gToUpper(const char& inChar);
+extern void		gToUpper(String& inString);
+extern char		gToLower(const char& inChar);
+extern void		gToLower(String& inString);
+extern float	gStringToFloat(const String& inString);
+extern int		gStringToInt(const String& inString);
+extern uint		gStringToUInt(const String& inString);
+extern String	gToString(uint inUint);
+extern String	gToString(double inDouble);
+extern String	gToString(float inFloat);
+extern offset64 gFindInString(const String& inCorpus, const String& inSearchTerm, offset64 inStartOffset = 0);
 
-float		gStringToFloat(const String& inString);
-int			gStringToInt(const String& inString);
-uint		gStringToUInt(const String& inString);
-String		gToString(uint inUint);
-String		gToString(double inDouble);
-String		gToString(float inFloat);
 
 template<class T>
 void gExplodeString(Array<BaseString<T>>& outParts, const BaseString<T>& inString, const T& inLimiter)
