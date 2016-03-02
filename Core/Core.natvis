@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+
+  <Type Name="Array&lt;*&gt;">
+    <DisplayString>{{ size={mEndValid - mData} }}</DisplayString>
+    <Expand>
+      <Item Name="[size]" ExcludeView="simple">mEndValid - mData</Item>
+      <Item Name="[capacity]" ExcludeView="simple">mEndReserved - mData</Item>
+      <ArrayItems>
+        <Size>mEndValid - mData</Size>
+        <ValuePointer>mData</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+</AutoVisualizer>

@@ -23,6 +23,28 @@ uint gStringToUInt(const String& inString)
 	return atoi(inString.GetData());
 }
 
+
+String gToString(short inShort)
+{
+	char buffer[10];
+	sprintf_s(buffer, 10, "%d", inShort);
+	return String(buffer);
+}
+
+String gToString(ushort inShort)
+{
+	char buffer[10];
+	sprintf_s(buffer, 10, "%d", inShort);
+	return String(buffer);
+}
+
+String gToString(int inUint)
+{
+	char buffer[10];
+	sprintf_s(buffer, 10, "%d", inUint);
+	return String(buffer);
+}
+
 String gToString(uint inUint)
 {
 	char buffer[10];

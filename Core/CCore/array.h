@@ -15,39 +15,40 @@ class Array
 {
 public:
 	// void constructor
-	Array() : mData(0), mElementCount(0), mReservedCount(0)	{ }
+	Array() : mData(nullptr), mEndValid(nullptr), mEndReserved(nullptr) { }
 	// copy constructor from another array
-	Array(const Array<T>& inOther)							{ size64 l = inOther.GetLength();	mData = LinearAllocator<T>::sAllocAndCopyConstruct(l, inOther.GetData(), l);	mReservedCount = l; mElementCount = l; }
+	Array(const Array<T>& inOther)							{ size64 l = inOther.GetLength();	mData = LinearAllocator<T>::sAllocAndCopyConstruct(l, inOther.GetData(), l); mEndValid = mData+l; mEndReserved=mData+l; }
 	// copy constructor from a raw data/elementcount
-	Array(const T* inArray, size64 inElementcount)			{ size64 l = inElementcount;		mData = LinearAllocator<T>::sAllocAndCopyConstruct(l, inArray, l);				mReservedCount = l; mElementCount = l; }
+	Array(const T* inArray, size64 inElementcount)			{ size64 l = inElementcount;		mData = LinearAllocator<T>::sAllocAndCopyConstruct(l, inArray, l);			mEndValid = mData + l; mEndReserved = mData + l; }
 	// destructor (only frees any allocated memory, leaves invalid state!)
-	~Array()												{ if (mData) LinearAllocator<T>::sFreeAndDestruct(mData, mElementCount); }
+	~Array()												{ if (mData) LinearAllocator<T>::sFreeAndDestruct(mData, GetLength()); }
 
-	size64 GetLength()								const	{ return mElementCount; }					// Amount of active/initialized elements	
-	size64 GetReserved()							const	{ return mReserverdCount; }					// Get Allocated elements (data size is sizeof(T)*GetReserved())
-	T* GetData()											{ return mData; }							// Getter to raw data block
-	const T* GetData()								const	{ return mData; }							// Const getter to raw data block
+	size64 GetLength()								const	{ gAssert(IsValid()); return mEndValid - mData; }					// Amount of active/initialized elements	
+	size64 GetReserved()							const	{ gAssert(IsValid()); return mEndReserved - mData; }				// Get Allocated elements (data size is sizeof(T)*GetReserved())
+	T* GetData()											{ gAssert(IsValid()); return mData; }							// Getter to raw data block
+	const T* GetData()								const	{ gAssert(IsValid()); return mData; }							// Const getter to raw data block
 
 	T& At(size64 inIndex)									{ return mData[inIndex]; }					// Const getter to element
 	const T& At(size64 inIndex)						const	{ return mData[inIndex]; }					// Const getter to element
 
-	T& Back()												{ return mData[mElementCount - 1]; }		// Getter to last element
-	const T& Back()									const	{ return mData[mElementCount - 1]; }		// Const getter to last element
+	T& Back()												{ return *(mEndValid - 1); }		// Getter to last element
+	const T& Back()									const	{ return *(mEndValid - 1); }		// Const getter to last element
 
 	T& Front()												{ return mData[0]; }						// Getter to first element
 	const T& Front()								const	{ return mData[0]; }						// Const getter to first element
 
-	bool IsEmpty()									const	{ return mElementCount == 0; }				// returns true is element count is zero
+	bool IsEmpty()									const	{ return mEndValid == mData; }				// returns true is element count is zero
+	bool IsValid()									const	{ return (mData == nullptr) == (mEndValid == nullptr) && (mData == nullptr) == (mEndReserved == nullptr); }
 
-	void Shrink(size64 inShrinkage)							{ Resize(mElementCount - inShrinkage); }	// Shrinks amount of elements by inShrinkage, destructing elements
-	void Pop()												{ Resize(mElementCount - 1); }				// Shrinks elements by one, destructing last element
+	void Shrink(size64 inShrinkage)							{ Resize(GetLength() - inShrinkage); }	// Shrinks amount of elements by inShrinkage, destructing elements
+	void Pop()												{ Resize(GetLength() - 1); }				// Shrinks elements by one, destructing last element
 
 	bool operator==(const Array& inOther) const
 	{
 		if (GetLength() != inOther.GetLength())
 			return false;
 
-		for (size64 e = 0; e < mElementCount; e++)
+		for (size64 e = 0; e < GetLength(); e++)
 		{
 			if (!(mData[e] == inOther[e]))
 				return false;
@@ -69,16 +70,16 @@ public:
 		{
 			if (mData != 0)														// If there is any allocation
 			{
-				gAssert(mReservedCount > 0);									// Sanity Check; reserved count should be zero
+				gAssert(mEndReserved != mData);									// Sanity Check; reserved count should be zero
 				TAllocator::sFreeAndDestruct(mData, mElementCount);				// Free allocation
 			}
 			else
 			{
-				gAssert(mReservedCount == 0);									// without allocation, reserved count should be zero
+				gAssert(mReservedCount == mData);								// without allocation, reserved count should be zero
 			}
-			mData = 0;															// No allocation so zero mData
-			mElementCount = 0;													// Element count is no zero
-			mReservedCount = 0;													// Reserved count is no zero
+			mData = nullptr;													// No allocation so zero mData
+			mElementCount = nullptr;											// Element count is no zero
+			mReservedCount = nullptr;											// Reserved count is no zero
 		}
 	}
 
@@ -88,23 +89,27 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	void Set(const T* inData, size64 inLength)
 	{
+		gAssert(IsValid());
 		if (mData)
 		{
-			// resize to zero
-			gAssert(mElementCount > 0);
-			TAllocator::sResizeWithinAlloc(mData, mElementCount, 0);
+			// resize to zero but keep current allocation
+			gAssert(GetLength() > 0);
+			TAllocator::sResizeWithinAlloc(mData, GetLength(), 0);
+			mEndValid = mData;
 		}
-		if (mReservedCount < inLength)											// raw realloc if needed
+		if (GetReserved() < inLength)											// raw realloc if needed
 		{
-			gAssert(mElementCount == 0);										// We assume no active elements so realloc will not perform any extra work
-			mData = TAllocator::sRealloc(mData, mElementCount, inLength);
-			mReservedCount = inLength;											// Either way, we now have [inLength] buffer size
+			gAssert(IsEmpty());													// We assume no active elements so realloc will not perform any extra work
+			mData = TAllocator::sRealloc(mData, 0, inLength);
+			mEndReserved = mData + inLength;									// We now have [inLength] buffer size reserved
+			mEndValid = mData;
 		}
+		gAssert(IsEmpty());
 		for (size64 c = 0; c < inLength; c++)
 		{
 			new (mData + c) T(inData[c]);										// Copy-construct the data inside the allocated data buffer
 		}
-		mElementCount = inLength;
+		mEndValid = mData + inLength;											// All entries up to [inLength] are now valid
 	}
 
 	// --------------------------------------------------------------------------------------------------------
@@ -113,17 +118,22 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	void Reserve(size64 inNewReserveCount)
 	{
-		if (mData == 0)																			// if there is no buffer yet, make a new one
+		if (mData == nullptr)																	// if there is no buffer yet, make a new one
 		{
-			gAssert(mReservedCount== 0);														// sanity check; there cannot be reserved data yet
-			mData = TAllocator::sRawAlloc(inNewReserveCount);									// Allocate new buffer without constructing anything
+			gAssert(mEndReserved == nullptr);													// sanity check; there cannot be reserved data yet
+			mData			= TAllocator::sRawAlloc(inNewReserveCount);							// Allocate new buffer without constructing anything
+			mEndReserved	= mData + inNewReserveCount;										// inNewReserveCount reserved objects
+			mEndValid		= mData;															// Zero valid objects
 		}
-		else if (mReservedCount != inNewReserveCount)											// otherwise simply realloc the old one
+		else if (GetReserved() != inNewReserveCount)											// otherwise simply realloc the old one
 		{
-			gAssert(inNewReserveCount >= mElementCount);										// Cannot resize to a smaller size than the element count; this would implicitly delete elements
-			mData = TAllocator::sRealloc(mData, mElementCount, inNewReserveCount);				// Realloc existing buffer, copying existing elements
+			gAssert(inNewReserveCount >= GetLength());											// Cannot resize to a smaller size than the element count; this would implicitly delete elements
+			size64 old_length	= GetLength();
+			mData				= TAllocator::sRealloc(mData, old_length, inNewReserveCount);	// Realloc existing buffer, copying existing elements
+			mEndReserved		= mData + inNewReserveCount;									// We have resized our buffer to a new size
+			mEndValid			= mData + old_length;
 		}
-		mReservedCount = inNewReserveCount;														// Either way we have resized our buffer to a new size
+		gAssert(GetReserved() == inNewReserveCount);											// This should always be true if we did our job
 	}
 
 	// --------------------------------------------------------------------------------------------------------
@@ -132,15 +142,18 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	void Resize(size64 inNewElementCount)
 	{
-		if (inNewElementCount == mElementCount) return;									// No resize needed
-		if (inNewElementCount > mReservedCount)											// If the new size is bigger than the current buffer size we need to realloc
+		if (inNewElementCount == GetLength()) return;										// No resize needed
+		if (inNewElementCount > GetReserved())												// If the new size is bigger than the current buffer size we need to realloc
 		{
-			mData = TAllocator::sRealloc(mData, mElementCount, inNewElementCount);		// Realloc the buffer, copying all elements
-			mReservedCount = inNewElementCount;											// Set reserved count to new buffer size
+			size64 old_length	= GetLength();
+			mData				= TAllocator::sRealloc(mData, old_length, inNewElementCount);	// Realloc the buffer, copying all elements
+			mEndReserved		= mData + inNewElementCount;									// Set reserved count to new buffer size
+			mEndValid			= mData + old_length;											// We moved allocation, so update mEndValid properly
 		}
-		TAllocator::sResizeWithinAlloc(mData, mElementCount, inNewElementCount);		// Resize the amount of actual elements inside buffer (uses void constructor)
-		mElementCount = inNewElementCount;												// Update element count to new value
+		TAllocator::sResizeWithinAlloc(mData, GetLength(), inNewElementCount);				// Resize the amount of actual elements inside buffer (uses void constructor)
+		mEndValid			= mData + inNewElementCount;									// Update element count to new value
 	}
+
 
 	// --------------------------------------------------------------------------------------------------------
 	// Appends data of length [inElementCount] from [inData] to the end of the existing elements.
@@ -152,9 +165,9 @@ public:
 		size64 first_free_element = GetLength();						// copy construct new elements
 		for (size64 c = 0; c < inAppendElementCount; c++)				// Iterate over all elements in append buffer
 		{
-			new (mData + (first_free_element + c)) T(inAppendData[c]);	// Copy-construct new data into data buffer
+			new (mEndValid++) T(inAppendData[c]);	// Copy-construct new data into data buffer
+			gAssert(mEndValid <= mEndReserved);
 		}
-		mElementCount += inAppendElementCount;							// update size
 	}
 
 	// --------------------------------------------------------------------------------------------------------
@@ -164,8 +177,8 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	void Grow(size64 inMinimumAllocCount)
 	{
-		if (inMinimumAllocCount <= mReservedCount) return;		// If the current buffer is big enough, early out
-		size64 next_multiple_two = mReservedCount * 2;			// Calculate the next step in size, simply double the size
+		if (inMinimumAllocCount <= GetReserved()) return;		// If the current buffer is big enough, early out
+		size64 next_multiple_two = GetReserved() * 2;			// Calculate the next step in size, simply double the size
 		if (inMinimumAllocCount > next_multiple_two)			// If the new amount is even bigger than twice the size...
 		{
 			Reserve(inMinimumAllocCount);						// call [Reserve()] to do an exact resize to the asked value
@@ -186,20 +199,16 @@ public:
 	T&				operator[](size64 inIndex)					{ return mData[inIndex]; }		// Const getter to element
 	const T&		operator[](size64 inIndex)			const	{ return mData[inIndex]; }		// Const getter to element
 
-
 	const T*		begin() const								{ return mData; }
-	const T*		end() const									{ return mData + mElementCount; }
-
+	const T*		end() const									{ return mEndValid; }
 	T*				begin()										{ return mData; }
-	T*				end()										{ return mData + mElementCount; }
-
+	T*				end()										{ return mEndValid; }
 
 protected:
-
 	// Internal data
 	T*				mData;										// Array data buffer. Should be non-null if [mReservedCount] > 0
-	size64			mElementCount;								// The amount of constructed and valid elements within the buffer (in consecutive memory)
-	size64			mReservedCount;								// Size of databuffer in elements (not bytes(!)). Should be zero if [mData] is null.
+	T*				mEndValid;									// First uninitialized/invalid entry
+	T*				mEndReserved;								// First entry outside reserved memory
 };
 
 

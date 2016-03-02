@@ -89,7 +89,7 @@ public:
 	}
 
 	// --------------------------------------------------------------------------------------------------------
-	// Realloc set of items in memoryblock [inPrevData] to a new memory block of size [inNewCount]
+	// Realloc set of items in memoryblock [inPrevData] to a new memory block of size [inNewAllocCount]
 	// It destruct/constructs [inPrevElementCount] into the new data
 	// Returns a new block of data of size [inNewAllocCount]
 	// This does _NOT_ use the realloc() function because afaik there is no proper way of predicting if realloc 
@@ -98,15 +98,15 @@ public:
 	// Instead we will always take the "long way around" re-alloc at all times, with full destruction/construction 
 	// of all elements
 	// --------------------------------------------------------------------------------------------------------
-	static T* sRealloc(T* inPrevData, size64 inActiveCount, size64 inNewAllocCount)
+	static T* sRealloc(T* inPrevData, size64 inPrevElementCount, size64 inNewAllocCount)
 	{
 		gAssert(inNewAllocCount > 0);								// cannot realloc a zero array to zero because by definition a zero-length allocation would be a null pointer
-		gAssert(inActiveCount <= inNewAllocCount);					// sRealloc cannot realloc to a smaller space because it does by definition only move, not delete objects (no move operator as of yet)
-		gAssert(inPrevData != 0 || inActiveCount == 0);				// previous elements should be zero only when 
+		gAssert(inPrevElementCount <= inNewAllocCount);				// sRealloc cannot realloc to a smaller space because it does by definition only move, not delete objects (no move operator as of yet)
+		gAssert(inPrevData != 0 || inPrevElementCount == 0);		// previous elements should be zero only when 
 		
-		if (inActiveCount == inNewAllocCount) return inPrevData;	// no size change means we can early out
+		if (inPrevElementCount == inNewAllocCount) return inPrevData;	// no size change means we can early out
 		T* new_array = sRawAlloc(inNewAllocCount);					// allocate array of bytes with appropriate new size
-		for (size64 c = 0; c < inActiveCount; c++)					// Move over all active elements to new allocated buffer, destroying them at old location
+		for (size64 c = 0; c < inPrevElementCount; c++)					// Move over all active elements to new allocated buffer, destroying them at old location
 		{
 			new (new_array + c) T(inPrevData[c]);					// placement new copy-constructor (no assingment op used))
 			inPrevData[c].~T();										// destruct old instance

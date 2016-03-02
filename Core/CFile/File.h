@@ -8,7 +8,8 @@ enum EFileOpenMode	// mask
 {
 	fomRead = 1,			// open file for reading
 	fomWrite = 2,			// open file for writing
-	fomDiscard = 4			// discard contents if file exists already
+	fomDiscard = 4,			// discard contents if file exists already (not valid stand-alone option)
+	fomWriteDiscard = 6		// discard contents when writing
 };
 
 

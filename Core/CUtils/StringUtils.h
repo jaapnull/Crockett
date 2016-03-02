@@ -16,6 +16,9 @@ extern uint		gStringToUInt(const String& inString);
 extern String	gToString(uint inUint);
 extern String	gToString(double inDouble);
 extern String	gToString(float inFloat);
+extern String	gToString(int inFloat);
+extern String	gToString(short inFloat);
+extern String	gToString(ushort inFloat);
 extern offset64 gFindInString(const String& inCorpus, const String& inSearchTerm, offset64 inStartOffset = 0);
 
 

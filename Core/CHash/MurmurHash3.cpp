@@ -6,8 +6,9 @@
 // algorithms are optimized for their respective platforms. You can still
 // compile and run any of them on any platform, but your performance with the
 // non-native version will be less than optimal.
-#include <stdafx.h>
-#include "MurmurHash3.h"
+
+#include <CorePCH.h>
+#include <CHash/MurmurHash3.h>
 
 //-----------------------------------------------------------------------------
 // Platform-specific functions and macros

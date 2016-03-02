@@ -1,4 +1,4 @@
-#include <StdAfx.h>
+#include <CorePCH.h>
 #include <CReflection/Reflection.h>
 
 ReflectionHost* ReflectionHost::sReflectionHost = nullptr;
@@ -13,38 +13,36 @@ const CompoundReflectionInfo* ReflectionHost::FindClassInfo(const ClassName& inC
 
 size64 TypeDecl::GetSizeInBytes() const
 {
-	if (mModifiers.IsEmpty())
+	if (IsNakedCompound())
 	{
-		if (mBaseType == etClass)
+		gAssert(mCompoundInfo != nullptr);
+		return mCompoundInfo->mSize;
+	}
+	else if (IsNakedPrimitive())
+	{
+		switch (mNakedType)
 		{
-			gAssert(mClassInfo != nullptr);
-			return mClassInfo->mSize;
-		}
-		else
-		{
-			switch (mBaseType)
-			{
-			case etInt: return sizeof(int);
-			case etFloat: return sizeof(float);
-			case etShort: return sizeof(short);
-			case etUShort: return sizeof(ushort);
-			case etChar: return sizeof(char);
-			case etUInt: return sizeof(uint);
-			case etUChar: return sizeof(uchar);
-			case etDouble: return sizeof(double);
-			case etBool: return sizeof(bool);
-			case etWChar: return sizeof(wchar_t);
-			default: return 0;
-			}
+		case etInt: return sizeof(int);
+		case etFloat: return sizeof(float);
+		case etShort: return sizeof(short);
+		case etUShort: return sizeof(ushort);
+		case etChar: return sizeof(char);
+		case etUInt: return sizeof(uint);
+		case etUChar: return sizeof(uchar);
+		case etDouble: return sizeof(double);
+		case etBool: return sizeof(bool);
+		case etWChar: return sizeof(wchar_t);
+		default: return 0;
 		}
 	}
 	else
 	{
-		switch (mModifiers.Back())
+		gAssert(!mModifiers.IsEmpty());
+		switch (mModifiers.Outer())
 		{
-			case ctPointer: return sizeof(void*);
-			case ctArray: return sizeof(Array<byte>);
-			case ctString: return sizeof(String);
+			case ctPointerTo: return sizeof(void*);
+			case ctArrayOf: return sizeof(Array<byte>);
+			case ctStringOf: return sizeof(String);
 			default: return 0;
 		}
 	}
@@ -55,13 +53,13 @@ size64 TypeDecl::GetAlignment() const
 {
 	if (mModifiers.IsEmpty())
 	{
-		if (mBaseType == etClass)
+		if (mNakedType == etCompound)
 		{
-			return mClassInfo->mAlign;
+			return mCompoundInfo->mAlign;
 		}
 		else
 		{
-			switch (mBaseType)
+			switch (mNakedType)
 			{
 				case etInt: return __alignof(int);
 				case etFloat: return __alignof(float);
@@ -79,11 +77,11 @@ size64 TypeDecl::GetAlignment() const
 	}
 	else
 	{
-		switch (mModifiers.Back())
+		switch (mModifiers.Outer())
 		{
-		case ctPointer: return __alignof(void*);
-		case ctArray: return __alignof(Array<byte>);
-		case ctString: return __alignof(String);
+		case ctPointerTo: return __alignof(void*);
+		case ctArrayOf: return __alignof(Array<byte>);
+		case ctStringOf: return __alignof(String);
 		default: return 0;
 		}
 	}
@@ -95,23 +93,23 @@ static char* sTypeStrings[etCount - 1] = { "int", "float", "short", "short", "ch
 String TypeDecl::ToString() const
 {
 	String str;
-	if (mBaseType == etClass)
+	if (mNakedType == etCompound)
 	{
-		gAssert(mClassInfo != nullptr);
-		mClassInfo->mName;
+		gAssert(mCompoundInfo != nullptr);
+		mCompoundInfo->mName;
 	}
 	else
 	{
-		str = sTypeStrings[uint(mBaseType) - 1];
+		str = sTypeStrings[uint(mNakedType) - 1];
 	}
 	
 	for (uint c = 0; c < mModifiers.GetLength(); c++)
 	{
 		switch (mModifiers[c])
 		{
-			case ctArray: str.Append("[]"); break;
-			case ctString: str.Append("()");  break;
-			case ctPointer: str.Append('*'); break;
+			case ctArrayOf: str.Append("[]"); break;
+			case ctStringOf: str.Append("()");  break;
+			case ctPointerTo: str.Append('*'); break;
 			default:
 			case ctNone : assert(false); // shouldn't happen, ctNone cannot be on stack
 		}
