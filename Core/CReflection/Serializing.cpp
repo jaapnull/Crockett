@@ -16,15 +16,17 @@ bool ObjectStreamer::WriteInstance(const TypedPointer& inTypedPointer)
 				return 0; 
 			}
 			
-			mOutStream << "{";
+			mOutStream << IndentStart() << "{\n";
 			for (uint m = 0; m < info->mMembers.GetLength(); m++)
 			{
 				ClassMember tm = info->mMembers[m];
 				TypedPointer tp(tm.mType, (void*)(((byte*)inTypedPointer.mPointer) + tm.mOffset));
-				mOutStream << tm.mName << " = ";
+				mOutStream << Indent() << tm.mName << " = ";
+				if (!tp.mType.IsNakedPrimitive() && !tp.mType.GetOuterDecoration() == ctPointerTo) mOutStream << "\n";
 				WriteInstance(tp);
+				if (tp.mType.IsNakedPrimitive() || tp.mType.GetOuterDecoration() == ctPointerTo) mOutStream << ";\n";
 			}
-			mOutStream << "}";
+			mOutStream << IndentStop() << "}\n";
 			return true;
 		}
 		else
@@ -67,12 +69,12 @@ bool ObjectStreamer::WriteInstance(const TypedPointer& inTypedPointer)
 		size64 elem_count = inTypedPointer.GetContainerElementCount();
 		if (outer_container == ctArrayOf)
 		{
-			mOutStream << "[";
+			mOutStream << IndentStart() << "[\n";
 			for (size64 c = 0; c < elem_count; c++)
 			{
-				WriteInstance(inTypedPointer.GetContainerElement(c));
+				WriteInstance(inTypedPointer.GetContainerElement(c)); 
 			}
-			mOutStream << "]";
+			mOutStream << IndentStop() << "]\n";
 			return true;
 		}
 		else // ctStringOf:

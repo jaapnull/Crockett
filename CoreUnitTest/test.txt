@@ -1,1 +1,32 @@
-[{Hallo = 123Dag = 1Member = {Poep = 1Zand = 0}}{Hallo = 345Dag = 3Member = {Poep = 3Zand = 2}}{Hallo = 678Dag = 5Member = {Poep = 5Zand = 4}}]
+[
+  {
+    Hallo = 123;
+    Dag = 1;
+    Member = 
+    {
+      Poep = 1;
+      Zand = 0;
+    }
+    Sibling = <some TestClass>;
+  }
+  {
+    Hallo = 345;
+    Dag = 3;
+    Member = 
+    {
+      Poep = 3;
+      Zand = 2;
+    }
+    Sibling = <some TestClass>;
+  }
+  {
+    Hallo = 678;
+    Dag = 5;
+    Member = 
+    {
+      Poep = 5;
+      Zand = 4;
+    }
+    Sibling = <some TestClass>;
+  }
+]

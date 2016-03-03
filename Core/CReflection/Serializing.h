@@ -1,6 +1,7 @@
 #pragma once
 #include <CCore/Types.h>
 #include <CCore/Array.h>
+#include <CCore/String.h>
 #include <CReflection/Reflection.h>
 #include <CCore/Streams.h>
 
@@ -26,12 +27,18 @@ struct Dependency
 class ObjectStreamer
 {
 public:
-	ObjectStreamer(Stream& outStream) : mOutStream(outStream) {}
-	const Path&			GetTargetLocation() { return mOutStream.GetPath(); }
+	ObjectStreamer(Stream& outStream) : mOutStream(outStream), mIndent(0)	{}
+	const Path&			GetTargetLocation()									{ return mOutStream.GetPath(); }
+	String				IndentStart()										{ mIndent++; return String((mIndent - 1) * 2, ' '); }
+	String				IndentStop()										{ mIndent--; return String((mIndent) * 2, ' '); }
+	String				Indent()											{ return String((mIndent)* 2, ' '); }
+
 	bool				WriteInstance(const TypedPointer& inTypedPointer);
-	bool				WriteNamedInstance(const TypedPointer& inTypedPointer, const String& inIdentifier);
+
 
 protected:
 	Array<Dependency>	mDependencies;
 	Stream&				mOutStream;
+	int					mIndent;
+
 };

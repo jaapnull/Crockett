@@ -22,9 +22,9 @@ public:
 		inInspector.Inspect(mZand, "Zand");
 	}
 
-	int			mPoep;
-	int			mZand;
-	static int	sCreateCount;
+	int					mPoep;
+	int					mZand;
+	static int			sCreateCount;
 };
 
 class TestClass
@@ -41,11 +41,13 @@ public:
 		inInspector.Inspect(mHallo, "Hallo");
 		inInspector.Inspect(mDag , "Dag");
 		inInspector.Inspect(mMemberClass, "Member");
+		inInspector.Inspect(mSibling, "Sibling");
 	}
 
-	TestMemberClass mMemberClass;
-	int			mHallo;
-	int			mDag;
+	TestClass*			mSibling;
+	TestMemberClass		mMemberClass;
+	int					mHallo;
+	int					mDag;
 	static int	sCreateCount;
 };
 
@@ -56,8 +58,6 @@ int main()
 {
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestMemberClass>();
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestClass>();
-	
-
 	Array<TestClass> tc;
 
 	tc.Resize(20);
@@ -69,12 +69,18 @@ int main()
 	tc.Resize(3);
 
 
+
+
 	File f;
 	f.Open("./test.txt", fomWriteDiscard);
 	TypedPointer tp = gInspectObject(tc);
 	ObjectStreamer os(f);
 	os.WriteInstance(tp);
 	f.Close();
+
+
+
+
 
 
 	f.Open("./test.txt", fomRead);

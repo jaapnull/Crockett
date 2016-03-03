@@ -41,6 +41,9 @@
     <ClInclude Include="CReflection\Serializing.h">
       <Filter>CReflection</Filter>
     </ClInclude>
+    <ClInclude Include="CReflection\TypedPointer.h">
+      <Filter>CReflection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
@@ -57,6 +60,9 @@
       <Filter>CUtils</Filter>
     </ClCompile>
     <ClCompile Include="CReflection\Serializing.cpp">
+      <Filter>CReflection</Filter>
+    </ClCompile>
+    <ClCompile Include="CReflection\TypedPointer.cpp">
       <Filter>CReflection</Filter>
     </ClCompile>
   </ItemGroup>
