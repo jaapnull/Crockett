@@ -74,6 +74,8 @@ public:
 	BaseString& Append(const Array<T>& inArray)					{ return Append(inArray.mData, inArray.GetLength()); }
 	BaseString& Append(const T* inZeroTerminated)				{ return Append(inZeroTerminated, sGetLength(inZeroTerminated)); }
 
+	size64 Find(const T& inElement)						const	{ for (size64 i = 0; i < GetLength(); i++) if (mData[i] == inElement) return i; return size64(-1); }
+
 	void Set(const BaseString<T>& inString)						{ Set(inString.mData, inString.mElementCount); }
 
 	size64 sGetLength(const T* inZeroTerminated)

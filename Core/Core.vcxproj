@@ -128,6 +128,7 @@
     <ClInclude Include="CCore\Types.h" />
     <ClInclude Include="CFile\File.h" />
     <ClInclude Include="CHash\MurmurHash3.h" />
+    <ClInclude Include="CMath\Math.h" />
     <ClInclude Include="CorePCH.h" />
     <ClInclude Include="CReflection\Reflection.h" />
     <ClInclude Include="CReflection\Serializing.h" />

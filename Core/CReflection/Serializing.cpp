@@ -2,6 +2,10 @@
 #include <CReflection/Serializing.h>
 #include <CUtils/StringUtils.h>
 
+static bool sIsInline(const TypeDecl& inDecl)
+{
+	return inDecl.IsNakedPrimitive() || inDecl.GetOuterDecoration() == ctPointerTo;
+}
 
 bool ObjectStreamer::WriteInstance(const TypedPointer& inTypedPointer)
 {
@@ -22,11 +26,12 @@ bool ObjectStreamer::WriteInstance(const TypedPointer& inTypedPointer)
 				ClassMember tm = info->mMembers[m];
 				TypedPointer tp(tm.mType, (void*)(((byte*)inTypedPointer.mPointer) + tm.mOffset));
 				mOutStream << Indent() << tm.mName << " = ";
-				if (!tp.mType.IsNakedPrimitive() && !tp.mType.GetOuterDecoration() == ctPointerTo) mOutStream << "\n";
-				WriteInstance(tp);
-				if (tp.mType.IsNakedPrimitive() || tp.mType.GetOuterDecoration() == ctPointerTo) mOutStream << ";\n";
+				if (sIsInline(tp.mType)) 
+				{ WriteInstance(tp); mOutStream << ";\n"; }
+				else
+				{ mOutStream << "\n";  WriteInstance(tp); mOutStream << "\n"; }
 			}
-			mOutStream << IndentStop() << "}\n";
+			mOutStream << IndentStop() << "}";
 			return true;
 		}
 		else
@@ -69,12 +74,26 @@ bool ObjectStreamer::WriteInstance(const TypedPointer& inTypedPointer)
 		size64 elem_count = inTypedPointer.GetContainerElementCount();
 		if (outer_container == ctArrayOf)
 		{
+			TypeDecl p; inTypedPointer.mType.GetPeeled(p);
 			mOutStream << IndentStart() << "[\n";
 			for (size64 c = 0; c < elem_count; c++)
 			{
-				WriteInstance(inTypedPointer.GetContainerElement(c)); 
+				if (sIsInline(p))
+				{
+					mOutStream << Indent();
+					WriteInstance(inTypedPointer.GetContainerElement(c));
+				}
+				else
+				{
+					WriteInstance(inTypedPointer.GetContainerElement(c));
+				}
+				if (c != elem_count-1) 
+					mOutStream << ",\n";
+				else
+					mOutStream << "\n";
+
 			}
-			mOutStream << IndentStop() << "]\n";
+			mOutStream << IndentStop() << "]";
 			return true;
 		}
 		else // ctStringOf:
@@ -83,8 +102,11 @@ bool ObjectStreamer::WriteInstance(const TypedPointer& inTypedPointer)
 			inTypedPointer.mType.GetPeeled(peeled);
 			// only support char and wchar types in a string
 			gAssert(peeled.IsNakedPrimitive());
-			if (peeled.mNakedType == etChar)	{ mOutStream << (*((String*)inTypedPointer.mPointer)); return 1; }
-//			else if (peeled.mNakedType == etWChar)	{ mOutStream << (*((WString*)inTypedPointer.mPointer)); return 1; }
+			if (peeled.mNakedType == etChar)
+			{ 
+				mOutStream << (*((String*)inTypedPointer.mPointer)); 
+				return true; 
+			}
 			else
 			{
 				gAssert(false);

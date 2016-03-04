@@ -39,3 +39,21 @@ void gExplodeString(Array<BaseString<T>>& outParts, const BaseString<T>& inStrin
 	}
 }
 
+template<class T>
+void gExplodeString(Array<BaseString<T>>& outParts, const BaseString<T>& inString, const BaseString<T>& inLimiterSet)
+{
+	uint begin = 0;
+	for (uint end = 0; end <= inString.GetLength(); end++)
+	{
+		if (end == inString.GetLength() || inLimiterSet.Find(inString[end]) != size64(-1))
+		{
+			if (begin < end)
+			{
+				outParts.Append(inString.Substring(begin, end - begin));
+			}
+			begin = end + 1;
+		}
+	}
+}
+
+

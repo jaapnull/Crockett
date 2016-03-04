@@ -120,6 +120,7 @@ public:
 	const TypedPointer				DerefPointer() const;							// Deref pointer
 	const size64					GetContainerElementCount() const;				// Get element count in case of container type
 	TypedPointer					GetContainerElement(size64 inIndex) const;		// Get element from container type
+	TypedPointer					GetCompoundMember(const String& inMemberName) const;	// Get element from container type
 	TypedPointer					GetObjectAtPath(const String& inPath);			// Evaluate a path and return object that is pointed to
 
 	TypeDecl						mType;

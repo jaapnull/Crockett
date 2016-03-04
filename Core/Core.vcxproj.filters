@@ -44,6 +44,9 @@
     <ClInclude Include="CReflection\TypedPointer.h">
       <Filter>CReflection</Filter>
     </ClInclude>
+    <ClInclude Include="CMath\Math.h">
+      <Filter>CMath</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
@@ -81,6 +84,9 @@
     </Filter>
     <Filter Include="CReflection">
       <UniqueIdentifier>{d11f0023-c48e-4448-947f-26b40069b18f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CMath">
+      <UniqueIdentifier>{0bb1f2aa-baa8-48e7-834e-102fe6426ad4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

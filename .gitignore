@@ -9,3 +9,8 @@
 *.pch
 *.suo
 *.opendb
+*.lib
+*.exe
+*.cache
+*.iobj
+*.ipdb
