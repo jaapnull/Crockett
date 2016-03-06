@@ -47,6 +47,12 @@
     <ClInclude Include="CMath\Math.h">
       <Filter>CMath</Filter>
     </ClInclude>
+    <ClInclude Include="CReflection\TypeDecl.h">
+      <Filter>CReflection</Filter>
+    </ClInclude>
+    <ClInclude Include="CReflection\ObjectWriter.h">
+      <Filter>CReflection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
@@ -66,6 +72,12 @@
       <Filter>CReflection</Filter>
     </ClCompile>
     <ClCompile Include="CReflection\TypedPointer.cpp">
+      <Filter>CReflection</Filter>
+    </ClCompile>
+    <ClCompile Include="CReflection\TypeDecl.cpp">
+      <Filter>CReflection</Filter>
+    </ClCompile>
+    <ClCompile Include="CReflection\ObjectWriter.cpp">
       <Filter>CReflection</Filter>
     </ClCompile>
   </ItemGroup>

@@ -5,16 +5,22 @@
 #include <CReflection/Reflection.h>
 #include <CCore/Streams.h>
 
-
-
-struct StreamSet
+class Resource
 {
-	Array<TypedPointer> mObjects;
+public:
+	String mName;
+	String mLocation;
+	virtual void Boo() {}
+
+	void Inspect(ObjectInspector& inInspector)
+	{
+	}
+
 };
 
+typedef Array<Resource> ResourceSet;
 
 // Dependency between serialized files or between files in the same source file
-// 
 struct Dependency
 {
 	TypedPointer			mObject;						// Pointer of the object that has the dependency
@@ -22,23 +28,3 @@ struct Dependency
 	String					mReflectionPath;				// Path in the reflection tree of mObject
 };
 
-
-// Helper class that writes out reflected objects to (file) stream
-class ObjectStreamer
-{
-public:
-	ObjectStreamer(Stream& outStream) : mOutStream(outStream), mIndent(0)	{}
-	const Path&			GetTargetLocation()									{ return mOutStream.GetPath(); }
-	String				IndentStart()										{ mIndent++; return String((mIndent - 1) * 2, ' '); }
-	String				IndentStop()										{ mIndent--; return String((mIndent) * 2, ' '); }
-	String				Indent()											{ return String((mIndent)* 2, ' '); }
-
-	bool				WriteInstance(const TypedPointer& inTypedPointer);
-
-
-protected:
-	Array<Dependency>	mDependencies;
-	Stream&				mOutStream;
-	int					mIndent;
-
-};

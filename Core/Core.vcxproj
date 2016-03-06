@@ -130,8 +130,10 @@
     <ClInclude Include="CHash\MurmurHash3.h" />
     <ClInclude Include="CMath\Math.h" />
     <ClInclude Include="CorePCH.h" />
+    <ClInclude Include="CReflection\ObjectWriter.h" />
     <ClInclude Include="CReflection\Reflection.h" />
     <ClInclude Include="CReflection\Serializing.h" />
+    <ClInclude Include="CReflection\TypeDecl.h" />
     <ClInclude Include="CReflection\TypedPointer.h" />
     <ClInclude Include="CReflect\Streams.h" />
     <ClInclude Include="CUtils\EnumMask.h" />
@@ -169,6 +171,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CorePCH.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="CReflection\ObjectWriter.cpp" />
     <ClCompile Include="CReflection\Reflection.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CorePCH.h</PrecompiledHeaderFile>
@@ -180,6 +183,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CorePCH.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="CReflection\Serializing.cpp" />
+    <ClCompile Include="CReflection\TypeDecl.cpp" />
     <ClCompile Include="CReflection\TypedPointer.cpp" />
     <ClCompile Include="CUtils\StringUtils.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>

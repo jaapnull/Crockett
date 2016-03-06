@@ -1,80 +1,26 @@
-[
-  {
-    Hallo = 123;
-    Dag = 1;
-    Children = 
-    [
-      {
-        Poep = 1;
-        Zand = 0;
-      },
-      {
-        Poep = 3;
-        Zand = 2;
-      },
-      {
-        Poep = 5;
-        Zand = 4;
-      }
-    ]
-    Sibling = <some TestClass>;
-    Getallen = 
-    [
-      1,
-      7,
-      4
-    ]
-  },
-  {
-    Hallo = 345;
-    Dag = 3;
-    Children = 
-    [
-      {
-        Poep = 7;
-        Zand = 6;
-      },
-      {
-        Poep = 9;
-        Zand = 8;
-      },
-      {
-        Poep = 11;
-        Zand = 10;
-      }
-    ]
-    Sibling = <some TestClass>;
-    Getallen = 
-    [
-      0,
-      9,
-      4
-    ]
-  },
-  {
-    Hallo = 678;
-    Dag = 5;
-    Children = 
-    [
-      {
-        Poep = 13;
-        Zand = 12;
-      },
-      {
-        Poep = 15;
-        Zand = 14;
-      },
-      {
-        Poep = 17;
-        Zand = 16;
-      }
-    ]
-    Sibling = <some TestClass>;
-    Getallen = 
-    [
-      8,
-      8,
-      2
-    ]
-  }
-]
+TestClass:mytest = {
+  Hallo = 0;
+  Dag = 1;
+  Children = 
+  [
+    {
+      Poep = 1;
+      Zand = 0;
+    },
+    {
+      Poep = 3;
+      Zand = 2;
+    },
+    {
+      Poep = 5;
+      Zand = 4;
+    }
+  ]
+  Sibling = <null>;
+  Getallen = 
+  [
+    1,
+    7,
+    4
+  ]
+}

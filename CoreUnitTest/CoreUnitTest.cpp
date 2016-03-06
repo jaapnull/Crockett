@@ -4,7 +4,7 @@
 #include <PCHCoreUnitTest.h>
 #include <CCore/String.h>
 #include <CReflection/Reflection.h>
-#include <CReflection/Serializing.h>
+#include <CReflection/ObjectWriter.h>
 #include <CFile/File.h>
 #include <CMath/Math.h>
 
@@ -28,7 +28,7 @@ public:
 	static int			sCreateCount;
 };
 
-class TestClass
+class TestClass : public Resource
 {
 public:
 
@@ -66,46 +66,33 @@ int	TestClass::sCreateCount = 0;
 
 int main()
 {
+	ReflectionHost::sGetReflectionHost().RegisterClassType<Resource>();
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestMemberClass>();
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestClass>();
-	Array<TestClass> tc;
 
-	tc.Resize(20);
-	tc.Reserve(25);
+	TestClass tc;
+	tc.mName = "mytest";
 
-	tc[2].mHallo = 678;
-	tc[1].mHallo = 345;
-	tc[0].mHallo = 123;
-	tc.Resize(3);
-	{
-		TypedPointer tp = gInspectObject(tc);
-		TypedPointer pp = tp.GetObjectAtPath("[2].Children[1].Poep");
-		std::cout << "ttttt" << std::endl;
 
-	}
+	Resource* r = &tc;
+	TypeDecl type = gInspectObject(r);
+	std::cout << type.ToString() << std::endl;
 
-	/*
-	{
-		TestClass c;
-		TypedPointer p = gInspectObject(c);
-		TypedPointer m = p.GetCompoundMember("Hallo");
-		std::cout << ((int*)m.mPointer)[0] << std::endl;
-		m = p.GetCompoundMember("Dag");
-		std::cout << ((int*)m.mPointer)[0] << std::endl;
-	}
-	*/
+	Array<Resource*> ra;
+	type = gInspectObject(ra);
+	std::cout << type.ToString() << std::endl;
+
+	Array<Resource**>* pra;
+	type = gInspectObject(pra);
+	std::cout << type.ToString() << std::endl;
+
+
 
 	File f;
 	f.Open("./test.txt", fomWriteDiscard);
-	TypedPointer tp = gInspectObject(tc);
-	ObjectStreamer os(f);
-	os.WriteInstance(tp);
+	ObjectWriter os(f);
+	os.WriteResource(tc);
 	f.Close();
-
-	
-
-
-
 
 	f.Open("./test.txt", fomRead);
 	size64 size = f.GetLength();
