@@ -27,6 +27,10 @@ inline Stream& operator<<(Stream& ioStream, const String& inString)
 	return ioStream;
 }
 
-
+inline Stream& operator<<(Stream& ioStream, const char& inChar)
+{
+	ioStream.PutBytes(&inChar, 1);
+	return ioStream;
+}
 
 

@@ -10,3 +10,5 @@ const CompoundReflectionInfo* ReflectionHost::FindClassInfo(const ClassName& inC
 	return &(i->second);
 }
 
+
+

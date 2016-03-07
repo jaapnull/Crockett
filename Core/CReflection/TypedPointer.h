@@ -17,32 +17,24 @@ public:
 										mType(inType),
 										mPointer(inPointer)							{}
 
-	const TypedPointer				DerefPointer() const;							// Deref pointer
-	const size64					GetContainerElementCount() const;				// Get element count in case of container type
-	TypedPointer					GetContainerElement(size64 inIndex) const;		// Get element from container type
+	bool							IsValid() const									{ return mType.IsValid() && mPointer != nullptr; }
+	const TypedPointer				DerefPointer() const;									// Deref pointer
+	const size64					GetContainerElementCount() const;						// Get element count in case of container type
+	TypedPointer					GetContainerElement(size64 inIndex) const;				// Get element from container type
 	TypedPointer					GetCompoundMember(const String& inMemberName) const;	// Get element from container type
-	TypedPointer					GetObjectAtPath(const String& inPath);			// Evaluate a path and return object that is pointed to
+	TypedPointer					GetObjectAtPath(const String& inPath);					// Evaluate a path and return object that is pointed to
 
 	TypeDecl						mType;
 	void*							mPointer;
 };
 
-// Inspect code to generate a TypeInfo from a class <T>
-// template <typename T> const TypedPointer gInspectObject(T& inObject)
-// { 
-// 	TypedPointer tp; 
-// 	gInspectDeclaration<T>(tp.mType); 
-// 	tp.mPointer = (void*)&inObject; 
-// 	return tp; 
-// }
+template <typename T>
+TypedPointer gInspectObject(T& inObject)
+{
+	TypeDecl td = gLookupTypeForObject<T>(inObject);
+	void* ptr = &inObject;
+	return TypedPointer(td, ptr);
+}
 
 
-//template <typename T>
-//TypedPointer gInspectObject(const T& inObject)
-//{
-//	const CompoundReflectionInfo* compound_info = ReflectionHost::sGetReflectionHost().FindCompoundInfoDynamic<T>(inObject); 
-//	TypeDecl ttype(compound_info);
-//	TypedPointer tp = TypedPointer(ttype, (void*)&inObject);
-//	return tp;
-//}
-//
+

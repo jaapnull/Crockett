@@ -1,26 +1,23 @@
-TestClass:mytest = {
-  Hallo = 0;
-  Dag = 1;
+TestClass:piet = {
+  !name = "piet"
+  !location = ""
+  Hallo = 0
+  Dag = 1
   Children = 
   [
     {
-      Poep = 1;
-      Zand = 0;
+      Poep = 1
+      Zand = 0
     },
     {
-      Poep = 3;
-      Zand = 2;
+      Poep = 3
+      Zand = 2
     },
     {
-      Poep = 5;
-      Zand = 4;
+      Poep = 5
+      Zand = 4
     }
   ]
-  Sibling = <null>;
-  Getallen = 
-  [
-    1,
-    7,
-    4
-  ]
+  Sibling = <:klaas>
+  Getallen = [1,7,4]
 }

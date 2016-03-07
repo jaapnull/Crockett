@@ -1,25 +1,20 @@
 #include <CorePCH.h>
-#include <CReflection/ObjectWriter.h>
+
 #include <CUtils/StringUtils.h>
+#include <CReflection/ObjectWriter.h>
+#include <CReflection/Serializing.h>
 
 static bool sIsInline(const TypeDecl& inDecl)
 {
-	return inDecl.IsNakedPrimitive() || inDecl.GetOuterDecoration() == ctPointerTo;
+	return
+		(inDecl.IsNakedPrimitive()) ||
+		(inDecl.GetOuterDecoration() == ctPointerTo) ||
+		(inDecl.GetOuterDecoration() == ctStringOf) ||
+		(inDecl.IsNakedArray() && inDecl.GetNakedType() != etCompound);
+		
 }
 
-
-bool ObjectWriter::WriteResource(Resource& inResource)
-{
-	gAssert(!inResource.mName.IsEmpty());
-	TypeDecl type = gInspectObject(inResource);
-
-	mOutStream << Indent() << type.ToString() << ":" << inResource.mName << " = ";
-	TypedPointer tp(type, &inResource);
-	return WriteObject(tp);
-}
-
-
-bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer)
+bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer, bool inOutputDebugFields)
 {
 	if (inTypedPointer.mType.mModifiers.IsEmpty())
 	{
@@ -36,13 +31,16 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer)
 			for (uint m = 0; m < info->mMembers.GetLength(); m++)
 			{
 				ClassMember tm = info->mMembers[m];
+				// do not write out debug data
+				if (!inOutputDebugFields && tm.mName[0] == '!') continue;
+
 				TypedPointer tp(tm.mType, (void*)(((byte*)inTypedPointer.mPointer) + tm.mOffset));
 				mOutStream << Indent() << tm.mName << " = ";
 				if (sIsInline(tp.mType)) 
 				{
-					WriteObject(tp); mOutStream << ";\n"; }
+					WriteObject(tp, inOutputDebugFields); mOutStream << "\n"; }
 				else
-				{ mOutStream << "\n";  WriteObject(tp); mOutStream << "\n"; }
+				{ mOutStream << "\n";  WriteObject(tp, inOutputDebugFields); mOutStream << "\n"; }
 			}
 			mOutStream << IndentStop() << "}";
 			return true;
@@ -79,34 +77,52 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer)
 			}
 			else
 			{
-				mOutStream << "<some " << deref.mType.ToString() << ">";
+				TypedPointer name_field = deref.GetObjectAtPath("!name");
+				gAssert(name_field.IsValid() && name_field.mType.IsCharString());
+				TypedPointer location_field = deref.GetObjectAtPath("!location");
+				if (location_field.IsValid())
+				{
+					gAssert(location_field.mType.IsCharString());
+					mOutStream << '<' << *((String*)location_field.mPointer) << ":" << *((String*)name_field.mPointer) << ">";
+				}
+				else
+				{
+					mOutStream << '<' << *((String*)name_field.mPointer) << ">";
+				}
 			}
 			return true;
 		}
 		
-		size64 elem_count = inTypedPointer.GetContainerElementCount();
+		
 		if (outer_container == ctArrayOf)
 		{
+			size64 elem_count = inTypedPointer.GetContainerElementCount();
 			TypeDecl peeled_type = inTypedPointer.mType.GetPeeled();
-			mOutStream << IndentStart() << "[\n";
+			bool array_inline = sIsInline(inTypedPointer.mType);
+			if (!array_inline)
+				mOutStream << IndentStart();
+			mOutStream << "[";
+			if (!array_inline) mOutStream << '\n';
 			for (size64 c = 0; c < elem_count; c++)
 			{
 				if (sIsInline(peeled_type))
 				{
-					mOutStream << Indent();
-					WriteObject(inTypedPointer.GetContainerElement(c));
+					if (!array_inline) mOutStream << Indent();
+					WriteObject(inTypedPointer.GetContainerElement(c), inOutputDebugFields);
 				}
 				else
 				{
-					WriteObject(inTypedPointer.GetContainerElement(c));
+					WriteObject(inTypedPointer.GetContainerElement(c), inOutputDebugFields);
 				}
 				if (c != elem_count-1) 
-					mOutStream << ",\n";
-				else
+					mOutStream << ",";
+				if (!array_inline)
 					mOutStream << "\n";
 
 			}
-			mOutStream << IndentStop() << "]";
+			if (!array_inline)
+				mOutStream << IndentStop();
+			mOutStream << "]";
 			return true;
 		}
 		else // ctStringOf:
@@ -116,7 +132,7 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer)
 			gAssert(peeled.IsNakedPrimitive());
 			if (peeled.mNakedType == etChar)
 			{ 
-				mOutStream << (*((String*)inTypedPointer.mPointer)); 
+				mOutStream << '\"' << (*((String*)inTypedPointer.mPointer)) << '\"';
 				return true; 
 			}
 			else

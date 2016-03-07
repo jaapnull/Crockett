@@ -46,6 +46,7 @@ public:
 
 	void Inspect(ObjectInspector& inInspector)
 	{
+				Resource::Inspect(inInspector);
 		inInspector.Inspect(mHallo,		"Hallo");
 		inInspector.Inspect(mDag ,		"Dag");
 		inInspector.Inspect(mChildren,	"Children");
@@ -70,28 +71,31 @@ int main()
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestMemberClass>();
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestClass>();
 
-	TestClass tc;
-	tc.mName = "mytest";
+	TestClass tc0;
+	
+	String* poep = gGetDebugField<String>(tc0, String("!name"));
 
+	TestClass tc1;
+	tc1.mName = "klaas";
 
-	Resource* r = &tc;
-	TypeDecl type = gInspectObject(r);
-	std::cout << type.ToString() << std::endl;
+	tc0.mSibling = &tc1;
+
+	Resource* r = &tc0;
+	TypedPointer typed_pointer = gInspectObject(r);
+	std::cout << typed_pointer.mType.ToString() << std::endl;
 
 	Array<Resource*> ra;
-	type = gInspectObject(ra);
-	std::cout << type.ToString() << std::endl;
+	typed_pointer = gInspectObject(ra);
+	std::cout << typed_pointer.mType.ToString() << std::endl;
 
 	Array<Resource**>* pra;
-	type = gInspectObject(pra);
-	std::cout << type.ToString() << std::endl;
-
-
-
+	typed_pointer = gInspectObject(pra);
+	std::cout << typed_pointer.mType.ToString() << std::endl;
+	
 	File f;
 	f.Open("./test.txt", fomWriteDiscard);
 	ObjectWriter os(f);
-	os.WriteResource(tc);
+	os.WriteResource(tc0, true);
 	f.Close();
 
 	f.Open("./test.txt", fomRead);
