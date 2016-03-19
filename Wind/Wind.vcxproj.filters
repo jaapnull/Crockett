@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="PCHWind.cpp" />
+    <ClCompile Include="WCommon\Message.cpp">
+      <Filter>WCommon</Filter>
+    </ClCompile>
+    <ClCompile Include="WWin32\Window.cpp">
+      <Filter>WWin32</Filter>
+    </ClCompile>
+    <ClCompile Include="WWin32\Canvas.cpp">
+      <Filter>WWin32</Filter>
+    </ClCompile>
+    <ClCompile Include="WWin32\DIB.cpp">
+      <Filter>WWin32</Filter>
+    </ClCompile>
+    <ClCompile Include="WWin32\Mouse.cpp">
+      <Filter>WWin32</Filter>
+    </ClCompile>
+    <ClCompile Include="WWin32\Keyboard.cpp">
+      <Filter>WWin32</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="PCHWind.h" />
+    <ClInclude Include="WCommon\Message.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="WCommon\Mouse.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="WCommon\Window.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="WCommon\Canvas.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="WCommon\DIB.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="WCommon\Keyboard.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="WWin32\targetver.h">
+      <Filter>WWin32</Filter>
+    </ClInclude>
+    <ClInclude Include="WWin32\Win32.h">
+      <Filter>WWin32</Filter>
+    </ClInclude>
+    <ClInclude Include="WCommon\ColorPen.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="WWin32">
+      <UniqueIdentifier>{ff22a9bd-e6d7-452b-b0fa-0a059ad8045f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="WCommon">
+      <UniqueIdentifier>{0506a55a-3f94-4b2b-8bb3-42b2c6e52763}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

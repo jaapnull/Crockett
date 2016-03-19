@@ -1,5 +1,5 @@
-TestClass:piet = {
-  !name = "piet"
+TestClass: = {
+  !name = ""
   !location = ""
   Hallo = 0
   Dag = 1

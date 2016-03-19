@@ -53,6 +53,12 @@
     <ClInclude Include="CReflection\ObjectWriter.h">
       <Filter>CReflection</Filter>
     </ClInclude>
+    <ClInclude Include="CGeo\Quad.h">
+      <Filter>CGeo</Filter>
+    </ClInclude>
+    <ClInclude Include="CUtils\Color.h">
+      <Filter>CUtils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
@@ -99,6 +105,9 @@
     </Filter>
     <Filter Include="CMath">
       <UniqueIdentifier>{0bb1f2aa-baa8-48e7-834e-102fe6426ad4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CGeo">
+      <UniqueIdentifier>{fb985c6c-eef3-49e1-8874-34ef1a00dce7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

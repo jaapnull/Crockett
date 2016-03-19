@@ -1,6 +1,6 @@
 #pragma once
 #include <stdarg.h>
-#include "../core/Serializing.h"
+#include <CCore/Assert.h>
 
 template <class T, int I> class BaseVector
 {
@@ -121,7 +121,7 @@ public:
 
 	const T& Get(unsigned int n) const
 	{
-		assert(n < i);
+		gAssert(n < i);
 		return mField[n];
 	}
 
@@ -132,7 +132,7 @@ public:
 
 	T& Get(unsigned int n)
 	{
-		assert(n < i);
+		gAssert(n < i);
 		return mField[n];
 	}
 
@@ -145,37 +145,37 @@ public:
 
 	Vector(const T& x, const T& y, const T& z, const T& w)
 	{
-		assert(i >= 4);
+		gAssert(i >= 4);
 		mField[0] = x; mField[1] = y; mField[2] = z; mField[3] = w;
 	}
 
 	explicit Vector(const BaseVector<T, 3>& inXyz, const T& w)
 	{
-		assert(i >= 4);
+		gAssert(i >= 4);
 		mField[0] = inXyz.x; mField[1] = inXyz.y; mField[2] = inXyz.z; mField[3] = w;
 	}
 
 	explicit Vector(const T& x, const T& y, const T& z)
 	{
-		assert(i >= 3);
+		gAssert(i >= 3);
 		mField[0] = x; mField[1] = y; mField[2] = z;
 	}
 
 	explicit Vector(const BaseVector<T, 2>& inXy, const T& z)
 	{
-		assert(i >= 3);
+		gAssert(i >= 3);
 		mField[0] = inXy.x; mField[1] = inXy.y; mField[2] = z;
 	}
 
 	explicit Vector(const T& x, const T& y)
 	{
-		assert(i >= 2);
+		gAssert(i >= 2);
 		mField[0] = x; mField[1] = y;
 	}
 
 	explicit Vector(const T& x)
 	{
-		assert(i >= 1);
+		gAssert(i >= 1);
 		mField[0] = x;
 	}
 
@@ -435,33 +435,6 @@ public:
 
 };
 
-template <class T, int I>
-std::ostream& operator<<(std::ostream& inStream, const BaseVector<T, I>& inVector)
-{
-	inStream << '{';
-	for (unsigned int x = 0; x < I; x++)
-	{
-		inStream << inVector.mField[x];
-		if (x != I-1) inStream << ',';
-	}
-	inStream << '}';
-	return inStream;
-}
-
-template <class T, int I>
-std::wostream& operator<<(std::wostream& inStream, const BaseVector<T, I>& inVector)
-{
-	inStream << L'{';
-	for (unsigned int x = 0; x < I; x++)
-	{
-		inStream << inVector.mField[x];
-		if (x != I-1) inStream << L',';
-	}
-	inStream << L'}';
-	return inStream;
-}
-
-
 
 typedef Vector<int, 2> ivec2;
 typedef Vector<int, 3> ivec3;
@@ -469,22 +442,4 @@ typedef Vector<int, 4> ivec4;
 
 typedef Vector<float, 2> fvec2;
 typedef Vector<float, 4> fvec4;
-
-
-class fvec3 : public Vector<float, 3>, public Reflected
-{
-public:
-
-	fvec3(const Vector<float, 3>& inVec3) : Vector<float, 3>(inVec3) {}
-	fvec3() {}
-	fvec3(float inX, float inY, float inZ) : Vector<float, 3>(inX, inY, inZ) {}
-
-	void Inspect(ObjectInspector& ioInspector)
-	{
-		ioInspector.Inspect(mField[0], "X");
-		ioInspector.Inspect(mField[1], "Y");
-		ioInspector.Inspect(mField[2], "Z");
-	}
-
-};
 
