@@ -36,7 +36,7 @@ _Atom sGetRegisteredClass()
 {
 	WNDCLASSEX wcx;
 	wcx.cbSize = sizeof(WNDCLASSEX);
-	wcx.style = 0;// CS_HREDRAW | CS_VREDRAW;
+	wcx.style = CS_HREDRAW | CS_VREDRAW;
 	wcx.lpfnWndProc = gDispatchMessage;
 	wcx.cbClsExtra = 0;
 	wcx.cbWndExtra = 0;

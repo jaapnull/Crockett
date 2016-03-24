@@ -3,7 +3,7 @@
 
 // compilation unit header
 #include <WCommon/Message.h>
-
+#include <WWin32/Win32.h>
 /* 
 	Does one "pump" of the message pump which dispatches waiting messages to the appropriate windows
 	Beware that on non-blocking and blocking calls, this will handle all waiting messages, but will exit immediately after handling WM_QUIT

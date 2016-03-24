@@ -72,6 +72,8 @@ inline int gRoundToNearestInt(float r)
 	return (r > 0.0) ? int(floor(r + 0.5f)) : int(ceil(r - 0.5f)); 
 }
 
+
+
 template <typename T>
 inline const T& gMin(const T& A, const T& B)
 {
