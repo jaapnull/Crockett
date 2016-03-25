@@ -75,7 +75,7 @@ public:
 		}
 	}
 
-	uint AddAnchor(const PanelAnchorPoint& inAnchor)
+	size64 AddAnchor(const PanelAnchorPoint& inAnchor)
 	{
 		mAnchors.Append(inAnchor);
 		return mAnchors.GetLength();
@@ -112,16 +112,28 @@ public:
 		mLayout.UpdateLayout(iquad(0,0,GetWidth()-1, GetHeight()-1));
 		inDib.SetAll(DIBColor::sCreateDefaultPaletteColor(dpcLightCyan));
 		ColorPen<DIBColor> pen(inDib);
-		pen.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcBlack));
+		
+
+		int vert_tabs = 5;
+		int horz_tabs = 5;
+
 		for (const PanelAnchorPoint& a : mLayout.GetAnchors())
 		{
-			if (a.mType == PanelAnchorPoint::atVertical)
+			if (a.mType == PanelAnchorPoint::atVertical && a.mParent0 != cMaxUint)
 			{
+				pen.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcBlack));
 				pen.DrawLine(ivec2(0, a.mResolvedPosition), ivec2(GetWidth()-1, a.mResolvedPosition));
+				pen.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcCyan));
+				pen.DrawLine(ivec2(vert_tabs, mLayout.GetAnchors()[a.mParent0].mResolvedPosition), ivec2(vert_tabs, a.mResolvedPosition));
+				vert_tabs +=7;
 			}
-			else
+			else if (a.mType == PanelAnchorPoint::atHorizontal && a.mParent0 != cMaxUint)
 			{
+				pen.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcBlack));
 				pen.DrawLine(ivec2(a.mResolvedPosition, 0), ivec2(a.mResolvedPosition, GetHeight()-1));
+				pen.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcCyan));
+				pen.DrawLine(ivec2(mLayout.GetAnchors()[a.mParent0].mResolvedPosition, horz_tabs), ivec2(a.mResolvedPosition, horz_tabs));
+				horz_tabs += 7;
 			}
 		}
 
