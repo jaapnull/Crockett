@@ -54,11 +54,11 @@ public:
 		}
 	}
 
-	void Set(int inX, int inY, T inValue)
+	inline void Set(int inX, int inY, T inValue)
 	{
 //		if (inX < 0 || inY < 0 || inX >= (int) mWidth || inY >= (int) mHeight )
 //			return;
-		assert(inX < (int)GetWidth() && inY < (int)GetHeight());
+//		assert(inX < (int)GetWidth() && inY < (int)GetHeight());
 		offset64 byte_addres = ((offset64 ) GetBaseData());
 		byte_addres += ((offset64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
 		byte_addres += inX * sizeof(T) + inY * mPitch;;

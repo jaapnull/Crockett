@@ -14,6 +14,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Wind", "Wind\Wind.vcxproj",
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WindUnitTest", "WindUnitTest\WindUnitTest.vcxproj", "{29B4C1F1-62D2-4579-A509-AF4DF9493BB0}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComeDither", "ComeDither\ComeDither.vcxproj", "{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5BDE4B4A-B892-48E5-BEE6-8665EBED350B} = {5BDE4B4A-B892-48E5-BEE6-8665EBED350B}
+		{858A7B68-2892-45BE-87D4-5BEEFEE65A84} = {858A7B68-2892-45BE-87D4-5BEEFEE65A84}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -56,6 +62,14 @@ Global
 		{29B4C1F1-62D2-4579-A509-AF4DF9493BB0}.Release|x64.Build.0 = Release|x64
 		{29B4C1F1-62D2-4579-A509-AF4DF9493BB0}.Release|x86.ActiveCfg = Release|Win32
 		{29B4C1F1-62D2-4579-A509-AF4DF9493BB0}.Release|x86.Build.0 = Release|Win32
+		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Debug|x64.ActiveCfg = Debug|x64
+		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Debug|x64.Build.0 = Debug|x64
+		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Debug|x86.ActiveCfg = Debug|Win32
+		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Debug|x86.Build.0 = Debug|Win32
+		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Release|x64.ActiveCfg = Release|x64
+		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Release|x64.Build.0 = Release|x64
+		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Release|x86.ActiveCfg = Release|Win32
+		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
