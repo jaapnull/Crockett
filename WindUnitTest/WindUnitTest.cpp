@@ -17,7 +17,8 @@ struct AnchorRestriction
 				mMin(0),
 				mMax(0),
 				mPercentage(0.0f),
-				mResolvedPosition(inPos) {}
+				mResolvedPosition(inPos),
+				mRefCount(0) {}
 
 			AnchorRestriction(uint inP0, uint inP1, int inMin, int inMax, float inPercentage) :
 				mP0(inP0),
@@ -25,23 +26,58 @@ struct AnchorRestriction
 				mMin(inMin),
 				mMax(inMax),
 				mPercentage(inPercentage),
-				mResolvedPosition(0) {}
+				mResolvedPosition(0),
+				mRefCount(0) {}
 	uint	mP0;
 	uint	mP1;
 	int		mMin;
 	int		mMax;
 	float	mPercentage;
 	int		mResolvedPosition;
+	uint	mRefCount;
 };
 
 
-class AnchoredLayout
+struct LayoutData
+{
+	AnchorRestriction	mLeft;
+	AnchorRestriction	mTop;
+	AnchorRestriction	mRight;
+	AnchorRestriction	mBottom;
+};
+
+class JuiceWindow
+{
+public:
+	virtual void											OnDraw(DIB& inCanvas, iquad& inClientRect) = 0;
+	virtual void											AddChildWindow(JuiceWindow* inChild) = 0;
+private:
+	//typedef std::pair<JuiceWindow*, LayoutData>				LayoutEntry;
+	//typedef std::unordered_map<JuiceWindow, LayoutData>		ChildMap;			// 
+	//ChildMap													mChilderen;			// a map from id to instance function		
+	//JuiceLayout												mLayout;
+};
+
+
+class JuicePanel : public JuiceWindow
+{
+public:
+	JuicePanel(const DIBColor& inColor) : mColor(inColor) {}
+
+	virtual void OnDraw(DIB& inCanvas, iquad& inClientRect)
+	{
+		inCanvas.SetRegion(inClientRect, mColor);
+	}
+
+private:
+	DIBColor mColor;
+};
+
+class JuiceLayout
 {
 public:
 
-	enum {alLeft = 0, atTop = 0, alRight = 1, alBottom = 1};
-
-	AnchoredLayout()
+	JuiceLayout()
 	{
 		// setup the four base restrictions (left, top, right, bottom)
 		mRestrictionsHorz.Append(AnchorRestriction(0));
@@ -55,7 +91,6 @@ public:
 		gAssert(mRestrictionsVert.GetLength() >= 2);
 		gAssert(mRestrictionsHorz.GetLength() >= 2);
 		// first four always resolve to area bounds
-		
 		mRestrictionsVert[0].mResolvedPosition = inArea.mTop;
 		mRestrictionsVert[1].mResolvedPosition = inArea.mBottom;
 		mRestrictionsHorz[0].mResolvedPosition = inArea.mLeft;
@@ -127,13 +162,15 @@ public:
 	MyWindow() : Window(), mCanvas(*this)
 	{
 		AddHandler(&mCanvas);
-		mLayout.AddRestrictionVert(AnchorRestriction(0, 1, 150, 0, 0.5f));
-		mLayout.AddRestrictionHorz(AnchorRestriction(0, 1, 50, 0, 0.5f));
-		//mLayout.AddRestrictionHorz(AnchorRestriction(5, 0, 50, 0, 0.25f));
-		//mLayout.AddRestrictionHorz(AnchorRestriction(2, 0, 50, 0, 0.0f));
-		//mLayout.AddRestrictionHorz(AnchorRestriction(2, 0, 60, 0, 0.0f));
-		//mLayout.AddRestrictionVert(AnchorRestriction(1, 3, 50, 0, 0.0f));
-		//mLayout.AddRestrictionVert(AnchorRestriction(1, 3, 100, 0, 0.0f));
+		mLayout.AddRestrictionHorz(AnchorRestriction(1, 0, 10, 0, 0.0f));
+		mLayout.AddRestrictionHorz(AnchorRestriction(2, 0, 60, 0, 0.0f));
+		
+		mLayout.AddRestrictionVert(AnchorRestriction(0, 1, 30, 0, 0.0f));
+		mLayout.AddRestrictionVert(AnchorRestriction(2, 1, 50, 0, 0.0f));
+		mLayout.AddRestrictionVert(AnchorRestriction(3, 1, 10, 0, 0.0f));
+		mLayout.AddRestrictionVert(AnchorRestriction(4, 1, 50, 0, 0.0f));
+		mLayout.AddRestrictionVert(AnchorRestriction(5, 1, 10, 0, 0.0f));
+		mLayout.AddRestrictionVert(AnchorRestriction(6, 1, 50, 0, 0.0f));
 	}
 	
 	void OnUpdate(DIB& inDib, const iquad& inRegion) 
@@ -180,7 +217,7 @@ public:
 	}
 
 private:
-	AnchoredLayout		mLayout;
+	JuiceLayout			mLayout;
 	Canvas				mCanvas;
 
 } mainwindow;
