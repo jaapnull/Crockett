@@ -59,6 +59,12 @@
     <ClInclude Include="CUtils\Color.h">
       <Filter>CUtils</Filter>
     </ClInclude>
+    <ClInclude Include="CReflection\Tokenizer.h">
+      <Filter>CReflection</Filter>
+    </ClInclude>
+    <ClInclude Include="CReflection\ObjectReader.h">
+      <Filter>CReflection</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
@@ -84,6 +90,12 @@
       <Filter>CReflection</Filter>
     </ClCompile>
     <ClCompile Include="CReflection\ObjectWriter.cpp">
+      <Filter>CReflection</Filter>
+    </ClCompile>
+    <ClCompile Include="CReflection\Tokenizer.cpp">
+      <Filter>CReflection</Filter>
+    </ClCompile>
+    <ClCompile Include="CReflection\ObjectReader.cpp">
       <Filter>CReflection</Filter>
     </ClCompile>
   </ItemGroup>

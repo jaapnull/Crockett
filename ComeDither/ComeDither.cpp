@@ -11,13 +11,21 @@
 #error Windows Header Slip
 #endif
 
+
+struct Document
+{
+	Array<DIB*> mLayers;
+};
+
+
+
 class MyWindow : public Window, IPaintHandler
 {
 
 public:
 	MyWindow() : Window(), mCanvas(*this)
 	{
-	
+		AddHandler(&mCanvas);
 	}
 
 	void OnUpdate(DIB& inDib, const iquad& inRegion)
@@ -33,6 +41,12 @@ private:
 
 int main()
 {
+
+	Document doc;
+	DIB* bg = new DIB();
+	bg->LoadFromFile(L"./test.bmp");
+	doc.mLayers.Append(bg);
+
 	mainwindow.Create(L"ComeDither", 640, 480);
 	mainwindow.Show(true);
 

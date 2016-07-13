@@ -70,7 +70,7 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer, bool inOutput
 		// Write dependency reference
 		if (outer_container == ctPointerTo)
 		{
-			TypedPointer deref = inTypedPointer.DerefPointer();
+			TypedPointer deref = TypedPointerPointer(inTypedPointer).DerefPointer();
 			if (deref.mPointer == nullptr)
 			{
 				mOutStream << "<null>";
@@ -96,7 +96,8 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer, bool inOutput
 		
 		if (outer_container == ctArrayOf)
 		{
-			size64 elem_count = inTypedPointer.GetContainerElementCount();
+			TypedArrayPointer array_pointer(inTypedPointer);
+			size64 elem_count = array_pointer.GetContainerElementCount();
 			TypeDecl peeled_type = inTypedPointer.mType.GetPeeled();
 			bool array_inline = sIsInline(inTypedPointer.mType);
 			if (!array_inline)
@@ -108,11 +109,11 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer, bool inOutput
 				if (sIsInline(peeled_type))
 				{
 					if (!array_inline) mOutStream << Indent();
-					WriteObject(inTypedPointer.GetContainerElement(c), inOutputDebugFields);
+					WriteObject(array_pointer.GetContainerElement(c), inOutputDebugFields);
 				}
 				else
 				{
-					WriteObject(inTypedPointer.GetContainerElement(c), inOutputDebugFields);
+					WriteObject(array_pointer.GetContainerElement(c), inOutputDebugFields);
 				}
 				if (c != elem_count-1) 
 					mOutStream << ",";

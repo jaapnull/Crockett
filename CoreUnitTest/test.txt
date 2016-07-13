@@ -18,6 +18,6 @@ TestClass: = {
       Zand = 4
     }
   ]
-  Sibling = <:klaas>
+  Sibling = <Flop.txt:klaas>
   Getallen = [1,7,4]
 }

@@ -73,7 +73,6 @@ public:
 	template<typename T>
 	void RegisterClassType()						// Registers a class, giving instance func and id
 	{
-
 		CompoundReflectionInfo description;
 
 		// add to hash-map, hashed on typename
@@ -109,12 +108,13 @@ public:
 private:
 	typedef std::pair<ClassName, CompoundReflectionInfo>			ClassInfoEntry;
 	typedef std::unordered_map<ClassName, CompoundReflectionInfo>	ClassInfoMap;			// 
-	ClassInfoMap													mItems;					// a map from id to instance function		
+	ClassInfoMap													mItems;					// a map from id to instance function
 	static ReflectionHost*											sReflectionHost;
 
 	template <typename T>
 	static ClassName												sGetTypeName() { return ClassName(typeid(T)); }
 };
+
 
 
 

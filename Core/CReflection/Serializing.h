@@ -5,6 +5,7 @@
 #include <CReflection/Reflection.h>
 #include <CCore/Streams.h>
 
+
 class Resource
 {
 public:
@@ -25,7 +26,7 @@ typedef Array<Resource> ResourceSet;
 struct Dependency
 {
 	TypedPointer			mObject;						// Pointer of the object that has the dependency
-	String					mTargetPath;					// Path of the target
+	String					mResourcePath;					// Path of the target in resource
 	String					mReflectionPath;				// Path in the reflection tree of mObject
 };
 
@@ -33,19 +34,8 @@ template <class T, class S> T* gGetDebugField(S& inObject, const String& inMembe
 {
 	gAssert(!inMemberName.IsEmpty() && inMemberName[0] == '!');
 	TypeDecl debug_type = gInspectDeclaration<T>();
-	TypedPointer debug_object = gInspectObject(inObject).GetCompoundMember(inMemberName);
+	TypedPointer debug_object = TypedCompoundPointer(gInspectObject(inObject)).GetCompoundMember(inMemberName);
 	gAssert(debug_object.mPointer == nullptr ||  debug_type == debug_object.mType);
 	return (T*)debug_object.mPointer;
 }
-
-/*
-template <class T, class S> void gSetDebugField(S& inObject, const String& inMemberName, const T& inField)
-{
-	gAssert(!inMemberName.IsEmpty() && inMemberName[0] == '!');
-	TypeDecl debug_type = gInspectDeclaration<T>();
-	TypedPointer debug_object = gInspectObject(inObject).GetCompoundMember(inMemberName);
-	gAssert(debug_object.mPointer == nullptr || debug_type == debug_object.mType);
-	debug_object.mType.mCompoundInfo->mAssignFunction(&debug_object, &inField);
-}
-*/
 

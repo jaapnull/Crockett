@@ -13,6 +13,8 @@ extern void		gToLower(String& inString);
 extern float	gStringToFloat(const String& inString);
 extern int		gStringToInt(const String& inString);
 extern uint		gStringToUInt(const String& inString);
+extern bool		gStringToBool(const String& inString);
+
 extern String	gToString(uint inUint);
 extern String	gToString(double inDouble);
 extern String	gToString(float inFloat);

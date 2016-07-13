@@ -23,6 +23,11 @@ uint gStringToUInt(const String& inString)
 	return atoi(inString.GetData());
 }
 
+bool gStringToBool(const String& inString)
+{
+	return inString.Equals("true");
+}
+
 
 String gToString(short inShort)
 {

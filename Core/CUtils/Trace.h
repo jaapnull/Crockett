@@ -3,6 +3,8 @@
 #include <vector>
 #include <sstream>
 
+#include <windows.h>
+
 template<typename TChar, typename TTraits = std::char_traits<TChar> >
 class TraceStream : public std::basic_stringbuf<TChar,TTraits> 
 {
@@ -46,7 +48,7 @@ public:
 		return syncRet == -1 ? TTraits::eof() : 0;
 	}
 	
-	static void HookStream(std::basic_ostream<TChar, TTraits>& ioStream)
+	static void sHookStream(std::basic_ostream<TChar, TTraits>& ioStream)
 	{
 		// static so not properly thread-safe
 		static TraceStream sTraceStream;

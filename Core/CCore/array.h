@@ -23,25 +23,29 @@ public:
 	// destructor (only frees any allocated memory, leaves invalid state!)
 	~Array()												{ if (mData) LinearAllocator<T>::sFreeAndDestruct(mData, GetLength()); }
 
-	size64 GetLength()								const	{ gAssert(IsValid()); return mEndValid - mData; }					// Amount of active/initialized elements	
-	size64 GetReserved()							const	{ gAssert(IsValid()); return mEndReserved - mData; }				// Get Allocated elements (data size is sizeof(T)*GetReserved())
-	T* GetData()											{ gAssert(IsValid()); return mData; }							// Getter to raw data block
-	const T* GetData()								const	{ gAssert(IsValid()); return mData; }							// Const getter to raw data block
+	size64 GetLength()								const	{ return mEndValid - mData; }						// Amount of active/initialized elements	
+	size64 GetReserved()							const	{ return mEndReserved - mData; }					// Get Allocated elements (data size is sizeof(T)*GetReserved())
+	T* GetData()											{ return mData; }									// Getter to raw data block
+	const T* GetData()								const	{ return mData; }									// Const getter to raw data block
 
-	T& At(size64 inIndex)									{ return mData[inIndex]; }					// Const getter to element
-	const T& At(size64 inIndex)						const	{ return mData[inIndex]; }					// Const getter to element
+	T* _GetEndValid()										{ return mEndValid; }								// Getter to end of init. block
+	T* _GetEndReserved()									{ return mEndReserved; }							// Getter to end of allocated mem
 
-	T& Back()												{ return *(mEndValid - 1); }		// Getter to last element
-	const T& Back()									const	{ return *(mEndValid - 1); }		// Const getter to last element
 
-	T& Front()												{ return mData[0]; }						// Getter to first element
-	const T& Front()								const	{ return mData[0]; }						// Const getter to first element
+	T& At(size64 inIndex)									{ gAssert(IsValid()); return mData[inIndex]; }		// Const getter to element
+	const T& At(size64 inIndex)						const	{ gAssert(IsValid()); return mData[inIndex]; }		// Const getter to element
 
-	bool IsEmpty()									const	{ return mEndValid == mData; }				// returns true is element count is zero
+	T& Back()												{ gAssert(IsValid()); return *(mEndValid - 1); }	// Getter to last element
+	const T& Back()									const	{ gAssert(IsValid()); return *(mEndValid - 1); }	// Const getter to last element
+
+	T& Front()												{ gAssert(IsValid()); return mData[0]; }			// Getter to first element
+	const T& Front()								const	{ gAssert(IsValid()); return mData[0]; }			// Const getter to first element
+
+	bool IsEmpty()									const	{ return mEndValid == mData; }						// returns true is element count is zero
 	bool IsValid()									const	{ return (mData == nullptr) == (mEndValid == nullptr) && (mData == nullptr) == (mEndReserved == nullptr); }
 
-	void Shrink(size64 inShrinkage)							{ Resize(GetLength() - inShrinkage); }	// Shrinks amount of elements by inShrinkage, destructing elements
-	void Pop()												{ Resize(GetLength() - 1); }				// Shrinks elements by one, destructing last element
+	void Shrink(size64 inShrinkage)							{ Resize(GetLength() - inShrinkage); }				// Shrinks amount of elements by inShrinkage, destructing elements
+	void Pop()												{ Resize(GetLength() - 1); }						// Shrinks elements by one, destructing last element
 
 	bool operator==(const Array& inOther) const
 	{
@@ -68,18 +72,18 @@ public:
 		}
 		else
 		{
-			if (mData != 0)														// If there is any allocation
+			if (mData != nullptr)												// If there is any allocation
 			{
-				gAssert(mEndReserved != mData);									// Sanity Check; reserved count should be zero
-				TAllocator::sFreeAndDestruct(mData, mElementCount);				// Free allocation
+				gAssert(mEndReserved != mData);									// Sanity Check; reserved count should be mData + n, where m > 0
+				TAllocator::sFreeAndDestruct(mData, mEndValid - mData);			// Free allocation
 			}
 			else
 			{
-				gAssert(mReservedCount == mData);								// without allocation, reserved count should be zero
+				gAssert(mEndReserved == mData);									// without allocation, reserved should also be nullptr
 			}
 			mData = nullptr;													// No allocation so zero mData
-			mElementCount = nullptr;											// Element count is no zero
-			mReservedCount = nullptr;											// Reserved count is no zero
+			mEndValid = nullptr;												// Element count is no zero
+			mEndReserved = nullptr;												// Reserved count is no zero
 		}
 	}
 
@@ -188,6 +192,9 @@ public:
 			Reserve(next_multiple_two);							// call [Reserve()] to do an exact resize to the next doubled value
 		}
 	}
+
+	void _SetPointer(void* inData, void* inEndValid, void* inEndReserved) { mData = (T*) inData; mEndValid = (T*)inEndValid; mEndReserved = (T*)inEndReserved; }
+
 
 	// Overloads
 	void Set(const Array<T>& inOther)							{ Set(inOther.GetData(), inOther.GetLength()); }	// Resizes and copies data; overload of base [Set()]
