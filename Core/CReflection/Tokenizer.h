@@ -1,3 +1,5 @@
+#pragma once
+
 #include <CCore/Assert.h>
 #include <CCore/Streams.h>
 
@@ -17,6 +19,8 @@ enum EStreamTokenType
 	sstPath,				// /
 	sstAssign,				// =
 	sstDot,					// .
+	sstComma,				// ,
+	sstBang,				// !
 	sstColon,				// :
 	sstAt,					// @
 	sstSemicolon,			// ;

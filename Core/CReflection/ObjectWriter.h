@@ -14,16 +14,16 @@ public:
 	String				IndentStart()										{ mIndent++; return String((mIndent - 1) * 2, ' '); }
 	String				IndentStop()										{ mIndent--; return String((mIndent) * 2, ' '); }
 	String				Indent()											{ return String((mIndent)* 2, ' '); }
-	bool				WriteObject(const TypedPointer& inTypedPointer, bool inOutputDebugFields);
+	bool				WriteObject(const TypedPointer& inTypedPointer);
 
 	template <class T>
-	bool				WriteResource(T& inResource, bool inOutputDebugFields)
+	bool				WriteResource(T& inResource)
 	{
 		TypedPointer tp = gInspectObject(inResource);
 		String* name = gGetDebugField<String>(inResource, "!name");
 		gAssert(name != nullptr);
 		mOutStream << Indent() << tp.mType.ToString() << ":" << *name << " = ";
-		return WriteObject(tp, true);
+		return WriteObject(tp);
 		return false;
 	}
 

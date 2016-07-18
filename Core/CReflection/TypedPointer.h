@@ -8,6 +8,15 @@ class TypedCompoundPointer;
 class TypedArrayPointer;
 class TypedPointerPointer;
 
+
+struct ReflectPathPart
+{
+	ReflectPathPart() {}
+	ReflectPathPart(uint32 inOffset) : mOffset(inOffset) {}
+	uint32	mOffset = 0;			///< Offset of the next part; either an element index for arrays of member index for compounds
+};
+
+
 class TypedPointer
 {
 public:
@@ -20,8 +29,11 @@ public:
 										mType(inType),
 										mPointer(inPointer)							{}
 
-	bool							IsValid() const											{ return mType.IsValid() && mPointer != nullptr; }
-	TypedPointer					GetObjectAtPath(const String& inPath);					// Evaluate a path and return object that is pointed to
+	void							Clear()											{ mPointer = nullptr; mType.Clear(); }
+	bool							IsValid() const									{ return mType.IsValid() && mPointer != nullptr; }
+	TypedPointer					GetObjectAtStringPath(const String& inPath);	// Evaluate a path and return object that is pointed to
+	TypedPointer					GetObjectAtPath(const Array<ReflectPathPart>& inPath);
+	String							ResolvePathToString(const Array<ReflectPathPart>& inPath) const;
 
 	TypeDecl						mType;
 	void*							mPointer;
@@ -31,14 +43,17 @@ class TypedCompoundPointer : public TypedPointer
 {
 public:
 
-	TypedCompoundPointer(const TypeDecl& inType, void* inPointer) : TypedPointer(inType, inPointer) {}
+	TypedCompoundPointer(const TypeDecl& inType, void* inPointer) : TypedPointer(inType, inPointer) { }
+	TypedCompoundPointer(const TypedPointer& tp) : TypedPointer(tp)									{ gAssert(mType.IsNakedCompound()); }
 
-	TypedCompoundPointer(const TypedPointer& tp) : TypedPointer(tp)
+	TypedPointer	GetCompoundMemberByIndex(uint32 inIndex)  const
 	{
-		gAssert(mType.IsNakedCompound());
+		const ClassMember& member = mType.mCompoundInfo->mMembers[inIndex]; 
+		return TypedPointer(member.mType, gOffsetPointer<void>(mPointer, member.mOffset));
 	}
-	TypedPointer					GetCompoundMember(const String& inMemberName) const;	// Get element from container type
 
+	uint32			GetCompoundMemberIndex(const String& inMemberName) const;
+	TypedPointer	GetCompoundMember(const String& inMemberName) const;
 
 	template<class T>
 	T* GetCompoundMember(const String& inMemberName)
@@ -48,7 +63,6 @@ public:
 			if (m.mName == inMemberName)
 			{
 				TypedPointer tp(m.mType, gOffsetPointer<void>(mPointer, m.mOffset));
-				//const CompoundReflectionInfo* expected_type = ReflectionHost::sGetReflectionHost().FindCompoundInfoStatic<T>();
 				TypeDecl dcl = gInspectDeclaration<T>();
 				gAssert(dcl == tp.mType);
 				return (T*)tp.mPointer;
@@ -56,10 +70,8 @@ public:
 		}
 		return nullptr;
 	}
-
-
-
 };
+
 
 class TypedArrayPointer : public TypedPointer
 {
@@ -72,6 +84,7 @@ public:
 	TypedPointer					GetContainerElement(size64 inIndex) const;				// Get element from container type
 	TypedPointer					CreateNewArrayItem();
 };
+
 
 class TypedPointerPointer : public TypedPointer
 {

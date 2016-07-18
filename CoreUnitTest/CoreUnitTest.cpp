@@ -6,10 +6,12 @@
 #include <CReflection/Reflection.h>
 #include <CUtils/Trace.h>
 #include <CReflection/ObjectWriter.h>
+#include <CReflection/ObjectReader.h>
 #include <CReflection/Tokenizer.h>
 #include <CFile/File.h>
 #include <CMath/Math.h>
 
+class TestClass;
 
 class TestMemberClass
 {
@@ -21,12 +23,14 @@ public:
 
 	void Inspect(ObjectInspector& inInspector)
 	{
+		inInspector.Inspect(mReference, "TestClassReference");
 		inInspector.Inspect(mPoep, "Poep");
 		inInspector.Inspect(mZand, "Zand");
 	}
 
-	int					mPoep;
-	int					mZand;
+	TestClass*			mReference	= nullptr;
+	int					mPoep		= 0;
+	int					mZand		= 0;
 	static int			sCreateCount;
 };
 
@@ -37,13 +41,6 @@ public:
 	TestClass() : mHallo(sCreateCount), mDag(sCreateCount+1)
 	{
 		sCreateCount+=2;
-		mChildren.Append(TestMemberClass());
-		mChildren.Append(TestMemberClass());
-		mChildren.Append(TestMemberClass());
-
-		mGetallen.Append(gRand() % 10);
-		mGetallen.Append(gRand() % 10);
-		mGetallen.Append(gRand() % 10);
 	}
 
 	void Inspect(ObjectInspector& inInspector)
@@ -70,9 +67,6 @@ int	TestClass::sCreateCount = 0;
 
 int main()
 {
-
-
-
 	// Makes all output show up in debug output screen
 	TraceStream<char>::sHookStream(std::cout);
 	TraceStream<wchar_t>::sHookStream(std::wcout);
@@ -82,65 +76,53 @@ int main()
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestMemberClass>();
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestClass>();
 
-	//TestClass tc0;
-	//String* poep	= gGetDebugField<String>(tc0, String("!name"));
 
-	//TestClass tc1;
-	//tc1.mName		= "klaas";
-	//tc1.mLocation	= "Flop.txt";
-	//
-	//tc0.mSibling = &tc1;
+	TestClass tc1;
+	tc1.mName		= "TestObject0";
+	tc1.mLocation	= "test.txt";
 
-	//Resource* r = &tc0;
-	//TypedPointer typed_pointer = gInspectObject(r);
-	//std::cout << typed_pointer.mType.ToString() << std::endl;
-	//
-	//Array<Resource*> ra;
-	//typed_pointer = gInspectObject(ra);
-	//std::cout << typed_pointer.mType.ToString() << std::endl;
-	//
-	//Array<Resource**>* pra;
-	//typed_pointer = gInspectObject(pra);
-	//std::cout << typed_pointer.mType.ToString() << std::endl;
+	tc1.mChildren.Append(TestMemberClass());
+	tc1.mChildren.Append(TestMemberClass());
+	tc1.mChildren.Append(TestMemberClass());
+	
 
-	//File f;
-	//f.Open("./test.txt", fomWriteDiscard);
-	//ObjectWriter ow(f);
-	//ow.WriteResource(tc0, true);
-	//f.Close();
+	tc1.mGetallen.Append(gRand() % 10);
+	tc1.mGetallen.Append(gRand() % 10);
+	tc1.mGetallen.Append(gRand() % 10);
+
+	TestClass tc2;
+	tc2.mName		= "ExternObject0";
+	tc2.mLocation	= "test2.txt";
+
+	tc1.mChildren[2].mReference = &tc2;
+
+	tc1.mSibling = &tc2;
+	
+	File f;
+	f.Open("./test.txt", fomWriteDiscard);
+	ObjectWriter ow(f);
+	ow.WriteResource(tc1);
+	f.Close();
+	f.Open("./test2.txt", fomWriteDiscard);
+	ow.WriteResource(tc2);
+	f.Close();
 
 
+	f.Open("./test.txt", fomRead);
 
-	Array<TestMemberClass> tmc;
+	ObjectReader reader;
 
-	TypedArrayPointer tap = gInspectObject(tmc);
+	Array<TypedPointer> file_objects;
+	reader.ReadFile(f, file_objects);
+	
+	f.Close();
 
-	TypedPointer item = tap.CreateNewArrayItem();
 
-	int* i = TypedCompoundPointer(item).GetCompoundMember<int>("Poep");
-
-	*i = 10;
-
-	item = tap.CreateNewArrayItem();
-	int* j = TypedCompoundPointer(item).GetCompoundMember<int>("Poep");
-	*j = 20;
-
-	item = tap.CreateNewArrayItem();
-	int* k  = TypedCompoundPointer(item).GetCompoundMember<int>("Poep");
-	*k = 30;
-
-	//f.Open("./test.txt", fomRead);
-	//TokenReader reader;
-	//reader.SetStream(f);
-	//char buffer[100];
-	//EStreamTokenType type;
-	//while (int r = reader.GetToken(type, buffer, 100))
-	//{
-	//	buffer[r] = '\0';
-	//	std::wcout << type << ": " << buffer << std::endl;
-	//}
-	//
-	//f.Close();
+	for (const UnresolvedLink& link : reader.GetLinks())
+	{
+		TypedPointer obj = gInspectObject(tc1);
+		std::cout << obj.ResolvePathToString(link.mReflectionPath) << std::endl;
+	}
 
 	return 0;
 }

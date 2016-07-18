@@ -1,23 +1,24 @@
-TestClass: = {
-  !name = ""
-  !location = ""
+TestClass:TestObject0 = {
   Hallo = 0
   Dag = 1
   Children = 
   [
     {
+      TestClassReference = <>
       Poep = 1
       Zand = 0
     },
     {
+      TestClassReference = <>
       Poep = 3
       Zand = 2
     },
     {
+      TestClassReference = <test2.txt:ExternObject0>
       Poep = 5
       Zand = 4
     }
   ]
-  Sibling = <Flop.txt:klaas>
+  Sibling = <test2.txt:ExternObject0>
   Getallen = [1,7,4]
 }

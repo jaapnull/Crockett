@@ -3,11 +3,6 @@
 #include <CUtils/StringUtils.h>
 
 
-ObjectReader::ObjectReader(Stream& inStream) : mStream(&inStream)
-{
-	mTokenReader.SetStream(inStream);
-}
-
 bool ObjectReader::ReadToken(Token& outToken)
 {
 	char buffer[256];
@@ -24,6 +19,7 @@ bool ObjectReader::ExpectToken(EStreamTokenType inType, Token& outToken)
 }
 
 bool ObjectReader::ExpectToken(EStreamTokenType inType)
+
 {
 	Token temp;
 	bool ret = ReadToken(temp);
@@ -36,24 +32,22 @@ bool ObjectReader::ReadFile(Stream& inStream, Array<TypedPointer>& outObjects)
 	//// A) File					FH <Object>*
 	mStream = &inStream;
 	mTokenReader.SetStream(inStream);
-	gAssert(mStack.IsEmpty());
 	gAssert(mObjects.IsEmpty());
 
-	Token token;
-	ExpectToken(sstHeader, token);
-	std::cout << "Header: " << token.mText << std::endl;
+//	HEADER CHECK
+//	Token token;
+//	ExpectToken(sstHeader, token);
+//	std::cout << "Header: " << token.mText << std::endl;
 
-	// First add to stack, then call function to fill it further
-	mStack.Append(TypedPointer());
-	
+
 	// Read all objects in file
-	while (ReadRootObject(mStack.Back()) == true)
+	TypedPointer new_object;
+	while(ReadRootObject(new_object) == true)
 	{
-		outObjects.Append(mStack.Back());
-		mObjects.Append(mStack.Back());
-		mStack.Pop();
+		outObjects.Append(new_object);
+		mObjects.Append(new_object);
+		new_object.Clear();
 	}
-	mStack.Clear();
 	mObjects.Clear();
 	return true;
 }
@@ -65,25 +59,46 @@ bool ObjectReader::ReadRootObject(TypedPointer& outObject)
 	gAssert(!outObject.IsValid());
 
 	// B) Object				CI : NI = <Item>
-	Token name;
+	// O) Object				CI = <Item>
+
+	
 	Token type;
+	Token name;
+
 	Token first_token;
+	Token second_token;
 	ReadToken(first_token);
 	if (first_token.mType == sstEOF) 
 		return false;
 	type = first_token;
-	bool r = ExpectToken(sstColon) && ExpectToken(sstIdentifier, name) && ExpectToken(sstAssign);
-	if (!r) 
-		return false;
+
+	ReadToken(second_token);
+	if (second_token.mType == sstColon)			//B
+	{
+		bool r = ExpectToken(sstIdentifier, name) && ExpectToken(sstAssign);
+		if (!r) return false;
+	}
+	else if (second_token.mType == sstAssign)	// O
+	{
+		// directly to <Item>
+	}
 
 	// Assume a root object is always a known compound (class) object
 	const CompoundReflectionInfo* refl_info = ReflectionHost::sGetReflectionHost().FindClassInfo(ClassName(type.mText));
 	TypedCompoundPointer new_obj(TypeDecl(refl_info), refl_info->mInstanceFunction(nullptr));
 	outObject = new_obj;
-	String* name_member = new_obj.GetCompoundMember<String>("!name");
-	if (name_member != nullptr)
+	
+	mRootObject = new_obj;
+	mRootPath.Clear();
+
+	if (name.mType != sstInvalid)
 	{
-		name_member->Set(name.mText);
+		gAssert(name.mType == sstIdentifier);
+		String* name_member = new_obj.GetCompoundMember<String>("!name");
+		if (name_member != nullptr)
+		{
+			name_member->Set(name.mText);
+		}
 	}
 
 	bool return_value = ReadItem(outObject);
@@ -129,34 +144,29 @@ bool ObjectReader::ReadItem(TypedPointer& ioObject)
 	case sstStringLiteral:
 	{
 		gAssert(ioObject.mType.IsNakedString());
-		std::cout << "Item is String: " << first_token.mText << std::endl;
 		sReadStringLiteral(ioObject, first_token.mText);
 		return true;
 	}
 	case sstNumberLiteral:
 	{
 		gAssert(ioObject.mType.IsNakedPrimitive());
-		std::cout << "Item is Number: " << first_token.mText << std::endl;
 		sReadNumberLiteral(ioObject, first_token.mText);
 		return true;
 	}
 	case sstRefBegin:
 	{
 		gAssert(ioObject.mType.GetOuterDecoration() == ctPointerTo);
-		std::cout << "Item is Reference: " << std::endl;
 		return ReadRef(ioObject);
 	}
 	case sstTypeBegin:
 	{
 		gAssert(ioObject.mType.IsNakedCompound());
-		std::cout << "Item is Complex Type " << std::endl;
 		return ReadCmpMembers(ioObject);
 	}
 	case sstListBegin:
 	{
 		gAssert(ioObject.mType.GetOuterDecoration() == ctArrayOf);
-		std::cout << "Item is List: " << first_token.mText << std::endl;
-		return ReadList(ioObject);
+		return ReadList(ioObject, true);
 	}
 	default:
 		// unexpected type
@@ -171,7 +181,7 @@ bool ObjectReader::ReadRef(TypedPointer& ioObject)
 {
 	// can only read a reference into a pointer
 	gAssert(ioObject.mType.IsNakedPointer());
-	String path;
+	String location;
 	Token token;
 	while (ReadToken(token))
 	{
@@ -183,12 +193,17 @@ bool ObjectReader::ReadRef(TypedPointer& ioObject)
 		case sstPath:
 		case sstAt:
 		case sstColon:
-			path.Append(token.mText); break;
+			location.Append(token.mText); break;
 		case sstRefEnd:
 		{
-			std::cout << "FOUND LINK " << path << std::endl;
-			//			AddUnresolvedLink(path, mTIP)
-			ioObject.mPointer = (void*)0; // set nullpointer
+			if (!location.IsEmpty())
+			{
+				UnresolvedLink ul;
+				ul.mReflectionPath = mRootPath;
+				ul.mObjectLocation = location;
+				mLinks.Append(ul);
+				ioObject.mPointer = (void*)0; // set nullpointer
+			}
 			return true;
 		}
 		default:
@@ -206,86 +221,141 @@ bool ObjectReader::ReadCmpMembers(TypedPointer& ioObject)
 	gAssert(ioObject.mType.IsNakedCompound());
 	Token first_token;
 	ReadToken(first_token);
+
+	String member_name = first_token.mText;
+	if (first_token.mType == sstBang)
+	{
+		ReadToken(first_token);
+		gAssert(first_token.mType == sstIdentifier);
+		member_name.Append(first_token.mText);
+	}
+
 	switch (first_token.mType)
 	{
 		// M) CmpMembers				NI = <Item> <CmpMembers>
-	case sstIdentifier:
-	{
-		TypedPointer member_ptr = TypedCompoundPointer(ioObject).GetCompoundMember(first_token.mText);
-		if (!ExpectToken(sstAssign)) return false;
-		bool rv = ReadItem(member_ptr);
-		return rv && ReadCmpMembers(ioObject);
-	}
-	// N) CmpMembers				}
-	case sstTypeEnd:
-	{
-		return true;
-	}
-	default:
+		case sstIdentifier:
+		{
+			TypedPointer member_ptr = TypedCompoundPointer(ioObject).GetCompoundMember(member_name);
+			if (!ExpectToken(sstAssign)) 
+				return false;
+
+
+			int32 member_idx = TypedCompoundPointer(ioObject).GetCompoundMemberIndex(member_name);
+			mRootPath.Append(ReflectPathPart(member_idx));
+			bool rv = ReadItem(member_ptr);
+			mRootPath.Pop();
+			rv &= ReadCmpMembers(ioObject);
+			return rv;
+		}
+		// N) CmpMembers				}
+		case sstTypeEnd:
+		{
+			return true;
+		}
+		default:
 		// unexpected type
 		gAssert(false);
 		return false;
 	}
 }
 
-bool ObjectReader::ReadList(TypedPointer& outObject)
+bool ObjectReader::ReadList(TypedPointer& outObject, bool inFirstEntry)
 {
 	gAssert(outObject.mType.IsNakedArray());
 	// G) List					]
-	// H) List					NL <List>
-	// I) List					SL <List>
-	// J) List					< <Path> > <List>
-	// K) List					{ <CmpMembers> <List>
-	// L) List					[ <List> <List>
+	// H) List		[,]			NL <List>
+	// I) List		[,]			SL <List>
+	// J) List		[,]			< <Path> > <List>
+	// K) List		[,]			{ <CmpMembers> <List>
+	// L) List		[,]			[ <List> <List>
 	Token first_token;
 	ReadToken(first_token);
+
+	if (!inFirstEntry)
+	{
+		if (first_token.mType == sstListEnd)
+		{
+			return true;
+		}
+		else if (first_token.mType == sstComma)
+		{
+			ReadToken(first_token);
+		}
+		else
+		{
+			gAssert(false);
+			return false;
+		}
+	}
+
 	switch (first_token.mType)
 	{
 		// G) List					]
-	case sstListEnd:
-	{
-		std::cout << "Complex end" << std::endl;
-		return true;
-	}
-	// G) List					]
-	case sstNumberLiteral:
-	{
-		TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
-		sReadNumberLiteral(element_ptr, first_token.mText);
-		std::cout << "NumeredLiteralList, entry: " << first_token.mText << std::endl;
-		return ReadList(outObject);
-	}
-	case sstStringLiteral:
-	{
-		TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
-		sReadStringLiteral(element_ptr, first_token.mText);
-		std::cout << "StringLiteralList, entry: " << first_token.mText << std::endl;
-		return ReadList(outObject);
-	}
-	case sstRefBegin:
-	{
-		TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
-		std::cout << "RefList, entry: " << first_token.mText << std::endl;
-		return ReadRef(element_ptr) && ReadList(outObject);
-	}
-	case sstTypeBegin:
-	{
-		TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
-		std::cout << "TypeList, entry: " << first_token.mText << std::endl;
-		return ReadCmpMembers(element_ptr) && ReadList(outObject);
-	}
-	case sstListBegin:
-	{
-		TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
-		std::cout << "ListList, entry: " << first_token.mText << std::endl;
-		return ReadList(element_ptr) && ReadList(outObject);
-	}
-	default:
+		case sstListEnd:
+		{
+			return true;
+		}
+
+		// H) List					NL <List>
+		case sstNumberLiteral:
+		{
+			TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
+			sReadNumberLiteral(element_ptr, first_token.mText);
+			return ReadList(outObject, false);
+		}
+
+		// I) List					SL <List>
+		case sstStringLiteral:
+		{
+			TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
+			sReadStringLiteral(element_ptr, first_token.mText);
+			return ReadList(outObject, false);
+		}
+
+		// J) List					< <Path> > <List>
+		case sstRefBegin:
+		{
+			mRootPath.Append(ReflectPathPart(uint32(TypedArrayPointer(outObject).GetContainerElementCount())));
+			TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
+			bool r = ReadRef(element_ptr);
+			if (!r)
+				return false;
+			mRootPath.Pop();
+			return ReadList(outObject, false);
+		}
+
+		// K) List					{ <CmpMembers> <List>
+		case sstTypeBegin:
+		{
+			mRootPath.Append(ReflectPathPart(uint32(TypedArrayPointer(outObject).GetContainerElementCount())));
+			TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
+			bool r = ReadCmpMembers(element_ptr);
+			if (!r)
+				return false;
+			mRootPath.Pop();
+			return ReadList(outObject, false);
+		}
+
+		// L) List					[ <List> <List>
+		case sstListBegin:
+		{
+			mRootPath.Append(ReflectPathPart(uint32(TypedArrayPointer(outObject).GetContainerElementCount())));
+			TypedPointer element_ptr = TypedArrayPointer(outObject).CreateNewArrayItem();
+			bool r = ReadList(element_ptr, true);
+			if (!r)
+				return false;
+			mRootPath.Pop();
+			return ReadList(outObject, false);
+		}
+	
+		default:
 		// unexpected type
 		gAssert(false);
 		return false;
 	}
 }
+
+
 
 
 

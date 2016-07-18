@@ -55,15 +55,19 @@ struct TypeDecl
 
 	TypeDecl(EType inType) :
 		mNakedType(inType),
-		mCompoundInfo(nullptr)			{ gAssert(IsValid()); }
+		mCompoundInfo(nullptr) {
+		gAssert(IsValid());
+	}
 
 	TypeDecl(const CompoundReflectionInfo*	inCompoundInfo) :
 		mNakedType(etCompound),
-		mCompoundInfo(inCompoundInfo)	{ gAssert(IsValid()); }
+		mCompoundInfo(inCompoundInfo) {
+		gAssert(IsValid());
+	}
 
 	TypeDecl() :
 		mNakedType(etInvalid),
-		mCompoundInfo(nullptr)			{}
+		mCompoundInfo(nullptr) {}
 
 	bool							IsValid()					const { return (mNakedType < etCount) && (mNakedType != etCompound || mCompoundInfo != nullptr); }
 	bool							IsNakedPrimitive()			const { return mModifiers.IsEmpty() && mNakedType != etCompound; }
@@ -74,22 +78,23 @@ struct TypeDecl
 	bool							IsCharString()				const { return mModifiers.OuterIsStringOf() && mNakedType == etChar && mModifiers.GetLength() == 1; }
 
 	bool							operator==(const TypeDecl& inOtherType) const
-	{ 
+	{
 		return	mCompoundInfo == inOtherType.mCompoundInfo &&
-				mNakedType == inOtherType.mNakedType &&
-				mModifiers == inOtherType.mModifiers;
+			mNakedType == inOtherType.mNakedType &&
+			mModifiers == inOtherType.mModifiers;
 	}
 
-	TypeDecl						GetPeeled()					const { TypeDecl td = *this;  gAssert(!mModifiers.IsEmpty()); td.mModifiers.Pop(); return td; }
-	ETypeDecoration					GetOuterDecoration()		const { return mModifiers.Outer(); }
-	EType							GetNakedType()				const { return mNakedType; }
+	void							Clear()								{ mCompoundInfo = nullptr; mNakedType = etInvalid; mModifiers.Clear(); }
+	TypeDecl						GetPeeled()					const	{ TypeDecl td = *this;  gAssert(!mModifiers.IsEmpty()); td.mModifiers.Pop(); return td; }
+	ETypeDecoration					GetOuterDecoration()		const	{ return mModifiers.Outer(); }
+	EType							GetNakedType()				const	{ return mNakedType; }
 	String							ToString() const;
 
 	size64							GetSizeInBytes() const;
 	size64							GetAlignment() const;
 
-	const CompoundReflectionInfo*	mCompoundInfo;				// pointer to info about compound if nakedtype is a compound
-	EType							mNakedType;					// naked base class (naked class of Array<int>*, int* or Array<int*> would all be int)
+	const CompoundReflectionInfo*	mCompoundInfo =	nullptr;	// pointer to info about compound if nakedtype is a compound
+	EType							mNakedType =	etInvalid;	// naked base class (naked class of Array<int>*, int* or Array<int*> would all be int)
 	DecorationStack					mModifiers;					// stack of modifieds like pointer-to, array-of etc.
 };
 
@@ -109,13 +114,15 @@ public:
 	typedef void					(ReflectAssignFunction)(void*, const void*);	// CopyFunction is used to copy one object onto the other
 	typedef void					(ReflectDestructFunction)(void*, bool);			// DestructFunction is used to delete a created object, either releasing or keeping memory intact
 
+	bool							IsDeclaredOnly()						const	{ return !mName.IsEmpty() && mSize == 0 && mAlign == 0; }
+
 	ClassName						mName;
-	uint							mSize;
-	uint							mAlign;
-	ReflectInstanceFunction*		mInstanceFunction;
-	ReflectAssignFunction*			mAssignFunction;
-	ReflectCopyFunction*			mCopyFunction;
-	ReflectDestructFunction*		mDestructorFunction;
+	uint							mSize						= 0;
+	uint							mAlign						= 0;
+	ReflectInstanceFunction*		mInstanceFunction			= nullptr;
+	ReflectAssignFunction*			mAssignFunction				= nullptr;
+	ReflectCopyFunction*			mCopyFunction				= nullptr;
+	ReflectDestructFunction*		mDestructorFunction			= nullptr;
 	Array<ClassMember>				mMembers;
 };
 
@@ -125,7 +132,7 @@ template <typename T>
 TypeDecl gInspectDeclaration() { TypeDecl info;  InspectFunc<T> p; p.Fill(info); return info;  }
 
 // Various templates to generate various types of type-specific stuff
-template <typename T>	struct InspectFunc					{ void Fill(TypeDecl& ioInfo) const { ioInfo.mCompoundInfo = ReflectionHost::sGetReflectionHost().FindCompoundInfoStatic<T>(); ioInfo.mNakedType = etCompound; } };
+template <typename T>	struct InspectFunc					{ void Fill(TypeDecl& ioInfo) const { ioInfo.mCompoundInfo = ReflectionHost::sGetReflectionHost().FindOrCreateCompoundInfoStatic<T>(); ioInfo.mNakedType = etCompound; } };
 template <>				struct InspectFunc<int>				{ void Fill(TypeDecl& ioInfo) const { ioInfo.mNakedType = etInt; } };
 template <>				struct InspectFunc<float>			{ void Fill(TypeDecl& ioInfo) const { ioInfo.mNakedType = etFloat; } };
 template <>				struct InspectFunc<bool>			{ void Fill(TypeDecl& ioInfo) const { ioInfo.mNakedType = etBool; } };

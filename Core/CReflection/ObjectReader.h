@@ -8,6 +8,7 @@
 // 
 // A) File					FH <Object>*
 // B) Object				ID : ID = <Item> ;
+// O) Object				ID = <Item> ;
 // C) Item					NL
 // D) Item					SL
 // E) Item					{ <CmpMembers>
@@ -41,8 +42,8 @@
 
 struct UnresolvedLink
 {
-	String					mLinkPath;		///< What is the path to the unresolved link (should be pointer type)
-	String					mTargetPath;	///< What is the full path to the target
+	String					mObjectLocation;	///< What is the path to the unresolved link (should be pointer type)
+	Array<ReflectPathPart>	mReflectionPath;	///< What is the full path to the target
 };
 
 
@@ -52,12 +53,9 @@ public:
 
 	struct Token
 	{
-
 		String				mText;
-		EStreamTokenType	mType;
+		EStreamTokenType	mType = sstInvalid;
 	};
-
-	ObjectReader(Stream& inStream);
 
 	bool						ReadToken(Token& outToken);
 	bool						ExpectToken(EStreamTokenType inType, Token& outToken);
@@ -67,13 +65,16 @@ public:
 	bool						ReadItem(TypedPointer& outObject);
 	bool						ReadRef(TypedPointer& outObject);
 	bool						ReadCmpMembers(TypedPointer& outObject);
-	bool						ReadList(TypedPointer& outObject);
+	bool						ReadList(TypedPointer& outObject, bool inFirstEntry);
 
-	void						AddUnresolvedLink(const String& inLinkPath, const String& inTargetPath);
+	const Array<UnresolvedLink>& GetLinks() const { return mLinks; }
 
 private:
 	Array<UnresolvedLink>		mLinks;			///< List of all unresolved links, where to find them and what to link them to
-	Array<TypedPointer>			mStack;			///< Stack of objects that are being created/filled in
+	
+	TypedPointer				mRootObject;	///< Current root object that is being read
+	Array<ReflectPathPart>		mRootPath;		///< Path within current root object (used for unresolved links)
+	
 	Array<TypedPointer>			mObjects;		///< List of all created objects (popped off mStack during course of read)
 	Stream*						mStream;		///< Stream that supplies text to mTokenReader
 	TokenReader					mTokenReader;	///< Token Reader used to generate the tokens during read

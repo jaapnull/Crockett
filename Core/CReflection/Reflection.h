@@ -75,20 +75,29 @@ public:
 	{
 		CompoundReflectionInfo description;
 
+		ClassName class_name = sGetTypeName<T>();
+		ClassInfoMap::iterator it = mItems.find(class_name);
+		
+		if (it != mItems.end())
+		{
+			gAssert(it->second.IsDeclaredOnly());
+		}
+
 		// add to hash-map, hashed on typename
 		ClassInfoEntry entry;
-		entry.first = sGetTypeName<T>();
+		entry.first = class_name;
 		mItems.insert(entry);
 
 		// fill description through static analysis
-		ClassInfoMap::iterator it = mItems.find(entry.first);
+		it = mItems.find(entry.first);
 		ObjectInspector reflect_inspector(it->second);
 		reflect_inspector.StaticAnalysis<T>();
 	}
 
 	// find by name
 	const CompoundReflectionInfo*			FindClassInfo(const ClassName& inClassName) const;
-
+	const CompoundReflectionInfo*			FindOrCreateClassInfo(const ClassName& inClassName);
+	
 	// find by static type
 	template <typename T>
 	const CompoundReflectionInfo*			FindCompoundInfoStatic() const
@@ -96,6 +105,14 @@ public:
 		ClassName type_name = sGetTypeName<T>();
 		return FindClassInfo(type_name);
 	}
+
+	template <typename T>
+	const CompoundReflectionInfo*			FindOrCreateCompoundInfoStatic()
+	{
+		ClassName type_name = sGetTypeName<T>();
+		return FindOrCreateClassInfo(type_name);
+	}
+
 
 	// find by static type
 	template <typename T>

@@ -134,7 +134,41 @@ TypedPointer TypedCompoundPointer::GetCompoundMember(const String& inMemberName)
 }
 
 
-TypedPointer TypedPointer::GetObjectAtPath(const String& inPath)
+uint32 TypedCompoundPointer::GetCompoundMemberIndex(const String& inMemberName) const
+{
+	gAssert(mType.IsNakedCompound());
+
+	
+	for (uint32 i = 0; i < mType.mCompoundInfo->mMembers.GetLength(); i++)
+	{
+		if (mType.mCompoundInfo->mMembers[i].mName == inMemberName)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
+
+
+TypedPointer TypedPointer::GetObjectAtPath(const Array<ReflectPathPart>& inPath)
+{
+	TypedPointer current = *this;
+	for (const ReflectPathPart& path : inPath)
+	{
+		if (current.mType.IsNakedArray())
+		{
+			current = TypedArrayPointer(current).GetContainerElement(path.mOffset);
+		}
+		else
+		{
+			current = TypedCompoundPointer(current).GetCompoundMemberByIndex(path.mOffset);
+		}
+	}
+	return current;
+}
+
+
+TypedPointer TypedPointer::GetObjectAtStringPath(const String& inPath)
 {
 	Array<String> parts;
 	gExplodeString(parts, inPath, String(".[]"));
@@ -154,3 +188,29 @@ TypedPointer TypedPointer::GetObjectAtPath(const String& inPath)
 	}
 	return current;
 }
+
+
+String TypedPointer::ResolvePathToString(const Array<ReflectPathPart>& inPath) const
+{
+	String path;
+	TypedPointer current = *this;
+	for (const ReflectPathPart& p : inPath)
+	{
+		if (current.mType.mModifiers.OuterIsArrayOf())
+		{
+			path.Append('[');
+			path.Append(gToString(p.mOffset));
+			path.Append(']');
+			current = TypedArrayPointer(current).GetContainerElement(p.mOffset);
+
+		}
+		else if (current.mType.IsNakedCompound())
+		{
+			path.Append('.');
+			path.Append(TypedCompoundPointer(current).mType.mCompoundInfo->mMembers[p.mOffset].mName);
+			current = TypedCompoundPointer(current).GetCompoundMemberByIndex(p.mOffset);
+		}
+	}
+	return path;
+}
+

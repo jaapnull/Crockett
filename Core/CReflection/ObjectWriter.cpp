@@ -14,7 +14,7 @@ static bool sIsInline(const TypeDecl& inDecl)
 		
 }
 
-bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer, bool inOutputDebugFields)
+bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer)
 {
 	if (inTypedPointer.mType.mModifiers.IsEmpty())
 	{
@@ -32,15 +32,16 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer, bool inOutput
 			{
 				ClassMember tm = info->mMembers[m];
 				// do not write out debug data
-				if (!inOutputDebugFields && tm.mName[0] == '!') continue;
+				if (tm.mName[0] == '!') 
+					continue;
 
 				TypedPointer tp(tm.mType, (void*)(((byte*)inTypedPointer.mPointer) + tm.mOffset));
 				mOutStream << Indent() << tm.mName << " = ";
 				if (sIsInline(tp.mType)) 
 				{
-					WriteObject(tp, inOutputDebugFields); mOutStream << "\n"; }
+					WriteObject(tp); mOutStream << "\n"; }
 				else
-				{ mOutStream << "\n";  WriteObject(tp, inOutputDebugFields); mOutStream << "\n"; }
+				{ mOutStream << "\n";  WriteObject(tp); mOutStream << "\n"; }
 			}
 			mOutStream << IndentStop() << "}";
 			return true;
@@ -73,13 +74,13 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer, bool inOutput
 			TypedPointer deref = TypedPointerPointer(inTypedPointer).DerefPointer();
 			if (deref.mPointer == nullptr)
 			{
-				mOutStream << "<null>";
+				mOutStream << "<>";
 			}
 			else
 			{
-				TypedPointer name_field = deref.GetObjectAtPath("!name");
+				TypedPointer name_field = deref.GetObjectAtStringPath("!name");
 				gAssert(name_field.IsValid() && name_field.mType.IsCharString());
-				TypedPointer location_field = deref.GetObjectAtPath("!location");
+				TypedPointer location_field = deref.GetObjectAtStringPath("!location");
 				if (location_field.IsValid())
 				{
 					gAssert(location_field.mType.IsCharString());
@@ -109,11 +110,11 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer, bool inOutput
 				if (sIsInline(peeled_type))
 				{
 					if (!array_inline) mOutStream << Indent();
-					WriteObject(array_pointer.GetContainerElement(c), inOutputDebugFields);
+					WriteObject(array_pointer.GetContainerElement(c));
 				}
 				else
 				{
-					WriteObject(array_pointer.GetContainerElement(c), inOutputDebugFields);
+					WriteObject(array_pointer.GetContainerElement(c));
 				}
 				if (c != elem_count-1) 
 					mOutStream << ",";

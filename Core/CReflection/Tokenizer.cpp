@@ -56,6 +56,8 @@ int TokenReader::GetToken(EStreamTokenType& outType, char* outText, int inMaxLen
 	case (':') : initial_type = sstColon; break;
 	case ('@') : initial_type = sstAt; break;
 	case ('.') : initial_type = sstDot; break;
+	case (',') : initial_type = sstComma; break;
+	case ('!') : initial_type = sstBang; break;
 	case (';') : initial_type = sstSemicolon; break;
 	case ('[') : initial_type = sstListBegin; break;
 	case (']') : initial_type = sstListEnd; break;
