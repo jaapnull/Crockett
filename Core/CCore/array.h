@@ -31,7 +31,6 @@ public:
 	T* _GetEndValid()										{ return mEndValid; }								// Getter to end of init. block
 	T* _GetEndReserved()									{ return mEndReserved; }							// Getter to end of allocated mem
 
-
 	T& At(size64 inIndex)									{ gAssert(IsValid()); return mData[inIndex]; }		// Const getter to element
 	const T& At(size64 inIndex)						const	{ gAssert(IsValid()); return mData[inIndex]; }		// Const getter to element
 
@@ -46,6 +45,18 @@ public:
 
 	void Shrink(size64 inShrinkage)							{ Resize(GetLength() - inShrinkage); }				// Shrinks amount of elements by inShrinkage, destructing elements
 	void Pop()												{ Resize(GetLength() - 1); }						// Shrinks elements by one, destructing last element
+
+	size64 Find(const T& inElement)							
+	{ 
+		for (size64 i = 0; i < GetLength(); i++)
+		{
+			if (mData[i] == inElement)
+			{
+				return i;
+			}
+		}
+		return cMaxSize64; 
+	}
 
 	bool operator==(const Array& inOther) const
 	{

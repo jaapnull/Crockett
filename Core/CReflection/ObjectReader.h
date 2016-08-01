@@ -1,5 +1,5 @@
 #include <CCore/String.h>
-#include <CCore/Streams.h>
+#include <CStreams/Streams.h>
 #include <CReflection/Reflection.h>
 #include <CReflection/Serializing.h>
 #include <CReflection/Tokenizer.h>
@@ -39,14 +39,6 @@
 // N) CmpMembers			}
 
 
-
-struct UnresolvedLink
-{
-	String					mObjectLocation;	///< What is the path to the unresolved link (should be pointer type)
-	Array<ReflectPathPart>	mReflectionPath;	///< What is the full path to the target
-};
-
-
 class ObjectReader
 {
 public:
@@ -60,22 +52,24 @@ public:
 	bool						ReadToken(Token& outToken);
 	bool						ExpectToken(EStreamTokenType inType, Token& outToken);
 	bool						ExpectToken(EStreamTokenType inType);
-	bool						ReadFile(Stream& inStream, Array<TypedPointer>& outObjects);
+	bool						ReadFile(Stream& inStream, Array<TypedPointer>& outObjects, Array<UnresolvedLink>& outLinks);
 	bool						ReadRootObject(TypedPointer& outObject);
 	bool						ReadItem(TypedPointer& outObject);
 	bool						ReadRef(TypedPointer& outObject);
 	bool						ReadCmpMembers(TypedPointer& outObject);
 	bool						ReadList(TypedPointer& outObject, bool inFirstEntry);
-
-	const Array<UnresolvedLink>& GetLinks() const { return mLinks; }
+	void						SetDefaultDevice(StreamDevice& inDevice)		{ mDefaultDevice = &inDevice; }
 
 private:
+
+	StreamDevice*				mDefaultDevice; ///< The device we assume all external links are mapped onto if no device is set in the link
+
 	Array<UnresolvedLink>		mLinks;			///< List of all unresolved links, where to find them and what to link them to
-	
+	Array<TypedPointer>			mObjects;		///< List of all created objects (popped off mStack during course of read)
+
 	TypedPointer				mRootObject;	///< Current root object that is being read
 	Array<ReflectPathPart>		mRootPath;		///< Path within current root object (used for unresolved links)
 	
-	Array<TypedPointer>			mObjects;		///< List of all created objects (popped off mStack during course of read)
 	Stream*						mStream;		///< Stream that supplies text to mTokenReader
 	TokenReader					mTokenReader;	///< Token Reader used to generate the tokens during read
 };

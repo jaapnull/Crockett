@@ -1,7 +1,7 @@
 #pragma once
 
 #include <CCore/Assert.h>
-#include <CCore/Streams.h>
+#include <CStreams/Streams.h>
 
 // Tokeinzer: class for tokenizing string using the Object grammar
 
@@ -42,7 +42,7 @@ public:
 	inline void				IncreaseNextCharPointer();
 	inline bool				PeekNextChar(char& outChar) const;
 	int						GetToken(EStreamTokenType& outType, char* outText, int inMaxLength);
-
+	void					Reset();
 private:
 	static inline bool		sIsWhitespace(char inChar) { return inChar == ' ' || inChar == '\t'; }
 	static inline bool		sIsLineEnding(char inChar) { return inChar == '\n' || inChar == '\r'; }

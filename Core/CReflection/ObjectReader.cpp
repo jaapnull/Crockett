@@ -1,5 +1,6 @@
 #include <CReflection/ObjectReader.h>
 #include <CCore/String.h>
+#include <CCore/Assert.h>
 #include <CUtils/StringUtils.h>
 
 
@@ -27,7 +28,7 @@ bool ObjectReader::ExpectToken(EStreamTokenType inType)
 	return ret;
 }
 
-bool ObjectReader::ReadFile(Stream& inStream, Array<TypedPointer>& outObjects)
+bool ObjectReader::ReadFile(Stream& inStream, Array<TypedPointer>& outObjects, Array<UnresolvedLink>& outLinks)
 {
 	//// A) File					FH <Object>*
 	mStream = &inStream;
@@ -44,11 +45,18 @@ bool ObjectReader::ReadFile(Stream& inStream, Array<TypedPointer>& outObjects)
 	TypedPointer new_object;
 	while(ReadRootObject(new_object) == true)
 	{
-		outObjects.Append(new_object);
 		mObjects.Append(new_object);
 		new_object.Clear();
 	}
+
+	outObjects.Append(mObjects);
 	mObjects.Clear();
+
+	outLinks.Append(mLinks);
+	mLinks.Clear();
+
+	mRootObject.Clear();
+	mTokenReader.Reset();
 	return true;
 }
 
@@ -99,6 +107,12 @@ bool ObjectReader::ReadRootObject(TypedPointer& outObject)
 		{
 			name_member->Set(name.mText);
 		}
+	}
+
+	String* loc_member = new_obj.GetCompoundMember<String>("!location");
+	if (loc_member != nullptr)
+	{
+		loc_member->Set(mStream->GetPath());
 	}
 
 	bool return_value = ReadItem(outObject);
@@ -199,8 +213,15 @@ bool ObjectReader::ReadRef(TypedPointer& ioObject)
 			if (!location.IsEmpty())
 			{
 				UnresolvedLink ul;
-				ul.mReflectionPath = mRootPath;
-				ul.mObjectLocation = location;
+				
+				ul.mReflectionPath		= mRootPath;
+				ul.mTargetLocation		= location;
+				if (ul.mTargetLocation.GetDeviceName().IsEmpty())
+				{
+					gAssert(mDefaultDevice != nullptr);
+					ul.mTargetLocation.SetDeviceName(mDefaultDevice->GetName());
+				}
+				ul.mLinkParentObject	= mRootObject;
 				mLinks.Append(ul);
 				ioObject.mPointer = (void*)0; // set nullpointer
 			}

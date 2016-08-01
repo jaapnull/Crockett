@@ -9,8 +9,16 @@ TokenReader::TokenReader() :
 
 void TokenReader::SetStream(Stream& inStream)
 {
+	Reset();
 	mStream = &inStream;
 	IncreaseNextCharPointer();
+}
+
+void TokenReader::Reset()
+{
+	mStream				= nullptr;
+	mNextCharPointer	= cBufferSize;
+	mEOFPointer			= 0;
 }
 
 void TokenReader::IncreaseNextCharPointer()

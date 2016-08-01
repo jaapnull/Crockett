@@ -76,6 +76,9 @@ public:
 
 	size64 Find(const T& inElement)						const	{ for (size64 i = 0; i < GetLength(); i++) if (mData[i] == inElement) return i; return size64(-1); }
 
+	size64 FindR(const T& inElement)					const	{ for (size64 i = GetLength(); i != 0; i--) if (mData[i-1] == inElement) return (i-1); return size64(-1); }
+
+
 	void Set(const BaseString<T>& inString)						{ Set(inString.mData, inString.mElementCount); }
 
 	size64 sGetLength(const T* inZeroTerminated)
@@ -194,6 +197,13 @@ public:
 		size_t hash[4]; // 128 bit
 		MurmurHash3_x64_128(mData, int(sizeof(T)* mElementCount), 0xDEADBEEF, &(hash[0]));
 		return hash[0];
+	}
+
+	BaseString<T> operator+(const BaseString<T>& inOther) const
+	{
+		String s = *this;
+		s.Append(inOther);
+		return s;
 	}
 
 	bool operator<(const BaseString<T>& inOther) const

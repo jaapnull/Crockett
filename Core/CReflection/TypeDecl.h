@@ -80,8 +80,8 @@ struct TypeDecl
 	bool							operator==(const TypeDecl& inOtherType) const
 	{
 		return	mCompoundInfo == inOtherType.mCompoundInfo &&
-			mNakedType == inOtherType.mNakedType &&
-			mModifiers == inOtherType.mModifiers;
+				mNakedType == inOtherType.mNakedType &&
+				mModifiers == inOtherType.mModifiers;
 	}
 
 	void							Clear()								{ mCompoundInfo = nullptr; mNakedType = etInvalid; mModifiers.Clear(); }

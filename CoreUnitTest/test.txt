@@ -14,11 +14,11 @@ TestClass:TestObject0 = {
       Zand = 2
     },
     {
-      TestClassReference = <test2.txt:ExternObject0>
+      TestClassReference = <folder@test2.txt:ExternObject0>
       Poep = 5
       Zand = 4
     }
   ]
-  Sibling = <test2.txt:ExternObject0>
+  Sibling = <folder@test2.txt:ExternObject0>
   Getallen = [1,7,4]
 }

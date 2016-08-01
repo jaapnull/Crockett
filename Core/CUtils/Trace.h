@@ -53,7 +53,7 @@ public:
 		// static so not properly thread-safe
 		static TraceStream sTraceStream;
 		ioStream.rdbuf(&sTraceStream);
-		ioStream << "Start TraceStream on channel" << std::endl;
+		ioStream << "Hooked TraceStream" << std::endl;
 	}
 
 private:

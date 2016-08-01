@@ -138,7 +138,9 @@
     <ClInclude Include="CReflection\Tokenizer.h" />
     <ClInclude Include="CReflection\TypeDecl.h" />
     <ClInclude Include="CReflection\TypedPointer.h" />
-    <ClInclude Include="CReflect\Streams.h" />
+    <ClInclude Include="CResource\ObjectCollection.h" />
+    <ClInclude Include="CStreams\Path.h" />
+    <ClInclude Include="CStreams\Streams.h" />
     <ClInclude Include="CUtils\Color.h" />
     <ClInclude Include="CUtils\EnumMask.h" />
     <ClInclude Include="CUtils\StringUtils.h" />
@@ -191,6 +193,8 @@
     <ClCompile Include="CReflection\Tokenizer.cpp" />
     <ClCompile Include="CReflection\TypeDecl.cpp" />
     <ClCompile Include="CReflection\TypedPointer.cpp" />
+    <ClCompile Include="CResource\ObjectCollection.cpp" />
+    <ClCompile Include="CStreams\Streams.cpp" />
     <ClCompile Include="CUtils\StringUtils.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CorePCH.h</PrecompiledHeaderFile>

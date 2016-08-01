@@ -11,9 +11,6 @@
     <ClInclude Include="CCore\Memory.h">
       <Filter>CCore</Filter>
     </ClInclude>
-    <ClInclude Include="CReflect\Streams.h">
-      <Filter>CCore</Filter>
-    </ClInclude>
     <ClInclude Include="CCore\String.h">
       <Filter>CCore</Filter>
     </ClInclude>
@@ -65,6 +62,15 @@
     <ClInclude Include="CReflection\ObjectReader.h">
       <Filter>CReflection</Filter>
     </ClInclude>
+    <ClInclude Include="CResource\ObjectCollection.h">
+      <Filter>CResource</Filter>
+    </ClInclude>
+    <ClInclude Include="CStreams\Path.h">
+      <Filter>CStreams</Filter>
+    </ClInclude>
+    <ClInclude Include="CStreams\Streams.h">
+      <Filter>CStreams</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
@@ -98,6 +104,12 @@
     <ClCompile Include="CReflection\ObjectReader.cpp">
       <Filter>CReflection</Filter>
     </ClCompile>
+    <ClCompile Include="CResource\ObjectCollection.cpp">
+      <Filter>CResource</Filter>
+    </ClCompile>
+    <ClCompile Include="CStreams\Streams.cpp">
+      <Filter>CStreams</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CHash">
@@ -120,6 +132,12 @@
     </Filter>
     <Filter Include="CGeo">
       <UniqueIdentifier>{fb985c6c-eef3-49e1-8874-34ef1a00dce7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CResource">
+      <UniqueIdentifier>{8996473c-f61b-418b-989f-4dcc619f20aa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CStreams">
+      <UniqueIdentifier>{4f57fa4f-c089-484d-9e97-183ff387ad2b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

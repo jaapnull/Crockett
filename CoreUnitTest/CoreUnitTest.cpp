@@ -4,6 +4,7 @@
 #include <PCHCoreUnitTest.h>
 #include <CCore/String.h>
 #include <CReflection/Reflection.h>
+#include <CResource/ObjectCollection.h>
 #include <CUtils/Trace.h>
 #include <CReflection/ObjectWriter.h>
 #include <CReflection/ObjectReader.h>
@@ -67,6 +68,9 @@ int	TestClass::sCreateCount = 0;
 
 int main()
 {
+	gDevices.RegisterDevice(new FileDevice("data", "."));
+	gDevices.RegisterDevice(new FileDevice("folder", ".\\TestFolder"));
+
 	// Makes all output show up in debug output screen
 	TraceStream<char>::sHookStream(std::cout);
 	TraceStream<wchar_t>::sHookStream(std::wcout);
@@ -76,15 +80,13 @@ int main()
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestMemberClass>();
 	ReflectionHost::sGetReflectionHost().RegisterClassType<TestClass>();
 
-
 	TestClass tc1;
 	tc1.mName		= "TestObject0";
-	tc1.mLocation	= "test.txt";
+	tc1.mLocation	= "data@test.txt";
 
 	tc1.mChildren.Append(TestMemberClass());
 	tc1.mChildren.Append(TestMemberClass());
 	tc1.mChildren.Append(TestMemberClass());
-	
 
 	tc1.mGetallen.Append(gRand() % 10);
 	tc1.mGetallen.Append(gRand() % 10);
@@ -92,37 +94,16 @@ int main()
 
 	TestClass tc2;
 	tc2.mName		= "ExternObject0";
-	tc2.mLocation	= "test2.txt";
+	tc2.mLocation	= "folder@test2.txt";
 
 	tc1.mChildren[2].mReference = &tc2;
-
 	tc1.mSibling = &tc2;
-	
-	File f;
-	f.Open("./test.txt", fomWriteDiscard);
-	ObjectWriter ow(f);
-	ow.WriteResource(tc1);
-	f.Close();
-	f.Open("./test2.txt", fomWriteDiscard);
-	ow.WriteResource(tc2);
-	f.Close();
 
+	ObjectCollection oc;
+	oc.LoadFromStream("data@test.txt");
 
-	f.Open("./test.txt", fomRead);
-
-	ObjectReader reader;
-
-	Array<TypedPointer> file_objects;
-	reader.ReadFile(f, file_objects);
-	
-	f.Close();
-
-
-	for (const UnresolvedLink& link : reader.GetLinks())
-	{
-		TypedPointer obj = gInspectObject(tc1);
-		std::cout << obj.ResolvePathToString(link.mReflectionPath) << std::endl;
-	}
+	TestClass* to = oc.FindObject<TestClass>("TestObject0");
+	TestClass* eo = oc.FindObject<TestClass>("ExternObject0");
 
 	return 0;
 }

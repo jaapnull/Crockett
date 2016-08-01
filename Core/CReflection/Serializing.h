@@ -3,7 +3,15 @@
 #include <CCore/Array.h>
 #include <CCore/String.h>
 #include <CReflection/Reflection.h>
-#include <CCore/Streams.h>
+#include <CStreams/Streams.h>
+
+
+struct UnresolvedLink
+{
+	TypedPointer				mLinkParentObject;		///< Object that contains the pointer
+	Array<ReflectPathPart>		mReflectionPath;		///< Reflection path to the link (pointer) within the parent
+	Path						mTargetLocation;		///< Location of the object that is pointed to
+};
 
 
 class Resource

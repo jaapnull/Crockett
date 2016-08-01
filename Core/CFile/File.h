@@ -1,10 +1,11 @@
 #pragma once
 
 #include <CCore/Types.h>
-#include <CCore/Streams.h>
+#include <CStreams/Streams.h>
+#include <CStreams/Path.h>
 #include <CUtils/EnumMask.h>
 
-enum EFileOpenMode	// mask
+enum EFileOpenMode			// mask
 {
 	fomRead = 1,			// open file for reading
 	fomWrite = 2,			// open file for writing
@@ -20,8 +21,11 @@ class File : public Stream
 							File() : mFileHandle(0)											{}
 							~File()															{ if (mFileHandle) Close(); }
 
-	void					Open(const Path& inPath, EnumMask<EFileOpenMode> inMode);
+	void					Open(const String& inFileName, EnumMask<EFileOpenMode> inMode);
 	void					Close();
+
+	virtual bool			IsValid() const													{ return (mFileHandle != nullptr); }
+
 	virtual size64			GetLength() const;
 	virtual const Path&		GetPath() const;
 
@@ -39,6 +43,27 @@ class File : public Stream
 };
 
 
+class FileDeviceStream : public File
+{
+public:
+	FileDeviceStream(const Path& inDevicePath) : 
+		mDevicePath(inDevicePath) {}
+	virtual const Path&		GetPath() const { return mDevicePath; }
+	Path					mDevicePath;
+};
 
 
+class FileDevice : public StreamDevice
+{
 
+public:
+	FileDevice(const String& inName, const String& inSystemRoot) : mDeviceName(inName), mSystemRoot(inSystemRoot) { }
+
+	virtual const String&		GetName() const										{ return mDeviceName; }
+	virtual Stream*				CreateStream(const Path& inPath, StreamMode inMode);
+	virtual void				CloseStream(Stream* inStream)						{ ((File*)inStream)->Close(); delete inStream; }
+
+private:
+	String	mSystemRoot;
+	String	mDeviceName;
+};

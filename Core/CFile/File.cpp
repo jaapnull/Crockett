@@ -1,7 +1,16 @@
 #include <CorePCH.h>
 #include <CFile/File.h>
 
-void File::Open(const Path& inPath, EnumMask<EFileOpenMode> inMode)
+
+String gPathToSystem(const String& inLocationNoDevice)
+{
+	String s = inLocationNoDevice;
+	gStripWhitespace(s);
+	for (char& c : s)	if (c == '\\') c = '/';
+	return s;
+}
+
+void File::Open(const String& inFileName, EnumMask<EFileOpenMode> inMode)
 {
 	assert(inMode.Contains(fomRead) || inMode.Contains(fomWrite));		// read or write at least
 	assert(!inMode.Contains(fomDiscard) || inMode.Contains(fomWrite));	// discard only makes sense if we have write access		
@@ -12,9 +21,35 @@ void File::Open(const Path& inPath, EnumMask<EFileOpenMode> inMode)
 		(inMode == (fomWrite | fomDiscard)) ? "wb" :
 		(inMode == (fomRead | fomWrite | fomDiscard)) ? "wb+" : 0;
 	assert(open_mode);
-	int err = fopen_s(&mFileHandle, inPath.GetCString(), open_mode);
+	int err = fopen_s(&mFileHandle, inFileName.GetCString(), open_mode);
 	assert(mFileHandle);
-	mPath = inPath; // this is now officially a stream with a valid path (to the file opened)
+	mPath = String("system:") + inFileName; // this is now officially a stream with a valid path (to the file opened)
+}
+
+
+Stream* FileDevice::CreateStream(const Path& inPath, StreamMode inMode)
+{
+	// stream should not have a device name (yet)
+	gAssert(inPath.GetDeviceName().IsEmpty() || inPath.GetDeviceName() == mDeviceName);
+
+	// stream should be a file location
+	gAssert(inPath.IsFileLocation());
+
+	// stream should not have an object name
+	gAssert(inPath.GetObjectName().IsEmpty());
+
+	// stream should have a location
+	gAssert(!inPath.GetLocation().IsEmpty());
+
+	// generate full stream path
+	Path stream_path = inPath;
+	stream_path.SetDeviceName(mDeviceName);
+
+	String system_path = mSystemRoot + String("\\") + gPathToSystem(inPath.GetFile());
+
+	FileDeviceStream* f = new FileDeviceStream(stream_path);
+	f->Open(system_path, inMode == smRead ? fomRead : fomWriteDiscard);
+	return f;
 }
 
 void File::Close()
@@ -65,5 +100,7 @@ size64 File::PutBytes(const void* inBytes, size64 inLength)
 {
 	return size64(fwrite(inBytes, 1, inLength, mFileHandle));
 }
+
+
 
 
