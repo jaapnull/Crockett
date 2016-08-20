@@ -52,7 +52,7 @@ public:
 	bool						ReadToken(Token& outToken);
 	bool						ExpectToken(EStreamTokenType inType, Token& outToken);
 	bool						ExpectToken(EStreamTokenType inType);
-	bool						ReadFile(Stream& inStream, Array<TypedPointer>& outObjects, Array<UnresolvedLink>& outLinks);
+	bool						ReadFile(Stream& inStream, Array<TypedCompoundPointer>& outObjects, Array<UnresolvedLink>& outLinks);
 	bool						ReadRootObject(TypedPointer& outObject);
 	bool						ReadItem(TypedPointer& outObject);
 	bool						ReadRef(TypedPointer& outObject);
@@ -65,7 +65,7 @@ private:
 	StreamDevice*				mDefaultDevice; ///< The device we assume all external links are mapped onto if no device is set in the link
 
 	Array<UnresolvedLink>		mLinks;			///< List of all unresolved links, where to find them and what to link them to
-	Array<TypedPointer>			mObjects;		///< List of all created objects (popped off mStack during course of read)
+	Array<TypedCompoundPointer>	mObjects;		///< List of all created objects (popped off mStack during course of read)
 
 	TypedPointer				mRootObject;	///< Current root object that is being read
 	Array<ReflectPathPart>		mRootPath;		///< Path within current root object (used for unresolved links)

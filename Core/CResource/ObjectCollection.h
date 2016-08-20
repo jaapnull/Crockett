@@ -11,14 +11,14 @@ public:
 	template<class T>
 	void AddObject(T* inClass)
 	{
-		TypedPointer tp = gInspectObject(*inClass);
-		mObjects.Add(tp);
+		TypedCompoundPointer tp = gInspectObject(*inClass);
+		mObjects.Append(tp);
 	}
 
 	template<class T>
 	T* FindObject(String inName)
 	{
-		for (const TypedPointer& tp : mObjects)
+		for (const TypedCompoundPointer& tp : mObjects)
 		{
 			if (tp.mType.IsNakedCompound() && TypeDecl(tp.mType.mCompoundInfo) == gInspectDeclaration<T>())
 			{
@@ -33,9 +33,12 @@ public:
 	}
 
 	void LoadFromStream(const Path& inPath);
-	void SaveToStreams(StreamDevice& ioDevice);
+	void SaveToStreams();
+
+	Array<TypedCompoundPointer>&			GetObjects()		{ return mObjects; }
+	const Array<TypedCompoundPointer>&		GetObjects() const	{ return mObjects; }
 private:
-	Array<TypedPointer>			mObjects;
+	Array<TypedCompoundPointer>				mObjects;
 };
 
 

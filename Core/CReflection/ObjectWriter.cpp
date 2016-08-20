@@ -14,7 +14,7 @@ static bool sIsInline(const TypeDecl& inDecl)
 		
 }
 
-bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer)
+bool ObjectWriter::WriteBody(const TypedPointer& inTypedPointer)
 {
 	if (inTypedPointer.mType.mModifiers.IsEmpty())
 	{
@@ -39,9 +39,9 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer)
 				mOutStream << Indent() << tm.mName << " = ";
 				if (sIsInline(tp.mType)) 
 				{
-					WriteObject(tp); mOutStream << "\n"; }
+					WriteBody(tp); mOutStream << "\n"; }
 				else
-				{ mOutStream << "\n";  WriteObject(tp); mOutStream << "\n"; }
+				{ mOutStream << "\n";  WriteBody(tp); mOutStream << "\n"; }
 			}
 			mOutStream << IndentStop() << "}";
 			return true;
@@ -110,11 +110,11 @@ bool ObjectWriter::WriteObject(const TypedPointer& inTypedPointer)
 				if (sIsInline(peeled_type))
 				{
 					if (!array_inline) mOutStream << Indent();
-					WriteObject(array_pointer.GetContainerElement(c));
+					WriteBody(array_pointer.GetContainerElement(c));
 				}
 				else
 				{
-					WriteObject(array_pointer.GetContainerElement(c));
+					WriteBody(array_pointer.GetContainerElement(c));
 				}
 				if (c != elem_count-1) 
 					mOutStream << ",";

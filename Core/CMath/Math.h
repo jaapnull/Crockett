@@ -50,9 +50,9 @@ inline int gRandRange(int inMin, int inMax)
 	return (rand()%(inMax-inMin+1)) + inMin;
 }
 
-inline int gRand()
+inline uint32 gRand()
 {
-	return rand();
+	return (uint32) rand();
 }
 
 

@@ -19,6 +19,7 @@ struct Document
 
 
 
+
 class MyWindow : public Window, IPaintHandler
 {
 
@@ -30,7 +31,8 @@ public:
 
 	void OnUpdate(DIB& inDib, const iquad& inRegion)
 	{
-		inDib.SetAll(DIBColor::sCreateDefaultPaletteColor(dpcLightCyan));
+		DIBColor c = DIBColor::sCreateDefaultPaletteColor(EDefaultPaletteColor(gRandRange(0, 15)));
+		inDib.SetAll(c);
 		ColorPen<DIBColor> pen(inDib);
 	}
 
@@ -49,6 +51,7 @@ int main()
 
 	mainwindow.Create(L"ComeDither", 640, 480);
 	mainwindow.Show(true);
+
 
 	while (gDoMessageLoop(true)) {}
 

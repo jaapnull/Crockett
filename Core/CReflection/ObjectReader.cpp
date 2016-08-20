@@ -28,7 +28,7 @@ bool ObjectReader::ExpectToken(EStreamTokenType inType)
 	return ret;
 }
 
-bool ObjectReader::ReadFile(Stream& inStream, Array<TypedPointer>& outObjects, Array<UnresolvedLink>& outLinks)
+bool ObjectReader::ReadFile(Stream& inStream, Array<TypedCompoundPointer>& outObjects, Array<UnresolvedLink>& outLinks)
 {
 	//// A) File					FH <Object>*
 	mStream = &inStream;
@@ -215,7 +215,8 @@ bool ObjectReader::ReadRef(TypedPointer& ioObject)
 				UnresolvedLink ul;
 				
 				ul.mReflectionPath		= mRootPath;
-				ul.mTargetLocation		= location;
+				ul.mTargetLocation		= Path(location).GetLocation();
+				ul.mTargetName			= Path(location).GetObjectName();
 				if (ul.mTargetLocation.GetDeviceName().IsEmpty())
 				{
 					gAssert(mDefaultDevice != nullptr);

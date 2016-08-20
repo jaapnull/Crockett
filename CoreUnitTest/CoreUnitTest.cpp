@@ -12,58 +12,57 @@
 #include <CFile/File.h>
 #include <CMath/Math.h>
 
-class TestClass;
+class Node;
+class BranchNode;
 
-class TestMemberClass
+class Node : public Resource
 {
 public:
-	TestMemberClass() : mZand(sCreateCount), mPoep(sCreateCount + 1)
-	{
-		sCreateCount += 2;
-	}
-
-	void Inspect(ObjectInspector& inInspector)
-	{
-		inInspector.Inspect(mReference, "TestClassReference");
-		inInspector.Inspect(mPoep, "Poep");
-		inInspector.Inspect(mZand, "Zand");
-	}
-
-	TestClass*			mReference	= nullptr;
-	int					mPoep		= 0;
-	int					mZand		= 0;
-	static int			sCreateCount;
-};
-
-class TestClass : public Resource
-{
-public:
-
-	TestClass() : mHallo(sCreateCount), mDag(sCreateCount+1)
-	{
-		sCreateCount+=2;
-	}
+	Node() {}
+	Node(const String& inText) : mText(inText) {}
 
 	void Inspect(ObjectInspector& inInspector)
 	{
 		Resource::Inspect(inInspector);
-		inInspector.Inspect(mHallo,		"Hallo");
-		inInspector.Inspect(mDag ,		"Dag");
-		inInspector.Inspect(mChildren,	"Children");
-		inInspector.Inspect(mSibling,	"Sibling");
-		inInspector.Inspect(mGetallen,	"Getallen");
+		inInspector.Inspect(mText, "Text");
 	}
 
-	TestClass*					mSibling;
-	Array<TestMemberClass>		mChildren;
-	int							mHallo;
-	int							mDag;
-	Array<int>					mGetallen;
-	static int					sCreateCount;
+	virtual void Print(uint inIndent)
+	{
+		std::cout << String(inIndent, ' ') << mText << std::endl;
+	}
+
+	String mText;
 };
 
-int	TestMemberClass::sCreateCount = 0;
-int	TestClass::sCreateCount = 0;
+class BranchNode : public Node
+{
+public:
+	BranchNode(const String& inText) : Node(inText) {}
+	BranchNode() {}
+	void Inspect(ObjectInspector& inInspector)
+	{
+		Node::Inspect(inInspector);
+		inInspector.Inspect(mChildA, "ChildA");
+		inInspector.Inspect(mChildB, "ChildB");
+	}
+
+	virtual void Print(uint inIndent)
+	{
+		String s(inIndent, ' ');
+		std::cout << s << mText << std::endl;
+		std::cout << s << '{' << std::endl;
+		if (mChildA != nullptr) mChildA->Print(inIndent + 1);
+		if (mChildB != nullptr) mChildB->Print(inIndent + 1);
+		std::cout << s << '}' << std::endl;
+
+	}
+
+
+	Node* mChildA;
+	Node* mChildB;
+};
+
 
 
 int main()
@@ -77,33 +76,59 @@ int main()
 
 	// Register classes for reflection
 	ReflectionHost::sGetReflectionHost().RegisterClassType<Resource>();
-	ReflectionHost::sGetReflectionHost().RegisterClassType<TestMemberClass>();
-	ReflectionHost::sGetReflectionHost().RegisterClassType<TestClass>();
+	ReflectionHost::sGetReflectionHost().RegisterClassType<Node>();
+	ReflectionHost::sGetReflectionHost().RegisterClassType<BranchNode>();
 
-	TestClass tc1;
-	tc1.mName		= "TestObject0";
-	tc1.mLocation	= "data@test.txt";
 
-	tc1.mChildren.Append(TestMemberClass());
-	tc1.mChildren.Append(TestMemberClass());
-	tc1.mChildren.Append(TestMemberClass());
+	Array<Node*> nodes;
+	int idx = 0;
+	for (int x = 0; x < 10; x++)
+	{
+		Node* node = new Node(String("leaf_text") + gToString(x));
+		node->mLocation = String("data@outputfile") + gToString(gRand() % 4) + String(".txt");
+		node->mName = String("L") + gToString(idx++);
+		nodes.Append(node);
+	}
 
-	tc1.mGetallen.Append(gRand() % 10);
-	tc1.mGetallen.Append(gRand() % 10);
-	tc1.mGetallen.Append(gRand() % 10);
+	idx = 0;
+	for (int x = 0; x < 20; x++)
+	{
+		BranchNode* branch = new BranchNode(String("branch_text") + gToString(x));
+		branch->mLocation = String("data@outputfile") + gToString(gRand() % 4) + String(".txt");
+		branch->mName = String("B") + gToString(idx++);
 
-	TestClass tc2;
-	tc2.mName		= "ExternObject0";
-	tc2.mLocation	= "folder@test2.txt";
+		branch->mChildA = (Node*) nodes[gRand()%nodes.GetLength()];
+		branch->mChildB = (Node*) nodes[gRand()%nodes.GetLength()];
+		nodes.Append(branch);
+	}
 
-	tc1.mChildren[2].mReference = &tc2;
-	tc1.mSibling = &tc2;
 
-	ObjectCollection oc;
-	oc.LoadFromStream("data@test.txt");
+	ObjectCollection oc_write;
+	for (Node* n : nodes)
+	{
+		oc_write.AddObject(n);
+	}
+	oc_write.SaveToStreams();
 
-	TestClass* to = oc.FindObject<TestClass>("TestObject0");
-	TestClass* eo = oc.FindObject<TestClass>("ExternObject0");
+
+	ObjectCollection oc_read;
+	oc_read.LoadFromStream("data@outputfile0.txt");
+
+	std::cout << "WRITE TO DISK" << std::endl;
+	for (TypedCompoundPointer tc : oc_write.GetObjects())
+	{
+		((Node*)tc.mPointer)->Print(0);
+	}
+
+	std::cout << "READ FROM DISK" << std::endl;
+	for (TypedCompoundPointer tc : oc_read.GetObjects())
+	{
+		((Node*)tc.mPointer)->Print(0);
+	}
+
+	//
+	//TestClass* to = oc_read.FindObject<TestClass>("TestObject0");
+	//TestClass* eo = oc_read.FindObject<TestClass>("ExternObject0");
 
 	return 0;
 }

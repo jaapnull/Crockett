@@ -14,17 +14,21 @@ public:
 	String				IndentStart()										{ mIndent++; return String((mIndent - 1) * 2, ' '); }
 	String				IndentStop()										{ mIndent--; return String((mIndent) * 2, ' '); }
 	String				Indent()											{ return String((mIndent)* 2, ' '); }
-	bool				WriteObject(const TypedPointer& inTypedPointer);
+	bool				WriteBody(const TypedPointer& inTypedPointer);
+
+	bool				WriteTypedCompoundPointer(const TypedCompoundPointer& inTypedPointer)
+	{
+		const String* name = inTypedPointer.GetCompoundMember<String>("!name");
+		gAssert(name != nullptr);
+		mOutStream << Indent() << inTypedPointer.mType.ToString() << ":" << *name << " = ";
+		return WriteBody(inTypedPointer);
+	}
 
 	template <class T>
 	bool				WriteResource(T& inResource)
 	{
-		TypedPointer tp = gInspectObject(inResource);
-		String* name = gGetDebugField<String>(inResource, "!name");
-		gAssert(name != nullptr);
-		mOutStream << Indent() << tp.mType.ToString() << ":" << *name << " = ";
-		return WriteObject(tp);
-		return false;
+		TypedCompoundPointer tp(gInspectObject(inResource));
+		return WriteTypedCompoundPointer(tp);
 	}
 
 	protected:

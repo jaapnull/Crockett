@@ -43,6 +43,7 @@ class TypedCompoundPointer : public TypedPointer
 {
 public:
 
+	TypedCompoundPointer() {}
 	TypedCompoundPointer(const TypeDecl& inType, void* inPointer) : TypedPointer(inType, inPointer) { }
 	TypedCompoundPointer(const TypedPointer& tp) : TypedPointer(tp)									{ gAssert(mType.IsNakedCompound()); }
 
@@ -70,12 +71,31 @@ public:
 		}
 		return nullptr;
 	}
+
+	template<class T>
+	const T* GetCompoundMember(const String& inMemberName) const
+	{
+		for (const ClassMember& m : mType.mCompoundInfo->mMembers)
+		{
+			if (m.mName == inMemberName)
+			{
+				TypedPointer tp(m.mType, gOffsetPointer<void>(mPointer, m.mOffset));
+				TypeDecl dcl = gInspectDeclaration<T>();
+				gAssert(dcl == tp.mType);
+				return (T*)tp.mPointer;
+			}
+		}
+		return nullptr;
+	}
+
 };
 
 
 class TypedArrayPointer : public TypedPointer
 {
 public:
+
+	TypedArrayPointer() {}
 	TypedArrayPointer(const TypedPointer& tp) : TypedPointer(tp)
 	{
 		gAssert(mType.GetOuterDecoration() == ctArrayOf);
@@ -89,6 +109,7 @@ public:
 class TypedPointerPointer : public TypedPointer
 {
 public:
+	TypedPointerPointer() {}
 	TypedPointerPointer(const TypedPointer& tp) : TypedPointer(tp)
 	{
 		gAssert(mType.GetOuterDecoration() == ctPointerTo);
@@ -100,9 +121,16 @@ template <typename T>
 TypedPointer gInspectObject(T& inObject)
 {
 	TypeDecl td = gLookupTypeForObject<T>(inObject);
-	void* ptr = &inObject;
+	void* ptr = (void*)(&inObject);
 	return TypedPointer(td, ptr);
 }
 
+template <typename T>
+TypedPointer gInspectObject(const T& inObject)
+{
+	TypeDecl td = gLookupTypeForObject<const T>(inObject);
+	void* ptr = (void*) const_cast<T*>(&inObject);
+	return TypedPointer(td, ptr);
+}
 
 

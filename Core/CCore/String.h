@@ -9,10 +9,10 @@ class BaseString : protected LinearAllocator<T>
 public:
 
 	BaseString() : mData(0), mElementCount(0), mReservedCount(0){}
-	BaseString(const Array<T>& inOther)							{ size64 l = inOther.GetLength();					mData = LinearAllocator<T>::sAllocAndCopyConstruct(l + 1, inOther.GetData(), l);	new (mData + l) T(0); mReservedCount = l + 1; mElementCount = l; }
-	BaseString(const T* inArray, size64 inLength)				{ size64 l = inLength;								mData = LinearAllocator<T>::sAllocAndCopyConstruct(l + 1, inArray, l);			new (mData + l) T(0); mReservedCount = l + 1; mElementCount = l; }
-	BaseString(const BaseString<T>& inOther)					{ size64 l = inOther.GetLength();					mData = LinearAllocator<T>::sAllocAndCopyConstruct(l + 1, inOther.GetData(), l);	new (mData + l) T(0); mReservedCount = l + 1; mElementCount = l; }
-	BaseString(size64 inFillLength, const T& inFill)			{ size64 l = inFillLength;							mData = LinearAllocator<T>::sRawAlloc(l + 1); for (size64 c = 0; c < l; c++) { new (mData + c) T(inFill); } new (mData + l) T(0); mReservedCount = l + 1; mElementCount = l; }
+	BaseString(const Array<T>& inOther)							{ size64 l = inOther.GetLength();							mData = LinearAllocator<T>::sAllocAndCopyConstruct(l + 1, inOther.GetData(), l);	new (mData + l) T(0); mReservedCount = l + 1; mElementCount = l; }
+	BaseString(const T* inArray, size64 inLength)				{ size64 l = inLength;										mData = LinearAllocator<T>::sAllocAndCopyConstruct(l + 1, inArray, l);			new (mData + l) T(0); mReservedCount = l + 1; mElementCount = l; }
+	BaseString(const BaseString<T>& inOther)					{ size64 l = inOther.GetLength();							mData = LinearAllocator<T>::sAllocAndCopyConstruct(l + 1, inOther.GetData(), l);	new (mData + l) T(0); mReservedCount = l + 1; mElementCount = l; }
+	BaseString(size64 inFillLength, const T& inFill)			{ size64 l = inFillLength;	mData = nullptr; mReservedCount = 0; mElementCount = 0; if (l == 0) return;		mData = LinearAllocator<T>::sRawAlloc(l + 1); for (size64 c = 0; c < l; c++) { new (mData + c) T(inFill); } new (mData + l) T(0); mReservedCount = l + 1; mElementCount = l; }
 	BaseString(const T* inCString)								
 	{ 
 		size64 l = 0; T zero(0); 
