@@ -43,18 +43,15 @@ class TypedCompoundPointer : public TypedPointer
 {
 public:
 
-	TypedCompoundPointer() {}
-	TypedCompoundPointer(const TypeDecl& inType, void* inPointer) : TypedPointer(inType, inPointer) { }
-	TypedCompoundPointer(const TypedPointer& tp) : TypedPointer(tp)									{ gAssert(mType.IsNakedCompound()); }
+									TypedCompoundPointer() {}
+									TypedCompoundPointer(const TypeDecl& inType, void* inPointer) : TypedPointer(inType, inPointer) { }
+									TypedCompoundPointer(const TypedPointer& tp) : TypedPointer(tp)									{ gAssert(mType.IsNakedCompound()); }
 
-	TypedPointer	GetCompoundMemberByIndex(uint32 inIndex)  const
-	{
-		const ClassMember& member = mType.mCompoundInfo->mMembers[inIndex]; 
-		return TypedPointer(member.mType, gOffsetPointer<void>(mPointer, member.mOffset));
-	}
 
-	uint32			GetCompoundMemberIndex(const String& inMemberName) const;
-	TypedPointer	GetCompoundMember(const String& inMemberName) const;
+	TypedPointer					DynamicCast() const;
+	TypedPointer					GetCompoundMemberByIndex(uint32 inIndex) const;
+	uint32							GetCompoundMemberIndex(const String& inMemberName) const;
+	TypedPointer					GetCompoundMember(const String& inMemberName) const;
 
 	template<class T>
 	T* GetCompoundMember(const String& inMemberName)

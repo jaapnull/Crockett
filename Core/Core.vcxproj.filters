@@ -71,6 +71,12 @@
     <ClInclude Include="CStreams\Streams.h">
       <Filter>CStreams</Filter>
     </ClInclude>
+    <ClInclude Include="CCore\Frame.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
+    <ClInclude Include="CCore\RefCount.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />

@@ -150,6 +150,21 @@ uint32 TypedCompoundPointer::GetCompoundMemberIndex(const String& inMemberName) 
 }
 
 
+TypedPointer TypedCompoundPointer::DynamicCast() const
+{
+	const type_info& info = mType.mCompoundInfo->mInfoFunction(mPointer);
+	const CompoundReflectionInfo* refl_info = ReflectionHost::sGetReflectionHost().FindClassInfo(ClassName(info));
+	return TypedCompoundPointer(TypeDecl(refl_info), mPointer);
+}
+
+
+TypedPointer TypedCompoundPointer::GetCompoundMemberByIndex(uint32 inIndex) const
+{
+	const ClassMember& member = mType.mCompoundInfo->mMembers[inIndex]; 
+	return TypedPointer(member.mType, gOffsetPointer<void>(mPointer, member.mOffset));
+}
+
+
 TypedPointer TypedPointer::GetObjectAtPath(const Array<ReflectPathPart>& inPath)
 {
 	TypedPointer current = *this;

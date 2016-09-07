@@ -78,6 +78,10 @@ bool ObjectWriter::WriteBody(const TypedPointer& inTypedPointer)
 			}
 			else
 			{
+				if (deref.mType.IsNakedCompound())
+				{
+					deref = TypedCompoundPointer(deref).DynamicCast();
+				}
 				TypedPointer name_field = deref.GetObjectAtStringPath("!name");
 				gAssert(name_field.IsValid() && name_field.mType.IsCharString());
 				TypedPointer location_field = deref.GetObjectAtStringPath("!location");

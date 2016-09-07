@@ -158,6 +158,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">PCHWind.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">PCHWind.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="WWin32\Font.cpp" />
     <ClCompile Include="WWin32\Keyboard.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">PCHWind.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">PCHWind.h</PrecompiledHeaderFile>
@@ -182,6 +183,7 @@
     <ClInclude Include="WCommon\Canvas.h" />
     <ClInclude Include="WCommon\ColorPen.h" />
     <ClInclude Include="WCommon\DIB.h" />
+    <ClInclude Include="WCommon\Font.h" />
     <ClInclude Include="WCommon\Keyboard.h" />
     <ClInclude Include="WCommon\Message.h" />
     <ClInclude Include="WCommon\Mouse.h" />

@@ -7,7 +7,7 @@
 class IPaintHandler
 {
 public:
-	virtual void OnUpdate(DIB& inDib, const iquad& inRegion) { }
+	virtual void OnUpdate(DIB& inDib, const IRect& inRegion) { }
 };
 
 class Canvas : public IMessageHandler<Window>

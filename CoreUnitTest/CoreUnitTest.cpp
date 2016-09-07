@@ -1,8 +1,9 @@
 // CoreUnitTest.cpp : Defines the entry point for the console application.
 //
 
-#include <PCHCoreUnitTest.h>
+#include <CoreUnitTestPCH.h>
 #include <CCore/String.h>
+#include <CCore/RefCount.h>
 #include <CReflection/Reflection.h>
 #include <CResource/ObjectCollection.h>
 #include <CUtils/Trace.h>
@@ -15,16 +16,31 @@
 class Node;
 class BranchNode;
 
-class Node : public Resource
+
+class Node
 {
 public:
-	Node() {}
-	Node(const String& inText) : mText(inText) {}
+	virtual void	Print(uint inIndent) {} 
+	String			mName;
+	String			mLocation;
 
 	void Inspect(ObjectInspector& inInspector)
 	{
-		Resource::Inspect(inInspector);
-		inInspector.Inspect(mText, "Text");
+		inInspector.Inspect(mName, "!name");
+		inInspector.Inspect(mLocation, "!location");
+	}
+};
+
+class LeafNode : public Node
+{
+public:
+	LeafNode() {}
+	LeafNode(const String& inText) : mText(inText) {}
+
+	void Inspect(ObjectInspector& inInspector)
+	{
+		Node::Inspect(inInspector);
+		inInspector.Inspect(mText, "LeafText");
 	}
 
 	virtual void Print(uint inIndent)
@@ -38,11 +54,12 @@ public:
 class BranchNode : public Node
 {
 public:
-	BranchNode(const String& inText) : Node(inText) {}
+	BranchNode(const String& inText) : mText(inText) {}
 	BranchNode() {}
 	void Inspect(ObjectInspector& inInspector)
 	{
 		Node::Inspect(inInspector);
+		inInspector.Inspect(mText,   "BranchText");
 		inInspector.Inspect(mChildA, "ChildA");
 		inInspector.Inspect(mChildB, "ChildB");
 	}
@@ -55,15 +72,20 @@ public:
 		if (mChildA != nullptr) mChildA->Print(inIndent + 1);
 		if (mChildB != nullptr) mChildB->Print(inIndent + 1);
 		std::cout << s << '}' << std::endl;
-
 	}
 
-
+	String mText;
 	Node* mChildA;
 	Node* mChildB;
 };
 
+class Poop : public RefObject<Poop>
+{
+public:
+	Poop() { std::cout << "CREATED POOP" << std::endl; }
 
+	~Poop() { std::cout << "DELETED POOP" << std::endl; }
+};
 
 int main()
 {
@@ -75,8 +97,8 @@ int main()
 	TraceStream<wchar_t>::sHookStream(std::wcout);
 
 	// Register classes for reflection
-	ReflectionHost::sGetReflectionHost().RegisterClassType<Resource>();
 	ReflectionHost::sGetReflectionHost().RegisterClassType<Node>();
+	ReflectionHost::sGetReflectionHost().RegisterClassType<LeafNode>();
 	ReflectionHost::sGetReflectionHost().RegisterClassType<BranchNode>();
 
 
@@ -84,7 +106,7 @@ int main()
 	int idx = 0;
 	for (int x = 0; x < 10; x++)
 	{
-		Node* node = new Node(String("leaf_text") + gToString(x));
+		Node* node = new LeafNode(String("leaf_text") + gToString(x));
 		node->mLocation = String("data@outputfile") + gToString(gRand() % 4) + String(".txt");
 		node->mName = String("L") + gToString(idx++);
 		nodes.Append(node);
@@ -130,6 +152,14 @@ int main()
 	//TestClass* to = oc_read.FindObject<TestClass>("TestObject0");
 	//TestClass* eo = oc_read.FindObject<TestClass>("ExternObject0");
 
+	RefPtr<Poop> poop1 = new Poop();
+	std::cout << "1" << std::endl;
+	RefPtr<Poop> poop2 = poop1;
+	std::cout << "2" << std::endl;
+	poop1 = nullptr;
+	std::cout << "3" << std::endl;
+	poop2 = nullptr;
+	std::cout << "4" << std::endl;
 	return 0;
 }
 

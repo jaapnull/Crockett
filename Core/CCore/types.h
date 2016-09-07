@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <math.h>
+#include <float.h>
+
 
 // using abbreviated unsigned names to keep word count down and code clean
 typedef unsigned int		uint;
@@ -32,3 +34,14 @@ typedef uintptr_t			offset64;	// Offset within array; maximum offset between poi
 
 const size64				cMaxSize64 = size64(-1);
 const uint					cMaxUint = uint(-1);
+
+
+template<typename T> T gMaxValue();
+template<typename T> T gMinValue();
+
+template <>			inline float gMaxValue<float>()	{ return FLT_MAX; }
+template <>			inline float gMinValue<float>()	{ return -FLT_MAX; }
+template <>			inline int gMaxValue<int>()		{ return INT_MAX; }
+template <>			inline int gMinValue<int>()		{ return INT_MIN; }
+
+

@@ -12,10 +12,11 @@
 template <typename T>
 struct ReflectHelper
 {
-	static void*					sConstructInstance(void* inPlacement) { void* new_object = (inPlacement == 0) ? new T() : new (inPlacement)T(); return new_object; }
-	static void						sAssignInstance(void* inDest, const void* inSource) { *((T*)inDest) = *((T*)inSource); }
-	static void						sCopyInstance(void* inDest, const void* inSource) { *((T*)inDest) = *((T*)inSource); }
-	static void						sDestructInstance(void* inPlacement, bool inKeepMemory) { if (inKeepMemory) ((T*)inPlacement)->~T(); else delete inPlacement; }
+	static const type_info&			sGetDynamicInfo(void* inObject)								{ return typeid(*((T*) inObject)); }
+	static void*					sConstructInstance(void* inPlacement)						{ void* new_object = (inPlacement == 0) ? new T() : new (inPlacement)T(); return new_object; }
+	static void						sAssignInstance(void* inDest, const void* inSource)			{ *((T*)inDest) = *((T*)inSource); }
+	static void						sCopyInstance(void* inDest, const void* inSource)			{ *((T*)inDest) = *((T*)inSource); }
+	static void						sDestructInstance(void* inPlacement, bool inKeepMemory)		{ if (inKeepMemory) ((T*)inPlacement)->~T(); else delete inPlacement; }
 };
 
 
@@ -31,10 +32,11 @@ public:
 		mTargetDescription.mName = sGetTypeName<T>();
 		mTargetDescription.mSize = sizeof(T);
 		mTargetDescription.mAlign= __alignof(T);
-		mTargetDescription.mInstanceFunction = &(ReflectHelper<T>::sConstructInstance);
-		mTargetDescription.mCopyFunction = &(ReflectHelper<T>::sCopyInstance);
-		mTargetDescription.mDestructorFunction = &(ReflectHelper<T>::sDestructInstance);
-		mTargetDescription.mAssignFunction= &(ReflectHelper<T>::sAssignInstance);
+		mTargetDescription.mInfoFunction			= &(ReflectHelper<T>::sGetDynamicInfo);
+		mTargetDescription.mInstanceFunction		= &(ReflectHelper<T>::sConstructInstance);
+		mTargetDescription.mCopyFunction			= &(ReflectHelper<T>::sCopyInstance);
+		mTargetDescription.mDestructorFunction		= &(ReflectHelper<T>::sDestructInstance);
+		mTargetDescription.mAssignFunction			= &(ReflectHelper<T>::sAssignInstance);
 		((T*)0)->T::Inspect(*this);
 	}
 

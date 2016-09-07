@@ -16,6 +16,8 @@ class Array
 public:
 	// void constructor
 	Array() : mData(nullptr), mEndValid(nullptr), mEndReserved(nullptr) { }
+	// move operator
+	Array(Array<T>&& inOther)								{ mData = inOther.mData; mEndValid = inOther.mEndValid; mEndReserved = inOther.mEndReserved; inOther.mData = nullptr; inOther.mEndReserved = nullptr; inOther.mEndValid = nullptr; }
 	// copy constructor from another array
 	Array(const Array<T>& inOther)							{ size64 l = inOther.GetLength();	mData = LinearAllocator<T>::sAllocAndCopyConstruct(l, inOther.GetData(), l); mEndValid = mData+l; mEndReserved=mData+l; }
 	// copy constructor from a raw data/elementcount

@@ -36,7 +36,7 @@ _Atom sGetRegisteredClass()
 {
 	WNDCLASSEX wcx;
 	wcx.cbSize = sizeof(WNDCLASSEX);
-	wcx.style = CS_HREDRAW | CS_VREDRAW;
+	wcx.style = 0;// CS_HREDRAW | CS_VREDRAW;
 	wcx.lpfnWndProc = gDispatchMessage;
 	wcx.cbClsExtra = 0;
 	wcx.cbWndExtra = 0;
@@ -84,11 +84,29 @@ void Window::Invalidate()
 	HWND hwnd = gHandleToHWND(mHandle);
 	InvalidateRect(hwnd, 0, false);
 }
-void Window::Invalidate(const iquad& inQuad)
+void Window::Invalidate(const IRect& inQuad)
 {
 	HWND hwnd = gHandleToHWND(mHandle);
 	RECT r = { inQuad.mLeft, inQuad.mTop, inQuad.mTop, inQuad.mBottom };
 	InvalidateRect(hwnd, &r, false);
+}
+
+
+MessageReturnCode Window::HandleMessage(Window* inParent, uint inMessage, MessageParam inParamA, MessageParam inParamB)
+{
+	MessageReturnCode rc = MessageSource<Window>::HandleMessage(inParent, inMessage, inParamA, inParamB);
+
+	// internal messages
+	if (inMessage == WM_SIZE)
+	{
+		if (uint((size64) inParamA) != SIZE_MINIMIZED)
+		{
+			uint new_width = LOWORD(inParamB);
+			uint new_height = HIWORD(inParamB);
+			OnSize(ivec2(new_width, new_height));
+		}
+	}
+	return rc;
 }
 
 uint	Window::GetWidth() const					{ RECT r; GetClientRect(gHandleToHWND(mHandle), &r); return r.right - r.left; }

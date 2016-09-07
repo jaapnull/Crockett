@@ -109,6 +109,7 @@ struct ClassMember
 struct CompoundReflectionInfo
 {
 public:
+	typedef const type_info&		(ReflectInfoFunction)(void*);					// InstanceFunction is used to create a "clean" instance for serialization
 	typedef void*					(ReflectInstanceFunction)(void*);				// InstanceFunction is used to create a "clean" instance for serialization
 	typedef void					(ReflectCopyFunction)(void*, const void*);		// CopyFunction is used to copy one object onto the other
 	typedef void					(ReflectAssignFunction)(void*, const void*);	// CopyFunction is used to copy one object onto the other
@@ -119,6 +120,7 @@ public:
 	ClassName						mName;
 	uint							mSize						= 0;
 	uint							mAlign						= 0;
+	ReflectInfoFunction*			mInfoFunction				= nullptr;
 	ReflectInstanceFunction*		mInstanceFunction			= nullptr;
 	ReflectAssignFunction*			mAssignFunction				= nullptr;
 	ReflectCopyFunction*			mCopyFunction				= nullptr;

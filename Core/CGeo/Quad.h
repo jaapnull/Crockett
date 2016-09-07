@@ -2,7 +2,7 @@
 #include <CMath/Vector.h>
 
 template <class T>
-class Quad
+class Rect
 {
 public:
 	T mLeft;
@@ -12,11 +12,11 @@ public:
 	T GetWidth() const {return mRight - mLeft;}
 	T GetHeight() const {return mBottom - mTop;}
 
-	Quad() {}
-	Quad(const T& inLeft, const T& inTop, const T& inRight, const T& inBottom) : mLeft(inLeft), mTop(inTop), mRight(inRight), mBottom(inBottom) {}
-	Quad(const T& inWidth, const T& inHeight) : mLeft(0), mTop(0), mRight(inWidth), mBottom(inHeight) {}
+	Rect() {}
+	Rect(const T& inLeft, const T& inTop, const T& inRight, const T& inBottom) : mLeft(inLeft), mTop(inTop), mRight(inRight), mBottom(inBottom) {}
+	Rect(const T& inWidth, const T& inHeight) : mLeft(0), mTop(0), mRight(inWidth), mBottom(inHeight) {}
 
-	Quad<T> Scale(const T& inScale)
+	Rect<T> Scale(const T& inScale)
 	{
 		mLeft *= inScale;
 		mTop *= inScale;
@@ -25,7 +25,7 @@ public:
 		return *this;
 	}
 	
-	Quad<T> Scale(const T& inScaleV, const T& inScaleH)
+	Rect<T> Scale(const T& inScaleV, const T& inScaleH)
 	{
 		mLeft *= inScaleH;
 		mRight *= inScaleH;
@@ -34,14 +34,14 @@ public:
 		return *this;
 	}
 
-	Quad<T> GetTranslated(const Vector<T, 2>& inOffset) const
+	Rect<T> GetTranslated(const Vector<T, 2>& inOffset) const
 	{
-		Quad<T> t = *this;
+		Rect<T> t = *this;
 		t.Translate(inOffset.x, inOffset.y);
 		return t;
 	}
 
-	Quad<T> Translate(const T& inOffsetV, const T& inOffsetH)
+	Rect<T> Translate(const T& inOffsetV, const T& inOffsetH)
 	{
 		mLeft += inOffsetV;
 		mTop += inOffsetH;
@@ -50,9 +50,9 @@ public:
 		return *this;
 	}
 
-	bool IsValid() const
+	bool HasArea() const
 	{
-		return GetWidth() > 0 && GetHeight() > 0;
+		return mLeft < mRight && mTop < mBottom;
 	}
 
 	T GetSurfaceArea() const
@@ -60,18 +60,27 @@ public:
 		return GetWidth() * GetHeight();
 	}
 
-	bool IsZero() const
+	bool HasZeroSurface() const
 	{
-		return mLeft == 0 && mTop == 0 && mRight == 0 && mBottom == 0;
+		return mLeft == mRight && mTop == mBottom;
 	}
 
-	void SetInvalid()
+	Rect<T> Moved(const Vector<T, 2> inMovement) const
 	{
-		mLeft = FLT_MAX;
-		mRight = -FLT_MAX;
-		mTop = FLT_MAX;
-		mBottom = -FLT_MAX;
+		Rect<T> r = *this;
+		r.mLeft		+= inMovement.x;
+		r.mRight	+= inMovement.x;
+		r.mTop		+= inMovement.y;
+		r.mBottom	+= inMovement.y;
+		return r;
+	}
 
+	void SetEmpty()
+	{
+		mLeft = gMaxValue<T>();
+		mTop = gMaxValue<T>();
+		mBottom = gMinValue<T>();
+		mRight = gMinValue<T>();
 	}
 
 	void SetZero()
@@ -79,38 +88,54 @@ public:
 		mLeft = 0; mTop = 0; mRight = 0; mBottom = 0;
 	}
 
-	Quad<T> GetIntersect(const Quad<T>& other) const
+	Rect<T> GetIntersect(const Rect<T>& other) const
 	{
-		Quad<T> temp = *this;
+		Rect<T> temp = *this;
 		temp.Intersect(other);
 		return temp;
 	}
 
-	void Intersect(const Quad<T>& other)
+	void Intersect(const Rect<T>& other)
 	{
 		mLeft = std::max<T>(mLeft, other.mLeft);
 		mRight = std::min<T>(mRight, other.mRight);
 		mTop = std::max<T>(mTop, other.mTop);
-		mBottom = std::min<T>(mBottom, other.mBottom);		
+		mBottom = std::min<T>(mBottom, other.mBottom);
 	}
 
-	Quad<T> Bound(const Quad<T>& other)
+	Rect<T> Bound(const Rect<T>& other)
 	{
 		// todo implement
 		assert(false);
 	}
 
-	Quad<T> GetBound(const Quad<T>& other) const
+	Rect<T> GetBound(const Rect<T>& other) const
 	{
-		Quad<T> temp = *this;
+		Rect<T> temp = *this;
 		temp.Bound(other);
 		return temp;
 	}
 	
-	Vector<T, 2> GetOffset() const
+	Vector<T, 2> GetMin() const
 	{
 		return Vector<T, 2>(mLeft, mTop);
 	}
+
+	Rect<T> Widened(T inOffset)
+	{
+		Rect<T> t = *this;
+		t.mLeft		-= inOffset;
+		t.mRight	+= inOffset;
+		t.mTop		-= inOffset;
+		t.mBottom	+= inOffset;
+		return t;
+	}
+
+	Vector<T, 2> GetMax() const
+	{
+		return Vector<T, 2>(mRight, mBottom);
+	}
+
 
 	Vector<T, 2> GetCenter() const
 	{
@@ -123,7 +148,7 @@ public:
 		return Vector<T, 2>(mRight-mLeft, mBottom-mTop);
 	}
 
-	void Set(const Quad<T>& other)
+	void Set(const Rect<T>& other)
 	{
 		mLeft = other.mLeft;
 		mTop = other.mTop;
@@ -131,7 +156,7 @@ public:
 		mRight = other.mRight;
 	}
 
-	Quad<T> Enclose(const Vector<T, 2>& other)
+	Rect<T> Enclose(const Vector<T, 2>& other)
 	{
 		mLeft = std::min<T>(mLeft, other.x);
 		mRight = std::max<T>(mRight, other.x);
@@ -140,17 +165,25 @@ public:
 		return *this;
 	}
 
-	bool Contains(const Vector<T, 2>& other)
+	bool ContainsPoint(const Vector<T, 2>& other) const
 	{
 		return other.x >= mLeft && other.y >= mTop && other.x < mRight && other.y < mBottom;
 	}
 
-	bool Contains(const Quad<T>& other)
+	bool OverlapsWith(const Rect<T>& other) const
 	{
+		bool horz = other.mLeft < mRight && mLeft < other.mRight;
+		bool vert = other.mTop < mBottom && mTop < other.mBottom;
+		return horz && vert;
+	}
+
+	bool FullyContains(const Rect<T>& other) const
+	{
+		if (!HasArea() || !other.HasArea()) return false;
 		return other.mLeft >= mLeft && other.mTop >= mTop && other.mRight <= mRight && other.mBottom <= mBottom;
 	}
 
-	Quad<T> Enclose(const Quad<T>& other)
+	Rect<T> Enclose(const Rect<T>& other)
 	{
 		if (GetSurfaceArea() == 0)
 		{
@@ -166,7 +199,7 @@ public:
 		return *this;
 	}
 	
-	Quad<T> Expand(T inValue)
+	Rect<T> Expand(T inValue)
 	{
 		mLeft -= inValue;
 		mTop -= inValue;
@@ -175,7 +208,7 @@ public:
 		return *this;
 	}
 
-	Quad<T> Expand(const fvec2& inValues)
+	Rect<T> Expand(const fvec2& inValues)
 	{
 		mLeft -= inValues.x;
 		mTop -= inValues.y;
@@ -184,15 +217,14 @@ public:
 		return *this;
 	}
 
-
-	Quad<T> FlipValid()
+	Rect<T> FlipValid()
 	{
 		if (mLeft > mRight) std::swap(mLeft, mRight);
 		if (mTop > mBottom) std::swap(mTop, mBottom);
 		return *this;
 	}
 
-	bool operator==(const Quad<T>& inOther) const
+	bool operator==(const Rect<T>& inOther) const
 	{
 		return	(mLeft	== inOther.mLeft) &&
 				(mRight	== inOther.mRight) &&
@@ -200,54 +232,52 @@ public:
 				(mBottom== inOther.mBottom);
 	}
 
-
-	Quad<T> operator*(const T& inOther) const
+	Rect<T> operator*(const T& inOther) const
 	{
-		return Quad<T>(	mLeft * inOther, mTop * inOther, mRight * inOther, mBottom * inOther);
+		return Rect<T>(	mLeft * inOther, mTop * inOther, mRight * inOther, mBottom * inOther);
 	}
 
-	Quad<T> operator+(const Vector<T, 2>& inOffset) const
+	Rect<T> operator+(const Vector<T, 2>& inOffset) const
 	{
 		return GetTranslated(inOffset);
 	}
 
-	Quad<T> operator-(const Vector<T, 2>& inOffset) const
+	Rect<T> operator-(const Vector<T, 2>& inOffset) const
 	{
 		return GetTranslated(-inOffset);
 	}
+
+	static Rect<T> sEmpty() { Rect<T> r; r.SetEmpty(); return r; }
 
 
 };
 
 
 template <class T>
-std::ostream& operator<<(std::ostream& inStream, const Quad<T>& inQuad)
+std::ostream& operator<<(std::ostream& inStream, const Rect<T>& inRect)
 {
 	inStream << '{';
-	inStream << inQuad.mLeft << ',';
-	inStream << inQuad.mTop << ',';
-	inStream << inQuad.mRight << ',';
-	inStream << inQuad.mBottom;
+	inStream << inRect.mLeft << ',';
+	inStream << inRect.mTop << ',';
+	inStream << inRect.mRight << ',';
+	inStream << inRect.mBottom;
 
 	inStream << '}';
 	return inStream;
 }
 
-typedef Quad<int> iquad;
+typedef Rect<int> IRect;
 
-class fquad : public Quad<float>
+class FRect : public Rect<float>
 {
 	public:
-	static fquad sEmpty() { return fquad(FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX); }
-	static fquad sUnit()  { return fquad(-1.0f, -1.0f, 1.0f, 1.0f); };
+	static FRect sEmpty() { return FRect(FLT_MAX, FLT_MAX, -FLT_MAX, -FLT_MAX); }
+	static FRect sUnit()  { return FRect(-1.0f, -1.0f, 1.0f, 1.0f); };
 
-	// copy of constructors of Quad<float>
-	fquad() {}
-	fquad(const float inLeft, const float inTop, const float inRight, const float inBottom) : Quad<float>(inLeft, inTop, inRight, inBottom) {}
-	fquad(const float inWidth, const float inHeight) : Quad<float>(inWidth, inHeight) {}
-
-
-
+	// copy of constructors of Rect<float>
+	FRect() {}
+	FRect(const float inLeft, const float inTop, const float inRight, const float inBottom) : Rect<float>(inLeft, inTop, inRight, inBottom) {}
+	FRect(const float inWidth, const float inHeight) : Rect<float>(inWidth, inHeight) {}
 };
 
 

@@ -14,23 +14,6 @@ struct UnresolvedLink
 	String						mTargetName;			///< Target Name
 };
 
-
-class Resource
-{
-public:
-	String mName;
-	String mLocation;
-	virtual void Boo() {}
-
-	void Inspect(ObjectInspector& inInspector)
-	{
-		inInspector.Inspect(mName, "!name");
-		inInspector.Inspect(mLocation, "!location");
-	}
-};
-
-typedef Array<Resource> ResourceSet;
-
 // Dependency between serialized files or between files in the same source file
 struct Dependency
 {

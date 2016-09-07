@@ -23,7 +23,7 @@ MessageReturnCode Canvas::HandleMessage(Window* inWindow, uint inMessage, Messag
 			
 		if(mTarget)
 		{
-			mTarget->OnUpdate(mDib, iquad(ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom));
+			mTarget->OnUpdate(mDib, IRect(ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom));
 		}
 		
 		BitBlt(ps.hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, HDC(mDib.GetHandle()), ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);

@@ -49,7 +49,7 @@ struct LayoutData
 class JuiceWindow
 {
 public:
-	virtual void											OnDraw(DIB& inCanvas, iquad& inClientRect) = 0;
+	virtual void											OnDraw(DIB& inCanvas, IRect& inClientRect) = 0;
 	virtual void											AddChildWindow(JuiceWindow* inChild) = 0;
 private:
 	//typedef std::pair<JuiceWindow*, LayoutData>				LayoutEntry;
@@ -64,7 +64,7 @@ class JuicePanel : public JuiceWindow
 public:
 	JuicePanel(const DIBColor& inColor) : mColor(inColor) {}
 
-	virtual void OnDraw(DIB& inCanvas, iquad& inClientRect)
+	virtual void OnDraw(DIB& inCanvas, IRect& inClientRect)
 	{
 		inCanvas.SetRegion(inClientRect, mColor);
 	}
@@ -86,7 +86,7 @@ public:
 		mRestrictionsVert.Append(AnchorRestriction(0));
 	}
 
-	void UpdateLayout(iquad inArea)
+	void UpdateLayout(IRect inArea)
 	{
 		gAssert(mRestrictionsVert.GetLength() >= 2);
 		gAssert(mRestrictionsHorz.GetLength() >= 2);
@@ -173,9 +173,9 @@ public:
 		mLayout.AddRestrictionVert(AnchorRestriction(6, 1, 50, 0, 0.0f));
 	}
 	
-	void OnUpdate(DIB& inDib, const iquad& inRegion) 
+	void OnUpdate(DIB& inDib, const IRect& inRegion) 
 	{ 
-		mLayout.UpdateLayout(iquad(0,0,GetWidth()-1, GetHeight()-1));
+		mLayout.UpdateLayout(IRect(0,0,GetWidth()-1, GetHeight()-1));
 
 		if (GetWidth() < 1 || GetHeight() < 1) return;
 

@@ -78,26 +78,21 @@ public:
 	}
 
 
-	void FillSquare(int x0, int y0, int x1, int y1)
+	void FillSquare(const IRect& inRect)
 	{
-		for (int x = x0; x < x1; x++)
-			for (int y = y0; y < y1; y++)
-			{
-				SetPixel(x,y);
-			}
+		mCanvas.SetRegion(inRect, mColor);
 	}
 
-	void DrawSquare(int x0, int y0, int x1, int y1)
+	void DrawSquare(const IRect& inRect)
 	{
-		DrawLine(x0,y0,x1,y0);
-		DrawLine(x1,y0,x1,y1);
-		DrawLine(x1,y1,x0,y1);
-		DrawLine(x0,y1,x0,y0);
+		DrawLine(inRect.mLeft, inRect.mTop, inRect.mRight-1, inRect.mTop);
+		DrawLine(inRect.mRight-1, inRect.mTop, inRect.mRight-1, inRect.mBottom-1);
+		DrawLine(inRect.mRight-1, inRect.mBottom-1, inRect.mLeft, inRect.mBottom-1);
+		DrawLine(inRect.mLeft, inRect.mBottom-1, inRect.mLeft, inRect.mTop);
 	}
 	
 	void DrawLine(int x0, int y0, int x1, int y1)
 	{
-
 		bool steep = abs(y1 - y0) > abs(x1 - x0);
 		if (steep)
 		{
@@ -113,7 +108,7 @@ public:
 		if (xstep > 0)
 			for (int x = x0; x <= x1; x+= xstep)
 			{		
-				if (steep) DrawDot(y,x); else DrawDot(x,y);
+				if (steep) mCanvas.Set(y,x, mColor); else mCanvas.Set(x,y, mColor);
 				error -= deltay;
 				if (error < 0)
 				{
@@ -124,7 +119,7 @@ public:
 		else
 			for (int x = x0; x >= x1; x+= xstep)
 			{		
-				if (steep) DrawDot(y,x); else DrawDot(x,y);
+				if (steep) mCanvas.Set(y,x, mColor); else mCanvas.Set(x,y, mColor);
 				error -= deltay;
 				if (error < 0)
 				{

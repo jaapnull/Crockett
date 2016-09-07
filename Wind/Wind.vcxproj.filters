@@ -20,6 +20,9 @@
     <ClCompile Include="WWin32\Keyboard.cpp">
       <Filter>WWin32</Filter>
     </ClCompile>
+    <ClCompile Include="WWin32\Font.cpp">
+      <Filter>WWin32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PCHWind.h" />
@@ -48,6 +51,9 @@
       <Filter>WWin32</Filter>
     </ClInclude>
     <ClInclude Include="WCommon\ColorPen.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="WCommon\Font.h">
       <Filter>WCommon</Filter>
     </ClInclude>
   </ItemGroup>

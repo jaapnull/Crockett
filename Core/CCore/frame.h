@@ -37,12 +37,12 @@ public:
 		}			
 	}
 
-	void SetRegion(const iquad& inRegion, const T& inValue)
+	void SetRegion(const IRect& inRegion, const T& inValue)
 	{
 		offset64 byte_addres = ((offset64)GetBaseData());
 		byte_addres += ((offset64)(mHeight - 1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
 
-		T* pointer = (T*)byte_addres;
+		T* pointer = (T*)(byte_addres + mPitch * inRegion.mTop);
 
 		for (int y = inRegion.mTop; y < inRegion.mBottom; y++)
 		{
@@ -56,9 +56,6 @@ public:
 
 	inline void Set(int inX, int inY, T inValue)
 	{
-//		if (inX < 0 || inY < 0 || inX >= (int) mWidth || inY >= (int) mHeight )
-//			return;
-//		assert(inX < (int)GetWidth() && inY < (int)GetHeight());
 		offset64 byte_addres = ((offset64 ) GetBaseData());
 		byte_addres += ((offset64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
 		byte_addres += inX * sizeof(T) + inY * mPitch;;
@@ -112,7 +109,7 @@ public:
 	DataFrame() : mWrapped(false)
 	{}
 
-	DataFrame(iquad inSection, BaseFrame<T>& inSoureFrame) : mWrapped(true)
+	DataFrame(IRect inSection, BaseFrame<T>& inSoureFrame) : mWrapped(true)
 	{
 		BaseFrame::Resize(inSection.GetWidth(), inSection.GetHeight(), inSoureFrame.GetPitch());
 		if (GetPitch() > 0)
