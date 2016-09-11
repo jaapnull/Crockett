@@ -85,10 +85,20 @@ public:
 
 	void DrawSquare(const IRect& inRect)
 	{
-		DrawLine(inRect.mLeft, inRect.mTop, inRect.mRight-1, inRect.mTop);
-		DrawLine(inRect.mRight-1, inRect.mTop, inRect.mRight-1, inRect.mBottom-1);
-		DrawLine(inRect.mRight-1, inRect.mBottom-1, inRect.mLeft, inRect.mBottom-1);
-		DrawLine(inRect.mLeft, inRect.mBottom-1, inRect.mLeft, inRect.mTop);
+		IRect clamped = IRect(
+			gClamp<int>(inRect.mLeft, 0, mCanvas.GetWidth()),
+			gClamp<int>(inRect.mTop, 0, mCanvas.GetHeight()),
+			gClamp<int>(inRect.mRight, 0, mCanvas.GetWidth()),
+			gClamp<int>(inRect.mBottom, 0, mCanvas.GetHeight()));
+
+		if (inRect.mTop >= 0 && inRect.mTop < mCanvas.GetHeight())
+			DrawLine(clamped.mLeft,    clamped.mTop,      clamped.mRight-1, clamped.mTop);
+		if (inRect.mRight >= 0 && inRect.mRight < mCanvas.GetWidth())
+			DrawLine(clamped.mRight-1, clamped.mTop,      clamped.mRight-1, clamped.mBottom-1);
+		if (inRect.mBottom >= 0 && inRect.mBottom < mCanvas.GetHeight())
+			DrawLine(clamped.mRight-1, clamped.mBottom-1, clamped.mLeft,    clamped.mBottom-1);
+		if (inRect.mLeft >= 0 && inRect.mLeft < mCanvas.GetWidth())
+			DrawLine(clamped.mLeft,    clamped.mBottom-1, clamped.mLeft,    clamped.mTop);
 	}
 	
 	void DrawLine(int x0, int y0, int x1, int y1)

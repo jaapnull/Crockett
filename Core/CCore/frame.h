@@ -39,14 +39,20 @@ public:
 
 	void SetRegion(const IRect& inRegion, const T& inValue)
 	{
+		IRect clamped_reg = IRect(
+			gMax<int>(0, inRegion.mLeft),
+			gMax<int>(0, inRegion.mTop),
+			gMin<int>(GetWidth(), inRegion.mRight),
+			gMin<int>(GetHeight(), inRegion.mBottom)
+			);
 		offset64 byte_addres = ((offset64)GetBaseData());
 		byte_addres += ((offset64)(mHeight - 1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
 
-		T* pointer = (T*)(byte_addres + mPitch * inRegion.mTop);
+		T* pointer = (T*)(byte_addres + mPitch * clamped_reg.mTop);
 
-		for (int y = inRegion.mTop; y < inRegion.mBottom; y++)
+		for (int y = clamped_reg.mTop; y < clamped_reg.mBottom; y++)
 		{
-			for (int x = inRegion.mLeft; x < inRegion.mRight; x++)
+			for (int x = clamped_reg.mLeft; x < clamped_reg.mRight; x++)
 			{
 				pointer[x] = inValue;
 			}

@@ -16,22 +16,11 @@ enum MMouseButtons
 	mbShift			=32
 };
 
-// inline std::wostream& operator<<(std::wostream& inStream, EnumMask<MMouseButtons> inButtons)
-// {
-// 	wchar_t base_text[7] = L"lrmacs";
-// 	for (int x = 0; x < 8; x++)
-// 	{
-// 		if (inButtons.Contains(MMouseButtons(1 << x)))
-// 			base_text[x] = ::toupper(base_text[x]);
-// 	}
-// 	inStream << base_text;
-// 	return inStream;
-// }
-
 // mouse interface definition
 class IMouseHandler
 {
 public:
+	virtual void OnMouseDrag(const ivec2& inDragStart, const ivec2& inDragDelta) {}
 	virtual void OnMouseMove(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) {}
 	virtual void OnMouseLeftUp(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) {}
 	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) {}
@@ -52,6 +41,7 @@ private:
 	bool				mDragging;			// are we dragging at this moment
 	bool				mMouseLeaveTracking;// are we monitoring for mouse_leave events
 public:
+	void				SetDragBegin(const ivec2& inStart) { mDragStart = inStart; }
 	bool				IsDragging(ivec2& outDragStart) const;
 	ivec2				GetDragBegin() const;
 						MouseHandler(IMouseHandler& inTarget) : mTarget(&inTarget), mDragging(false), mMouseLeaveTracking(false) {}

@@ -96,7 +96,7 @@ static bool sIsWhiteSpace(char c)		{ return c == ' ' || c == '\t' || c == '\n' |
 bool gCompareStringsIgnoreCase(const String& inA, const String& inB)
 {
 	if (inA.GetLength() != inB.GetLength()) return false;
-	for (int i = 0; i < inA.GetLength(); i++)
+	for (uint i = 0; i < inA.GetLength(); i++)
 	{
 		if (sToLower(inA[i]) != sToLower(inB[i])) return false;
 	}
@@ -107,7 +107,7 @@ void gStripWhitespace(String& ioString)
 {
 	size64 len = ioString.GetLength();
 	size64 out_idx = 0;
-	for (int idx = 0; idx < len; idx++)
+	for (uint idx = 0; idx < len; idx++)
 	{
 		if (!sIsWhiteSpace(ioString[idx])) 
 			ioString[out_idx++] = ioString[idx];

@@ -16,16 +16,18 @@
 
 static void sPaintPattern(BaseFrame<DIBColor>& inCanvas, const IRect& inArea, const DIBColor& inColor)
 {
-	DIBColor* pointer = &(inCanvas.Get(inArea.mLeft, inArea.mTop));
-	DIBColor c_bg = inColor.GetScaled(gFloatRand());
-	DIBColor c_stripe = inColor.GetScaled(.8f);
+	IRect clamped = inArea.GetIntersect(IRect(0, 0, inCanvas.GetWidth(), inCanvas.GetHeight()));
 
-	for (int y = inArea.mTop; y < inArea.mBottom; y++)
+	DIBColor* pointer	= &(inCanvas.Get(clamped.mLeft, clamped.mTop));
+	DIBColor c_bg		= inColor;
+	DIBColor c_stripe	= inColor.GetScaled(.8f);
+
+	for (int y = clamped.mTop; y < clamped.mBottom; y++)
 	{
-		for (int x = inArea.mLeft; x < inArea.mRight; x++)
+		for (int x = clamped.mLeft; x < clamped.mRight; x++)
 		{
 			DIBColor v = ((x + y) & 7) < 2 ? c_stripe : c_bg;
-			pointer[x - inArea.mLeft] = v;
+			pointer[x - clamped.mLeft] = v;
 		}
 		pointer = gOffsetPointer(pointer, inCanvas.GetPitch());
 	}
@@ -45,6 +47,7 @@ public:
 		}
 		MarkClean();
 	}
+	bool IsDragging() const										{ return mIsDragging; }
 	const IRect				GetRect()							{ return mRect; }
 	const IRect				GetScreenRect()						{ return mParent == nullptr ? mRect : mRect.GetTranslated(mParent->GetRect().GetMin()); }
 	virtual void			MarkDirtyRect(const IRect& inRect)	
@@ -77,11 +80,37 @@ protected:
 
 	IRect					mRect;
 	IRect					mDirtyRect;
+	bool					mIsDragging = false;
 
 	Array<RefPtr<DControl>>	mChildren;
 	RefPtr<DControl>		mParent;
 };
 
+
+class DButton : public DControl
+{
+public:
+	DButton(const IRect& inClientRect, DControl* inParent) : DControl(inClientRect, inParent)
+	{
+	}
+
+	virtual void Draw(DIB& inCanvas)
+	{
+		if (!mDirtyRect.HasArea())
+			return;
+
+
+		IRect client_rect = GetRect();
+		if (mParent != nullptr)
+			client_rect.Translate(mParent->GetRect().GetMin());
+
+		ColorPen<DIBColor> p(inCanvas);
+		p.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcBlack));
+		sPaintPattern(inCanvas, client_rect, DIBColor::sCreateDefaultPaletteColor(dpcPurple));
+		p.DrawSquare(client_rect);
+		MarkClean();
+	}
+};
 
 class DocWindow : public DControl
 {
@@ -89,17 +118,36 @@ public:
 	DocWindow(const IRect& inClientRect, DControl* inParent) : DControl(inClientRect, inParent)
 	{
 		mFont = Font::sCreateFont("Segoe ui", 12);
+		mChildren.Append(new DButton(IRect(30, 30, 60, 60), this));
 	}
-	
+
+
+	virtual void OnMouseDrag(const ivec2& inDragStart, const ivec2& inDragDelta)
+	{
+		ResizeWindow(GetRect().GetTranslated(inDragDelta));
+	}
+
 	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
 	{
-		ResizeWindow(mRect.Moved(ivec2(10,5)));
+		mIsDragging = true;
+		MarkDirtyRect(IRect(0, 0, mRect.GetWidth(), mRect.GetHeight()));
+		//ResizeWindow(mRect.Moved(ivec2(10,5)));
 	}
+
+	virtual void OnMouseLeftUp(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
+	{
+		mIsDragging = false;
+		MarkDirtyRect(IRect(0, 0, mRect.GetWidth(), mRect.GetHeight()));
+	}
+
 
 	virtual void Draw(DIB& inCanvas)
 	{
 		if (!mDirtyRect.HasArea())
+		{
+			DControl::Draw(inCanvas);
 			return;
+		}
 
 		ColorPen<DIBColor> p(inCanvas);
 		p.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcWhite));
@@ -112,18 +160,19 @@ public:
 		title_bar.mBottom = title_bar.mTop + 20;
 		child_rect.mTop = title_bar.mBottom + 1; 
 		
-		sPaintPattern(inCanvas, title_bar, DIBColor(64, 128, 200));
+		sPaintPattern(inCanvas, title_bar, DIBColor(IsDragging() ? 255 : 64, 128, 200));
 		sPaintPattern(inCanvas, child_rect, DIBColor(128, 128, 128));
 		FontDrawer fd;
 		fd.SetFont(mFont);
 		fd.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcWhite));
 		fd.Draw(inCanvas, "test", mRect.Widened(-4));
 		MarkClean();
+		DControl::Draw(inCanvas);
 	}
 
 private:
 
-	bool						mMoving			= false;
+
 	ivec2						mMoveStart;
 	RefPtr<Font>				mFont;
 };
@@ -138,7 +187,7 @@ public:
 	{
 		AddHandler(&mCanvas);
 		AddHandler(&mMouseHandler);
-		mChildren.Append(new DocWindow(IRect(10,10,100,100), this));
+		mChildren.Append(new DocWindow(IRect(10,10,400,400), this));
 	}
 
 
@@ -159,11 +208,41 @@ public:
 		DControl::Draw(inDib);
 	}
 
+
+	virtual void OnMouseMove(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
+	{
+		ivec2 drag_start;
+		if (mMouseHandler.IsDragging(drag_start))
+		{
+			mMouseHandler.SetDragBegin(inPosition);
+			for (const RefPtr<DControl>& w : mChildren)
+			{
+				if (w->GetScreenRect().ContainsPoint(inPosition) || w->IsDragging())
+				{
+					w->OnMouseDrag(drag_start, inPosition - drag_start);
+				}
+			}
+		}
+	}
+
+
+	virtual void OnMouseLeftUp(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
+	{
+		for (const RefPtr<DControl>& w : mChildren)
+		{
+			if (w->GetScreenRect().ContainsPoint(inPosition) || w->IsDragging())
+			{
+				w->OnMouseLeftUp(inPosition - w->GetScreenRect().GetMin(), inButtons);
+			}
+		}
+	}
+
+
 	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
 	{
 		for (const RefPtr<DControl>& w : mChildren)
 		{
-			if (w->GetScreenRect().ContainsPoint(inPosition))
+			if (w->GetScreenRect().ContainsPoint(inPosition) || w->IsDragging())
 			{
 				w->OnMouseLeftDown(inPosition - w->GetScreenRect().GetMin(), inButtons);
 			}

@@ -37,16 +37,16 @@ public:
 	Rect<T> GetTranslated(const Vector<T, 2>& inOffset) const
 	{
 		Rect<T> t = *this;
-		t.Translate(inOffset.x, inOffset.y);
+		t.Translate(inOffset);
 		return t;
 	}
 
-	Rect<T> Translate(const T& inOffsetV, const T& inOffsetH)
+	Rect<T> Translate(const Vector<T, 2>& inOffset)
 	{
-		mLeft += inOffsetV;
-		mTop += inOffsetH;
-		mBottom += inOffsetH;
-		mRight += inOffsetV;
+		mLeft += inOffset.x;
+		mTop += inOffset.y;
+		mBottom += inOffset.y;
+		mRight += inOffset.x;
 		return *this;
 	}
 
