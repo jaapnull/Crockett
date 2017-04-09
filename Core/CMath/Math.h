@@ -55,7 +55,6 @@ inline uint32 gRand()
 	return (uint32) rand();
 }
 
-
 inline float gPowF(float inBase, float inPower)
 {
 	return powf(inBase, inPower);
@@ -67,12 +66,22 @@ inline T gClamp(const T& inValue, const T& inMin, const T& inMax)
 	return std::max<T>(std::min(inMax, inValue), inMin);
 }
 
+template<typename T>
+inline T gSquared(const T& inValue)
+{
+	return inValue * inValue;
+}
+
+template<typename T>
+inline T gRecp(const T& inValue)
+{
+	return T(1.0) / inValue;
+}
+
 inline int gRoundToNearestInt(float r)
 {
 	return (r > 0.0) ? int(floor(r + 0.5f)) : int(ceil(r - 0.5f)); 
 }
-
-
 
 template <typename T>
 inline const T& gMin(const T& A, const T& B)

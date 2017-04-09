@@ -19,7 +19,7 @@ static LRESULT CALLBACK gDispatchMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 	}
 	if (uMsg == WM_CLOSE)
 	{
-		//Element::StopMessageLoop();
+		PostQuitMessage(0);
 	}
 
 	// Retrieve it from the Window handle structure thing when needed.
@@ -87,7 +87,7 @@ void Window::Invalidate()
 void Window::Invalidate(const IRect& inQuad)
 {
 	HWND hwnd = gHandleToHWND(mHandle);
-	RECT r = { inQuad.mLeft, inQuad.mTop, inQuad.mTop, inQuad.mBottom };
+	RECT r = { inQuad.mLeft, inQuad.mTop, inQuad.mRight, inQuad.mBottom };
 	InvalidateRect(hwnd, &r, false);
 }
 

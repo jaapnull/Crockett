@@ -441,5 +441,6 @@ typedef Vector<int, 3> ivec3;
 typedef Vector<int, 4> ivec4;
 
 typedef Vector<float, 2> fvec2;
+typedef Vector<float, 3> fvec3;
 typedef Vector<float, 4> fvec4;
 

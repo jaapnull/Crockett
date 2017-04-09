@@ -40,8 +40,24 @@ MessageReturnCode Canvas::HandleMessage(Window* inWindow, uint inMessage, Messag
 			uint new_height = HIWORD(inParamB);
 			if (new_width < 200) new_width = 200;
 			if (new_height < 200) new_height = 200;
-			mDib.Resize(new_width, new_height);
-			mDib.SetAll(DIBColor(100, 200, gRand() & 0xff));
+
+			uint old_height = mDib.GetHeight();
+			uint old_width = mDib.GetWidth();
+			mDib.ResizeCopyData(new_width, new_height);
+
+			//  Todo: will now double-paint new corner area if both width and height change
+			if (new_width > old_width)
+			{
+				mDib.SetRegion(IRect(old_width, 0, new_width, new_height), mDefaultColor);
+			}
+
+			if (new_height > old_height)
+			{
+				mDib.SetRegion(IRect(0, old_height, new_width, new_height), mDefaultColor);
+			}
+
+
+			//mDib.SetAll(mDefaultColor);
 		}
 		return mrcUnhandled;
 	}

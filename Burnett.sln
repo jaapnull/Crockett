@@ -20,6 +20,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ComeDither", "ComeDither\Co
 		{858A7B68-2892-45BE-87D4-5BEEFEE65A84} = {858A7B68-2892-45BE-87D4-5BEEFEE65A84}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Clipper", "Clipper\Clipper.vcxproj", "{FC724CE4-E80F-4E64-AC74-F99E2C504243}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5BDE4B4A-B892-48E5-BEE6-8665EBED350B} = {5BDE4B4A-B892-48E5-BEE6-8665EBED350B}
+		{858A7B68-2892-45BE-87D4-5BEEFEE65A84} = {858A7B68-2892-45BE-87D4-5BEEFEE65A84}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -70,6 +76,14 @@ Global
 		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Release|x64.Build.0 = Release|x64
 		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Release|x86.ActiveCfg = Release|Win32
 		{8184D3C8-BE2A-4F17-9B27-B477F09AA6CB}.Release|x86.Build.0 = Release|Win32
+		{FC724CE4-E80F-4E64-AC74-F99E2C504243}.Debug|x64.ActiveCfg = Debug|x64
+		{FC724CE4-E80F-4E64-AC74-F99E2C504243}.Debug|x64.Build.0 = Debug|x64
+		{FC724CE4-E80F-4E64-AC74-F99E2C504243}.Debug|x86.ActiveCfg = Debug|Win32
+		{FC724CE4-E80F-4E64-AC74-F99E2C504243}.Debug|x86.Build.0 = Debug|Win32
+		{FC724CE4-E80F-4E64-AC74-F99E2C504243}.Release|x64.ActiveCfg = Release|x64
+		{FC724CE4-E80F-4E64-AC74-F99E2C504243}.Release|x64.Build.0 = Release|x64
+		{FC724CE4-E80F-4E64-AC74-F99E2C504243}.Release|x86.ActiveCfg = Release|Win32
+		{FC724CE4-E80F-4E64-AC74-F99E2C504243}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

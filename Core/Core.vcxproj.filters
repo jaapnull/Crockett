@@ -77,6 +77,9 @@
     <ClInclude Include="CCore\RefCount.h">
       <Filter>CCore</Filter>
     </ClInclude>
+    <ClInclude Include="CMath\Vector.h">
+      <Filter>CMath</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
