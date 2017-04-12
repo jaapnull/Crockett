@@ -8,266 +8,287 @@
 #include <WCommon/ColorPen.h>
 #include <WCommon/Font.h>
 #include <WCommon/Mouse.h>
+#include <WCommon/Keyboard.h>
 
 
 #ifdef WIN32_IS_INCLUDED
 #error Windows Header Slip
 #endif
 
-static void sPaintPattern(BaseFrame<DIBColor>& inCanvas, const IRect& inArea, const DIBColor& inColor)
+
+struct LayeredPixel
 {
-	IRect clamped = inArea.GetIntersect(IRect(0, 0, inCanvas.GetWidth(), inCanvas.GetHeight()));
-
-	DIBColor* pointer	= &(inCanvas.Get(clamped.mLeft, clamped.mTop));
-	DIBColor c_bg		= inColor;
-	DIBColor c_stripe	= inColor.GetScaled(.8f);
-
-	for (int y = clamped.mTop; y < clamped.mBottom; y++)
+	LayeredPixel()
 	{
-		for (int x = clamped.mLeft; x < clamped.mRight; x++)
-		{
-			DIBColor v = ((x + y) & 7) < 2 ? c_stripe : c_bg;
-			pointer[x - clamped.mLeft] = v;
-		}
-		pointer = gOffsetPointer(pointer, inCanvas.GetPitch());
+		for (int p = 0; p < 16; p++) mWeight[p] = 0.0f;
 	}
-}
 
 
-
-class DControl: public RefObject<DControl>, public IMouseHandler
-{
-public:
-	DControl(const IRect& inClientRect, DControl* inParent) : mRect(inClientRect), mParent(inParent), mDirtyRect(IRect::sEmpty()) { }
-	virtual void			Draw(DIB& inCanvas)
+	float GetColorAmount() const
 	{
-		for (RefPtr<DControl> child : mChildren)
-		{
-			child->Draw(inCanvas);
-		}
-		MarkClean();
+		float color = 0.0f;
+		for (int p = 0; p < 16; p++) color += mWeight[p];
+		gAssert(color >= 0 && color <= 1.0f);
+		return color;
 	}
-	bool IsDragging() const										{ return mIsDragging; }
-	const IRect				GetRect()							{ return mRect; }
-	const IRect				GetScreenRect()						{ return mParent == nullptr ? mRect : mRect.GetTranslated(mParent->GetRect().GetMin()); }
-	virtual void			MarkDirtyRect(const IRect& inRect)	
+
+	float GetColorAmount(uint inExceptP) const
 	{
-		if (mDirtyRect.FullyContains(inRect))
+		float color = 0.0f;
+		for (int p = 0; p < 16; p++) if (p != inExceptP) color += mWeight[p];
+		gAssert(color >= 0 && color <= 1.0f);
+		return color;
+	}
+
+	float GetAlphaAmount() const
+	{
+		float alpha = 1.0f;
+		for (int p = 0; p < 16; p++) alpha -= mWeight[p];
+		gAssert(alpha >= 0);
+		return alpha;
+	}
+
+
+	void AddWeight(uint inPalette, float inAdd)
+	{
+		float curr_weight = mWeight[inPalette];
+		float new_weight = gClamp(inAdd + curr_weight, 0.0f, 1.0f);
+		float room_to_make = new_weight - curr_weight;
+
+		float weight_of_everyting_but = 1.0f - mWeight[inPalette];
+
+		if (weight_of_everyting_but == 0.0f)
+		{
+			gAssert(room_to_make == 0.0f);
 			return;
-		
-		IRect overlap = inRect.GetIntersect(IRect(0,0,mRect.GetWidth(), mRect.GetHeight()));
+		}
 
-		mDirtyRect.Enclose(overlap); 
-		for (RefPtr<DControl> child : mChildren)
+		float multipliers = 1.0f - (room_to_make / weight_of_everyting_but);
+		for (int p = 0; p < 16; p++) mWeight[p] *= multipliers;
+		mWeight[inPalette] = new_weight;
+	}
+
+	void GenerateDither(uint inX, uint inY)
+	{
+		int bayer_idx[4][4] = 
 		{
-			if (mDirtyRect.OverlapsWith(child->GetRect()))
+			{1,9,3,11},
+			{13,5,15,7},
+			{4,12,2,10},
+			{16,8,14,6}
+		};
+		float value = float(bayer_idx[inX&3][inY&3]) / 17.0f;
+		float accum = 0;
+		for (int c = 0; c < 16; c++)
+		{
+					
+			float _old = accum;
+			accum += mWeight[c];
+			float _new = accum;
+					
+			if (_old < value && _new >= value)
 			{
-				child->MarkDirtyRect(overlap.GetTranslated(-child->GetRect().GetMin()));
+				mCachedResult = DIBColor::sCreateDefaultPaletteColor(EDefaultPaletteColor(c));
+				return;
 			}
 		}
-	}
-	void					MarkClean()							{ mDirtyRect.SetEmpty(); }
-	void					ResizeWindow(const IRect& inRect)
-	{
-		if (mParent != nullptr && mRect.HasArea()) 
-			mParent->MarkDirtyRect(mRect);
-
-		mRect = inRect;
-		MarkDirtyRect(IRect(0,0, mRect.GetWidth(), mRect.GetHeight()));
-	}
-
-protected:
-
-	IRect					mRect;
-	IRect					mDirtyRect;
-	bool					mIsDragging = false;
-
-	Array<RefPtr<DControl>>	mChildren;
-	RefPtr<DControl>		mParent;
-};
-
-
-class DButton : public DControl
-{
-public:
-	DButton(const IRect& inClientRect, DControl* inParent) : DControl(inClientRect, inParent)
-	{
-	}
-
-	virtual void Draw(DIB& inCanvas)
-	{
-		if (!mDirtyRect.HasArea())
-			return;
-
-
-		IRect client_rect = GetRect();
-		if (mParent != nullptr)
-			client_rect.Translate(mParent->GetRect().GetMin());
-
-		ColorPen<DIBColor> p(inCanvas);
-		p.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcBlack));
-		sPaintPattern(inCanvas, client_rect, DIBColor::sCreateDefaultPaletteColor(dpcPurple));
-		p.DrawSquare(client_rect);
-		MarkClean();
-	}
-};
-
-class DocWindow : public DControl
-{
-public:
-	DocWindow(const IRect& inClientRect, DControl* inParent) : DControl(inClientRect, inParent)
-	{
-		mFont = Font::sCreateFont("Segoe ui", 12);
-		mChildren.Append(new DButton(IRect(30, 30, 60, 60), this));
+		mCachedResult = DIBColor(255,255,255);
 	}
 
 
-	virtual void OnMouseDrag(const ivec2& inDragStart, const ivec2& inDragDelta)
-	{
-		ResizeWindow(GetRect().GetTranslated(inDragDelta));
-	}
-
-	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
-	{
-		mIsDragging = true;
-		MarkDirtyRect(IRect(0, 0, mRect.GetWidth(), mRect.GetHeight()));
-		//ResizeWindow(mRect.Moved(ivec2(10,5)));
-	}
-
-	virtual void OnMouseLeftUp(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
-	{
-		mIsDragging = false;
-		MarkDirtyRect(IRect(0, 0, mRect.GetWidth(), mRect.GetHeight()));
-	}
-
-
-	virtual void Draw(DIB& inCanvas)
-	{
-		if (!mDirtyRect.HasArea())
-		{
-			DControl::Draw(inCanvas);
-			return;
-		}
-
-		ColorPen<DIBColor> p(inCanvas);
-		p.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcWhite));
-		p.FillSquare(mRect);
-		p.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcBlack));
-		p.DrawSquare(mRect);
-
-		IRect title_bar = mRect.Widened(-2);
-		IRect child_rect = mRect.Widened(-2);
-		title_bar.mBottom = title_bar.mTop + 20;
-		child_rect.mTop = title_bar.mBottom + 1; 
-		
-		sPaintPattern(inCanvas, title_bar, DIBColor(IsDragging() ? 255 : 64, 128, 200));
-		sPaintPattern(inCanvas, child_rect, DIBColor(128, 128, 128));
-		FontDrawer fd;
-		fd.SetFont(mFont);
-		fd.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcWhite));
-		fd.Draw(inCanvas, "test", mRect.Widened(-4));
-		MarkClean();
-		DControl::Draw(inCanvas);
-	}
-
-private:
-
-
-	ivec2						mMoveStart;
-	RefPtr<Font>				mFont;
+	float		mWeight[16];
+	DIBColor	mCachedResult;
 };
 
 
 
-class MyWindow : public Window, public IPaintHandler, public DControl
-{
+DataFrame<LayeredPixel> gDocument;
 
+class MyWindow : public Window, public IPaintHandler, IMouseHandler, IKeyHandler
+{
 public:
-	MyWindow() : Window(), mCanvas(*this), mMouseHandler(*this), DControl(IRect::sEmpty(), nullptr)
+
+	MyWindow() : Window(), mCanvas(*this), mMouseHandler(*this), mKeyboard(*this)
 	{
 		AddHandler(&mCanvas);
 		AddHandler(&mMouseHandler);
-		mChildren.Append(new DocWindow(IRect(10,10,400,400), this));
+		AddHandler(&mKeyboard);
 	}
 
 
 	virtual void OnSize(const ivec2& inNewSize)
 	{
-		ResizeWindow(IRect(0,0,inNewSize.x, inNewSize.y));
+		Invalidate();
 	}
 	
 
-	virtual void Draw(DIB& inDib)
+	virtual void OnUpdate(DIB& inDib, const IRect& inRegion)
 	{
-		if (mDirtyRect.HasArea())
+
+		ColorPen<DIBColor> pen(inDib);
+
+		inDib.SetAll(DIBColor::sCreateDefaultPaletteColor(dpcWhite));
+
+		if (!mShowDither)
 		{
-			DIBColor c = DIBColor::sCreateDefaultPaletteColor(EDefaultPaletteColor(gRandRange(0, 15)));
-			sPaintPattern(inDib, mDirtyRect, DIBColor(80,80,80));
+
+			for (int y = inRegion.mTop; y < inRegion.mBottom; y++)
+			{
+				int dy = y / mPixelSize;
+				if (dy < 0 || dy >= (int) gDocument.GetHeight()) break;
+				for (int x = inRegion.mLeft; x < inRegion.mRight; x++)
+				{
+					int dx = x / mPixelSize;
+					if (dx < 0 || dx >= (int) gDocument.GetWidth()) break;
+					
+					inDib.Set(x, y, gDocument.Get(dx,dy).mCachedResult);
+				}
+			}
 		}
-		MarkClean();
-		DControl::Draw(inDib);
+		else
+		{
+			for (uint x = 0; x < gDocument.GetWidth(); x++)
+			for (uint y = 0; y < gDocument.GetHeight(); y++)
+			{
+				LayeredPixel lp = gDocument.Get(x,y);
+				float accum = 0;
+				for (int c = 0; c < 16; c++)
+				{
+					pen.SetColor(DIBColor::sCreateDefaultPaletteColor(EDefaultPaletteColor(c)));
+					int _old = int(accum * float(mPixelSize-1));
+					accum += lp.mWeight[c];
+					int _new = int(accum * float(mPixelSize-1));
+					pen.FillSquare(IRect(x*mPixelSize+1, y*mPixelSize+_old+1, x*mPixelSize+mPixelSize, y*mPixelSize+_new+1));
+				}
+			}
+		}
 	}
+
+	void PaintAt(const ivec2& inPos, uint inSize)
+	{
+		int brush_size = inSize;
+
+		ivec2 min = inPos - ivec2(brush_size,brush_size);
+		min.x = gClamp<int>(min.x, 0, gDocument.GetWidth()-1);
+		min.y = gClamp<int>(min.y, 0, gDocument.GetHeight()-1);
+		ivec2 max = inPos + ivec2(brush_size,brush_size);
+		max.x = gClamp<int>(max.x, 0, gDocument.GetWidth()-1);
+		max.y = gClamp<int>(max.y, 0, gDocument.GetHeight()-1);
+
+		for (int x = min.x; x <= max.x; x++)
+		for (int y = min.y; y <= max.y; y++)
+		{
+			float dist_sq = 0.0f;
+			dist_sq += gSquared(float(x - inPos.x));
+			dist_sq += gSquared(float(y - inPos.y));
+
+			float dist = sqrt(dist_sq);
+
+			float weight = gClamp((float(brush_size) - dist) * gRecp(float(brush_size)), 0.0f, 1.0f);
+			gDocument.Get(x,y).AddWeight(mColor, 0.05f * weight);
+			gDocument.Get(x,y).GenerateDither(x,y);
+		}
+
+			Invalidate(
+				IRect(	(inPos.x-mBrushSize) * mPixelSize,				(inPos.y-mBrushSize) * mPixelSize,
+						(inPos.x+mBrushSize) * mPixelSize + mPixelSize,	(inPos.y+mBrushSize) * mPixelSize + mPixelSize));
+
+
+	}
+
+
+	virtual void OnKeyDown(const uint inKeyCode) 
+	{
+		if (inKeyCode >= '0' && inKeyCode <= '9') mColor = inKeyCode - '0';
+		if (inKeyCode == ' ')
+		{
+			mShowDither = !mShowDither;
+			Invalidate();
+		}
+
+		if (inKeyCode == 'A')
+		{
+			mPixelSize--;
+			if (mPixelSize <= 0) mPixelSize = 1;
+			Invalidate();
+		}
+
+		if (inKeyCode == 'Z')
+		{
+			mPixelSize++;
+			Invalidate();
+		}
+
+		if (inKeyCode == 'S')
+		{
+			mBrushSize--;
+		}
+
+		if (inKeyCode == 'X')
+		{
+			mBrushSize++;
+		}
+
+	}
+
 
 
 	virtual void OnMouseMove(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
 	{
-		ivec2 drag_start;
-		if (mMouseHandler.IsDragging(drag_start))
+		if (inButtons.Contains(mbLeft))
 		{
-			mMouseHandler.SetDragBegin(inPosition);
-			for (const RefPtr<DControl>& w : mChildren)
-			{
-				if (w->GetScreenRect().ContainsPoint(inPosition) || w->IsDragging())
-				{
-					w->OnMouseDrag(drag_start, inPosition - drag_start);
-				}
-			}
+			ivec2 pos = inPosition / mPixelSize;
+			PaintAt(pos, mBrushSize);
 		}
 	}
 
 
 	virtual void OnMouseLeftUp(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
 	{
-		for (const RefPtr<DControl>& w : mChildren)
-		{
-			if (w->GetScreenRect().ContainsPoint(inPosition) || w->IsDragging())
-			{
-				w->OnMouseLeftUp(inPosition - w->GetScreenRect().GetMin(), inButtons);
-			}
-		}
+
 	}
 
 
 	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons)
 	{
-		for (const RefPtr<DControl>& w : mChildren)
-		{
-			if (w->GetScreenRect().ContainsPoint(inPosition) || w->IsDragging())
-			{
-				w->OnMouseLeftDown(inPosition - w->GetScreenRect().GetMin(), inButtons);
-			}
-		}
+		ivec2 pos = inPosition / mPixelSize;
+		PaintAt(pos, mBrushSize);
+		Invalidate();
 	}
 
 	void DoTick()
 	{
-		Draw(mCanvas.GetDib());
-		Invalidate();
+	
 	}
 
 private:
-
+	bool						mShowDither			= false;
+	uint						mColor				= 4;
+	uint						mPixelSize			= 1;
+	uint						mBrushSize			= 10;
+	KeyboardHandler				mKeyboard;
 	MouseHandler				mMouseHandler;
 	Canvas						mCanvas;
 } mainwindow;
 
+
+
+
+
 int main()
 {
-
+	gDocument.Resize(640,640);
 //	Document doc;
-	DIB* bg = new DIB();
+//	DIB* bg = new DIB();
 //	bg->LoadFromFile(L"./test.bmp");
 //	doc.mLayers.Append(bg);
+
+	for (uint y = 0; y < gDocument.GetHeight(); y++)
+	for (uint x = 0; x < gDocument.GetWidth(); x++)
+	{
+		gDocument.Get(x,y).AddWeight(1, float(x) / float(gDocument.GetWidth()));
+		gDocument.Get(x,y).GenerateDither(x,y);
+	}
 
 	mainwindow.Create(L"ComeDither", 640, 480);
 	mainwindow.Show(true);

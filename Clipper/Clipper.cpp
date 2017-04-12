@@ -37,14 +37,12 @@ struct HalfSpace2
 	}
 
 
-	//bool GetIntersectInterpolant(const fvec2 inOrigin, const fvec2 inDirection, float& outInterpolant)
-	//{
-	//	// p = inOrigin + t * D
-	//	// p dot mNormal = -mOffset
-	//	
-	//	// (O + t * D) dot N = -offset
-	//	 
-	//}
+	static const HalfSpace2 sCreateBetweenPoints(const fvec2& inPointA, const fvec2& inPointB)
+	{
+			fvec2 s = inPointA-inPointB;
+			fvec2 n = s.GetPerp().GetNormalised();
+			return HalfSpace2(n, n.GetDot(inPointA));
+	}
 
 
 	bool GetIntersect(const HalfSpace2& inOther, fvec2& outIntersect) const
@@ -89,8 +87,8 @@ public:
 		mHalfSpaces.Append(HalfSpace2(0,-1,1));
 		mHalfSpaces.Append(HalfSpace2(1,0,1));
 		mHalfSpaces.Append(HalfSpace2(-1,0,1));
-		mHalfSpaces.Append(HalfSpace2(0.707f,-0.707f,0.0f));
-		mHalfSpaces.Append(HalfSpace2(0.707f,0.707f,0.0f));
+		//mHalfSpaces.Append(HalfSpace2(0.707f,-0.707f,0.0f));
+		//mHalfSpaces.Append(HalfSpace2(0.707f,0.707f,0.0f));
 	}
 
 	virtual void OnSize(const ivec2& inNewSize) override
@@ -109,7 +107,7 @@ public:
 		{
 			mask_string.Append((mask&(1<<b)) ? '1' : '0');
 		}
-		std::cout << std::hex << mask_string << std::endl;
+		std::cout << std::hex << mask_string << " : " << ((uint64(mask) * 275ll) % 720ll)/2ll << std::endl;
 	}
 
 	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
@@ -118,17 +116,19 @@ public:
 		if (mPointsSet == 0)
 		{
 			mP0 = pos;
-			fvec2 s0 = pos;
-			fvec2 s1(-1,-1);
-			fvec2 s = s1-s0;
-			fvec2 n(-s.y, s.x);
-			fvec2 nn = n.GetNormalised();
-			mHalfSpaces.Append(HalfSpace2(nn, nn.GetDot(s0)));
+			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(pos, fvec2(-1,-1)));
+			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(pos, fvec2( 1,-1)));
+			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(pos, fvec2(-1, 1)));
+			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(pos, fvec2( 1, 1)));
 		}
 
 		if (mPointsSet == 1)
 		{
 			mP1 = pos;
+			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(pos, fvec2(-1,-1)));
+			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(pos, fvec2( 1,-1)));
+			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(pos, fvec2(-1, 1)));
+			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(pos, fvec2( 1, 1)));
 		}
 
 		if (mPointsSet == 2)
@@ -191,8 +191,9 @@ public:
 			for (uint y = 0; y < dib.GetHeight(); y++)
 			{
 				uint32 mask = mHalfSpaceData.Get(x,y);
-				float h = float(mask) / float(max) * 360.0f;
-				dib.Set(x,y, DIBColor::sFromHSV(h, 1, 0.5));
+				uint32 h = ((uint64(mask) * 275ll) % 720ll)/2;//float(mask) / float(max) * 360.0f;
+				
+				dib.Set(x,y, DIBColor::sFromHSV(float(h), 1, 0.5));
 			}
 		}
 
@@ -243,10 +244,10 @@ public:
 			fvec2 a0 = TransformClipToScreen(o+fvec2(d.y*0.1f, d.x*-0.1f));
 			fvec2 a1 = TransformClipToScreen(o+d*0.2f);
 
-			p0.x = gClamp<float>(p0.x + .5f, 0, GetWidth()-1);
-			p0.y = gClamp<float>(p0.y + .5f, 0, GetHeight()-1);
-			p1.x = gClamp<float>(p1.x + .5f, 0, GetWidth()-1);
-			p1.y = gClamp<float>(p1.y + .5f, 0, GetHeight()-1);
+			p0.x = gClamp<float>(p0.x + .5f, 0, (float) GetWidth()-1);
+			p0.y = gClamp<float>(p0.y + .5f, 0, (float) GetHeight()-1);
+			p1.x = gClamp<float>(p1.x + .5f, 0, (float) GetWidth()-1);
+			p1.y = gClamp<float>(p1.y + .5f, 0, (float) GetHeight()-1);
 
 
 			ColorPen<DIBColor> pen(dib);
@@ -296,10 +297,13 @@ private:
 
 int main()
 {
-
 	gMainWindow.Create(L"ComeDither", 640, 640);
 	gMainWindow.Show(true);
 	gMainWindow.Redraw();
+	
+	std::cout << std::hex << 0xDEADBEEF << "has " << gCountBits(0xDEADBEEFu) << "bits" << std::endl;
+	std::cout << std::hex << 0x31313131 << "has " << gCountBits(0x31313131u) << "bits" << std::endl;
+
 	while (gDoMessageLoop(true)) 
 	{
 	}

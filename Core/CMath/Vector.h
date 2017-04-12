@@ -436,11 +436,33 @@ public:
 };
 
 
-typedef Vector<int, 2> ivec2;
+class ivec2 : public Vector<int, 2>
+{
+public:
+	ivec2() {}
+	ivec2(const Vector<int, 2>& inBase) : Vector<int, 2>(inBase) {}
+	ivec2(const Vector<float, 2>& inBase) : Vector<int, 2>((int)inBase.x, (int) inBase.y) {}
+	ivec2(int inX, int inY) : Vector<int,2>(inX, inY) {}
+
+	const ivec2 GetPerp() const { return ivec2(y, -x); }
+};
+
 typedef Vector<int, 3> ivec3;
 typedef Vector<int, 4> ivec4;
 
-typedef Vector<float, 2> fvec2;
+
+class fvec2 : public Vector<float, 2>
+{
+public:
+	fvec2() {}
+	fvec2(const Vector<float, 2>& inBase) : Vector<float, 2>(inBase) {}
+	fvec2(const Vector<int, 2>& inBase) : Vector<float, 2>((float)inBase.x, (float) inBase.y) {}	
+	fvec2(float inX, float inY) : Vector<float,2>(inX, inY) {}
+	
+	const fvec2 GetPerp() const { return fvec2(y, -x); }
+};
+
+
 typedef Vector<float, 3> fvec3;
 typedef Vector<float, 4> fvec4;
 
