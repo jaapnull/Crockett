@@ -132,6 +132,7 @@
     <ClInclude Include="CGeo\Quad.h" />
     <ClInclude Include="CHash\MurmurHash3.h" />
     <ClInclude Include="CMath\Math.h" />
+    <ClInclude Include="CMath\Vector.h" />
     <ClInclude Include="CorePCH.h" />
     <ClInclude Include="CReflection\ObjectReader.h" />
     <ClInclude Include="CReflection\ObjectWriter.h" />

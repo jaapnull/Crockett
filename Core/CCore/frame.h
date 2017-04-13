@@ -91,7 +91,7 @@ public:
 
 	virtual void Resize(unsigned int w, unsigned int h, int p = 0)
 	{
-		if (p == 0) p = w * sizeof(T);		
+		if (p == 0) p = w * sizeof(T);
 		mWidth = w;
 		mHeight = h;
 		mPitch = p;

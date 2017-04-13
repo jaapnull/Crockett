@@ -91,14 +91,21 @@ public:
 			gClamp<int>(inRect.mRight, 0, mCanvas.GetWidth()),
 			gClamp<int>(inRect.mBottom, 0, mCanvas.GetHeight()));
 
-		if (inRect.mTop >= 0 && inRect.mTop < mCanvas.GetHeight())
-			DrawLine(clamped.mLeft,    clamped.mTop,      clamped.mRight-1, clamped.mTop);
-		if (inRect.mRight >= 0 && inRect.mRight < mCanvas.GetWidth())
-			DrawLine(clamped.mRight-1, clamped.mTop,      clamped.mRight-1, clamped.mBottom-1);
-		if (inRect.mBottom >= 0 && inRect.mBottom < mCanvas.GetHeight())
-			DrawLine(clamped.mRight-1, clamped.mBottom-1, clamped.mLeft,    clamped.mBottom-1);
-		if (inRect.mLeft >= 0 && inRect.mLeft < mCanvas.GetWidth())
-			DrawLine(clamped.mLeft,    clamped.mBottom-1, clamped.mLeft,    clamped.mTop);
+		if (clamped.GetWidth() != 0)
+		{
+			if ((uint) inRect.mTop >= 0 && (uint) inRect.mTop < mCanvas.GetHeight())
+				DrawLine(clamped.mLeft,    clamped.mTop,      clamped.mRight-1, clamped.mTop);
+			if ((uint) inRect.mBottom >= 0 && (uint) inRect.mBottom < mCanvas.GetHeight())
+				DrawLine(clamped.mRight-1, clamped.mBottom-1, clamped.mLeft,    clamped.mBottom-1);
+		}
+
+		if (clamped.GetHeight() != 0)
+		{
+			if ((uint) inRect.mRight >= 0 && (uint) inRect.mRight < mCanvas.GetWidth())
+				DrawLine(clamped.mRight-1, clamped.mTop,      clamped.mRight-1, clamped.mBottom-1);
+			if ((uint) inRect.mLeft >= 0 && (uint) inRect.mLeft < mCanvas.GetWidth())
+				DrawLine(clamped.mLeft,    clamped.mBottom-1, clamped.mLeft,    clamped.mTop);
+		}
 	}
 	
 	void DrawLine(int x0, int y0, int x1, int y1)

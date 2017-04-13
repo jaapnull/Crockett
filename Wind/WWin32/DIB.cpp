@@ -82,7 +82,7 @@ bool DIB::IsValid() const
 void DIB::Resize(uint inWidth, uint inHeight)
 {
 	if (inWidth == GetWidth() && inHeight == GetHeight()) return;
-	//if (hbmp) DeleteObject(hbmp);
+
 	ClearResources();
 	if (inWidth == 0 || inHeight == 0) return; // invalid bmp
 	int pitch = ((int)inWidth)*sizeof(DIBColor);
@@ -111,6 +111,49 @@ void DIB::Resize(uint inWidth, uint inHeight)
 
 	BaseFrame::SetBaseData(bitmap);
 }
+
+
+void DIB::ResizeCopyData(uint inWidth, uint inHeight)
+{
+	if (inWidth == GetWidth() && inHeight == GetHeight()) return;
+
+	
+	if (inWidth == 0 || inHeight == 0)
+	{
+		ClearResources();
+		return; // invalid bmp
+	}
+
+	int pitch = ((int)inWidth)*sizeof(DIBColor);
+
+	BITMAPINFO bi;
+	sFillHeader(bi.bmiHeader, inWidth, inHeight);
+
+	DIBColor* bitmap;
+	HDC tdc = GetDC(0);
+	HBITMAP hbmp = CreateDIBSection(tdc, &bi, DIB_RGB_COLORS, (void**)&bitmap, 0, 0);
+	assert(hbmp);
+	HDC hdc = CreateCompatibleDC(tdc);
+	assert(hdc);
+	HGDIOBJ b = SelectObject(hdc, hbmp);
+	SetStretchBltMode(hdc, COLORONCOLOR);	// creates proper stretchblt
+	assert(b);
+	ReleaseDC(0, tdc);
+
+	// Copy over all old data to the new hdc
+	BitBlt(hdc, 0,0,GetWidth(), GetHeight(), HDC(mHdc), 0,0, SRCCOPY);
+
+	
+	// make sure it is 32-bits "aligned"
+	if (pitch % 4 != 0) pitch += (4 - pitch % 4);
+	BaseFrame::Resize(inWidth, inHeight, -pitch);
+
+	mBmp = _Handle(hbmp);
+	mHdc = _Handle(hdc);
+
+	BaseFrame::SetBaseData(bitmap);
+}
+
 
 void DIB::DrawImage(int inDestX, int inDestY, const DIB& image, int inSrcX, int inSrcY, int inWidth, int inHeight)
 {

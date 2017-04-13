@@ -12,11 +12,16 @@ public:
 
 class Canvas : public IMessageHandler<Window>
 {
-	DIB					mDib;
-	IPaintHandler*		mTarget;
 public:
-						Canvas(IPaintHandler& inHandler)		{ mTarget = &inHandler; }
-	const DIB&			GetDib()	const						{ return mDib; }
-	DIB&				GetDib()								{ return mDib; }
+						Canvas(IPaintHandler& inHandler)			{ mTarget = &inHandler; }
+	const DIB&			GetDib()	const							{ return mDib; }
+	DIB&				GetDib()									{ return mDib; }
+	void				SetDefaultColor(const DIBColor& inColor)	{ mDefaultColor = inColor; }
+
 	MessageReturnCode	HandleMessage(Window* inParent, uint inMessage, MessageParam inParamA, MessageParam  inParamB);	// implementation outside in CPP
+
+private:
+	DIB					mDib;
+	IPaintHandler*		mTarget										= nullptr;
+	DIBColor			mDefaultColor								= DIBColor(255,255,255);
 };

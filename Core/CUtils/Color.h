@@ -169,7 +169,6 @@ public:
 	}
 
 	static IntColor<T_ColorPacking> sGrayScale(const uchar& inGrayscale)								{ return IntColor<T_ColorPacking>(inGrayscale, inGrayscale, inGrayscale); }
-
 	
 	const IntColor GetScaled(float f) const
 	{
@@ -259,6 +258,30 @@ public:
 		default:
 		case 15: return IntColor(0xFF, 0xFF, 0xFF);
 		}
+	}
+
+
+	/// hue=0..360, value=0..1, saturation=0..1
+	static IntColor sFromHSV(float inHue, float inValue, float inSaturation)
+	{
+		float h60 = inHue / 60.0f;
+		float r,g,b;
+		if (h60 < 3.0f)
+		{
+			g = h60;
+			r = 2.0f - h60;
+			b = h60 - 2.0f;
+		}
+		else
+		{
+			g = 4.0f - h60;
+			r = h60 - 4.0f;
+			b = 6.0f - h60;
+		}
+		g = gClamp(g,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation);
+		r = gClamp(r,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation);
+		b = gClamp(b,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation);
+		return IntColor(uint8(r * 255.0f), uint8(g * 255.0f), uint8(b * 255.0f));
 	}
 };
 

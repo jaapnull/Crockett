@@ -23,6 +23,7 @@ public:
 				~DIB();
 
 	void		Resize(uint inWidth, uint inHeight);
+	void		ResizeCopyData(uint inWidth, uint inHeight);
 	bool		IsValid() const;
 	bool		LoadFromFile(const WString& filename);
 	void		ClearResources();
