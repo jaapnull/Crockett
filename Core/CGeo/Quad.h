@@ -50,17 +50,28 @@ public:
 		return *this;
 	}
 
-	bool HasArea() const
+	bool HasPositiveArea() const
 	{
 		return mLeft < mRight && mTop < mBottom;
 	}
+
+	bool HasInversions() const
+	{
+		return mLeft > mRight || mTop > mBottom;
+	}
+
+	bool HasZeroArea() const
+	{
+		return mLeft == mRight || mTop == mBottom;
+	}
+
 
 	T GetSurfaceArea() const
 	{
 		return GetWidth() * GetHeight();
 	}
 
-	bool HasZeroSurface() const
+	bool IsPointRect() const
 	{
 		return mLeft == mRight && mTop == mBottom;
 	}
@@ -94,6 +105,38 @@ public:
 		temp.Intersect(other);
 		return temp;
 	}
+
+
+	uint SubtractAndFragment(const Rect<T> inOther, Rect<T>* outFragments)
+	{
+		Rect<T> intersect = GetIntersect(inOther);
+		if (!intersect.HasPositiveArea())
+		{
+			outFragments[0] = *this; return 1;
+		}
+		if (intersect == *this)
+		{
+			return 0;
+		}
+		// .-----------.
+		// |   | U |   |
+		// |   |---|   |
+		// | L | i | R |
+		// |   |---|   |
+		// |   | D |   |
+		// '-----------'
+		uint fragments = 0;
+		if (intersect.mLeft > mLeft) //L 
+			outFragments[fragments++] = Rect<T>(mLeft, mTop, intersect.mLeft, mBottom);
+		if (intersect.mRight < mRight)  //R
+			outFragments[fragments++] = Rect<T>(intersect.mRight, mTop, mRight, mBottom);
+		if (intersect.mTop > mTop) //U
+			outFragments[fragments++] = Rect<T>(intersect.mLeft, mTop, intersect.mRight, intersect.mTop);
+		if (intersect.mBottom < mBottom) //D
+			outFragments[fragments++] = Rect<T>(intersect.mLeft, intersect.mBottom, intersect.mRight, mBottom);
+		return fragments;
+	}
+
 
 	void Intersect(const Rect<T>& other)
 	{
@@ -179,7 +222,7 @@ public:
 
 	bool FullyContains(const Rect<T>& other) const
 	{
-		if (!HasArea() || !other.HasArea()) return false;
+		if (HasInversions() || !other.HasInversions()) return false;
 		return other.mLeft >= mLeft && other.mTop >= mTop && other.mRight <= mRight && other.mBottom <= mBottom;
 	}
 
@@ -199,6 +242,11 @@ public:
 		return *this;
 	}
 	
+	Vector<T, 2> GetDimensions() const
+	{
+		return Vector<T, 2>(GetWidth(), GetHeight());
+	}
+
 	Rect<T> Expand(T inValue)
 	{
 		mLeft -= inValue;
