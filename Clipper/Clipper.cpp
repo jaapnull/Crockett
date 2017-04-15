@@ -103,11 +103,20 @@ public:
 	{
 		String mask_string;
 		uint32 mask = mHalfSpaceData.Get(inPosition.x, inPosition.y);
-		for (int b = 0; b < mHalfSpaces.GetLength(); b++)
+		for (uint b = 0; b < mHalfSpaces.GetLength(); b++)
 		{
 			mask_string.Append((mask&(1<<b)) ? '1' : '0');
 		}
+		
+		size64 idx = mSelected.Find(mask);
+		if (idx == cMaxSize64)
+			mSelected.Append(mask);
+		else
+			mSelected.SwapRemove(idx);
+
 		std::cout << std::hex << mask_string << " : " << ((uint64(mask) * 275ll) % 720ll)/2ll << std::endl;
+		FillHalfSpaceData();
+		Redraw();
 	}
 
 	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
@@ -135,10 +144,7 @@ public:
 		{
 			mP2 = pos;
 		}
-
-
 		mPointsSet++;
-		//mHalfSpaces.Append(HalfSpace2(pos.GetNormalised(), pos.GetLength()));
 		FillHalfSpaceData();
 		Redraw();
 	}
@@ -191,9 +197,15 @@ public:
 			for (uint y = 0; y < dib.GetHeight(); y++)
 			{
 				uint32 mask = mHalfSpaceData.Get(x,y);
-				uint32 h = ((uint64(mask) * 275ll) % 720ll)/2;//float(mask) / float(max) * 360.0f;
-				
-				dib.Set(x,y, DIBColor::sFromHSV(float(h), 1, 0.5));
+				uint32 h = ((uint64(mask) * 275ll) % 720ll) / 2;//float(mask) / float(max) * 360.0f;
+				if (mSelected.Find(mask) != cMaxSize64)
+				{
+					dib.Set(x, y, DIBColor::sFromHSV(float(h), 0.2f, 0.2f));
+				}
+				else
+				{
+					dib.Set(x, y, DIBColor::sFromHSV(float(h), 1.0f, 0.5f));
+				}
 			}
 		}
 
@@ -275,6 +287,7 @@ private:
 
 
 	// Handlers
+	Array<uint32>				mSelected;
 	Array<HalfSpace2>			mHalfSpaces;
 	DataFrame<uint32>			mHalfSpaceData;
 	fvec2						mPrevClick = fvec2(0,0);

@@ -278,9 +278,9 @@ public:
 			r = h60 - 4.0f;
 			b = 6.0f - h60;
 		}
-		g = gClamp(g,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation);
-		r = gClamp(r,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation);
-		b = gClamp(b,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation);
+		g = gClamp(g,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation) * inSaturation;
+		r = gClamp(r,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation) * inSaturation;
+		b = gClamp(b,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation) * inSaturation;
 		return IntColor(uint8(r * 255.0f), uint8(g * 255.0f), uint8(b * 255.0f));
 	}
 };

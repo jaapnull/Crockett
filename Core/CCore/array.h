@@ -47,6 +47,7 @@ public:
 
 	void Shrink(size64 inShrinkage)							{ Resize(GetLength() - inShrinkage); }				// Shrinks amount of elements by inShrinkage, destructing elements
 	void Pop()												{ Resize(GetLength() - 1); }						// Shrinks elements by one, destructing last element
+	void SwapRemove(size64 inIndex)							{ if (inIndex != GetLength() - 1) mData[inIndex] = Back(); Pop(); }
 
 	size64 Find(const T& inElement)							
 	{ 
