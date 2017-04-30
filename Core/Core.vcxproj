@@ -129,6 +129,8 @@
     <ClInclude Include="CCore\String.h" />
     <ClInclude Include="CCore\Types.h" />
     <ClInclude Include="CFile\File.h" />
+    <ClInclude Include="CGeo\HalfSpace2.h" />
+    <ClInclude Include="CGeo\LineSegment2.h" />
     <ClInclude Include="CGeo\Quad.h" />
     <ClInclude Include="CHash\MurmurHash3.h" />
     <ClInclude Include="CMath\Math.h" />
@@ -146,6 +148,7 @@
     <ClInclude Include="CStreams\Streams.h" />
     <ClInclude Include="CUtils\Color.h" />
     <ClInclude Include="CUtils\EnumMask.h" />
+    <ClInclude Include="CUtils\Sort.h" />
     <ClInclude Include="CUtils\StringUtils.h" />
     <ClInclude Include="CUtils\Trace.h" />
   </ItemGroup>

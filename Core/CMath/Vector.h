@@ -455,14 +455,25 @@ class fvec2 : public Vector<float, 2>
 {
 public:
 	fvec2() {}
-	fvec2(const Vector<float, 2>& inBase) : Vector<float, 2>(inBase) {}
-	fvec2(const Vector<int, 2>& inBase) : Vector<float, 2>((float)inBase.x, (float) inBase.y) {}	
-	fvec2(float inX, float inY) : Vector<float,2>(inX, inY) {}
-	
-	const fvec2 GetPerp() const { return fvec2(y, -x); }
+	fvec2(const Vector<float, 2>& inBase) : Vector<float, 2>(inBase)							{}
+	fvec2(const Vector<int, 2>& inBase) : Vector<float, 2>((float)inBase.x, (float) inBase.y)	{}	
+	fvec2(float inX, float inY) : Vector<float,2>(inX, inY)										{}
+
+	const fvec2 GetPerp() const																	{ return fvec2(y, -x); }
+	float GetCross(const fvec2 inOther)															{ return x*inOther.y - inOther.x*y; }
 };
 
 
-typedef Vector<float, 3> fvec3;
+class fvec3 : public Vector<float, 3>
+{
+
+	fvec3() {}
+	fvec3(const Vector<float, 3>& inBase) : Vector<float, 3>(inBase) {}
+	fvec3(const Vector<int, 3>& inBase) : Vector<float, 3>((float)inBase.x, (float) inBase.y) {}	
+	fvec3(float inX, float inY, float inZ) : Vector<float,3>(inX, inY, inZ) {}
+
+	fvec3 GetCross(const fvec3& inOther)														{ return fvec3(y*inOther.z - inOther.y*z, z*inOther.x - inOther.z*x, x*inOther.y - inOther.x*y); }
+};
+
 typedef Vector<float, 4> fvec4;
 

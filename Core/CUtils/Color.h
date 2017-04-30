@@ -261,8 +261,14 @@ public:
 	}
 
 
+	static int32 sClampTo255(int32 inValue)
+	{
+		// check upper 24 bits, if not zero, clamp output 0...255 by using arithetic shift to splat v-flag (MSB) into 8 bits and inverting
+		return ((inValue & 0xFFFFFF00)== 0) ? inValue : ((~(inValue>>31))&255);
+	}
+
 	/// hue=0..360, value=0..1, saturation=0..1
-	static IntColor sFromHSV(float inHue, float inValue, float inSaturation)
+	static IntColor sFromHSV(float inHue, float inSaturation, float inValue)
 	{
 		float h60 = inHue / 60.0f;
 		float r,g,b;
@@ -278,11 +284,33 @@ public:
 			r = h60 - 4.0f;
 			b = 6.0f - h60;
 		}
-		g = gClamp(g,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation) * inSaturation;
-		r = gClamp(r,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation) * inSaturation;
-		b = gClamp(b,0.0f,1.0f) * inValue * inSaturation + (1.0f - inSaturation) * inSaturation;
+		g = (gClamp(g,0.0f,1.0f) * inSaturation + (1.0f - inSaturation)) * inValue;
+		r = (gClamp(r,0.0f,1.0f) * inSaturation + (1.0f - inSaturation)) * inValue;
+		b = (gClamp(b,0.0f,1.0f) * inSaturation + (1.0f - inSaturation)) * inValue;
 		return IntColor(uint8(r * 255.0f), uint8(g * 255.0f), uint8(b * 255.0f));
 	}
+
+	/// hue=0..360, value=0..1, saturation=0..1
+	static IntColor sFromHSVInt(int32 inHue, int32 inSaturation, int32 inValue)
+	{
+		bool upper_register = (inHue >= 0x300);
+
+		int g = upper_register ? 0x400 - inHue : inHue;
+		int r = upper_register ? inHue - 0x400 : 0x200 - inHue;
+		int b = upper_register ? 0x600 - inHue : inHue - 0x200;
+
+		int offset = (0x100 - inSaturation) * 0x100;
+
+		g = ((sClampTo255(g) * inSaturation) + offset) * inValue;
+		r = ((sClampTo255(r) * inSaturation) + offset) * inValue;
+		b = ((sClampTo255(b) * inSaturation) + offset) * inValue;
+
+		g >>= 16;
+		r >>= 16;
+		b >>= 16;
+		return IntColor(r,g,b);
+	}
+
 };
 
 

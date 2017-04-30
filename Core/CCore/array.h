@@ -172,6 +172,10 @@ public:
 		mEndValid			= mData + inNewElementCount;									// Update element count to new value
 	}
 
+	void AppendEmpty()
+	{
+		Resize(GetLength()+1);
+	}
 
 	// --------------------------------------------------------------------------------------------------------
 	// Appends data of length [inElementCount] from [inData] to the end of the existing elements.

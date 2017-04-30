@@ -80,6 +80,15 @@
     <ClInclude Include="CMath\Vector.h">
       <Filter>CMath</Filter>
     </ClInclude>
+    <ClInclude Include="CUtils\Sort.h">
+      <Filter>CUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="CGeo\LineSegment2.h">
+      <Filter>CGeo</Filter>
+    </ClInclude>
+    <ClInclude Include="CGeo\HalfSpace2.h">
+      <Filter>CGeo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />

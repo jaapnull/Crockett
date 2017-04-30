@@ -7,6 +7,7 @@
 #include <CReflection/Reflection.h>
 #include <CResource/ObjectCollection.h>
 #include <CUtils/Trace.h>
+#include <CUtils/sort.h>
 #include <CReflection/ObjectWriter.h>
 #include <CReflection/ObjectReader.h>
 #include <CReflection/Tokenizer.h>
@@ -89,6 +90,9 @@ public:
 
 int main()
 {
+
+	Test_Sort();
+
 	gDevices.RegisterDevice(new FileDevice("data", "."));
 	gDevices.RegisterDevice(new FileDevice("folder", ".\\TestFolder"));
 
