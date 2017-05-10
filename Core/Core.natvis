@@ -13,4 +13,8 @@
     </Expand>
   </Type>
 
+  <Type Name="fvec2">
+    <DisplayString>[{x,g}, {y,g}]</DisplayString>
+  </Type>
+  
 </AutoVisualizer>

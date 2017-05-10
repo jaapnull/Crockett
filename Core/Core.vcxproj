@@ -131,6 +131,7 @@
     <ClInclude Include="CFile\File.h" />
     <ClInclude Include="CGeo\HalfSpace2.h" />
     <ClInclude Include="CGeo\LineSegment2.h" />
+    <ClInclude Include="CGeo\Polygon2.h" />
     <ClInclude Include="CGeo\Quad.h" />
     <ClInclude Include="CHash\MurmurHash3.h" />
     <ClInclude Include="CMath\Math.h" />

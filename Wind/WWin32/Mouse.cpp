@@ -12,7 +12,7 @@ MessageReturnCode MouseHandler::HandleMessage(Window* inWindow, uint inMessage, 
 	if (!is_mouse_message) return mrcUnhandled;
 
 	EnumMask<MMouseButtons> buttons;	
-	uint button_mask = (uint) ((offset64) inParamA);
+	uint button_mask = (uint) ((size64) inParamA);
 	// transform Win32 mask to our EnumMask<MMouseButtons>
 	if (button_mask&MK_LBUTTON)	buttons << mbLeft;
 	if (button_mask&MK_MBUTTON)	buttons << mbMiddle;

@@ -1,8 +1,17 @@
 #pragma once
+#include <CMath/Math.h>
 #include <CMath/Vector.h>
 
 struct HalfSpace2
 {
+
+	enum ESide
+	{
+		esInside,
+		esOutside,
+		esEdge
+	};
+
 	HalfSpace2() {}
 	HalfSpace2(float inNormX, float inNormY, float inOffset) : mNormal(inNormX, inNormY), mOffset(inOffset) {}
 	HalfSpace2(const fvec2& inNormal, float inOffset) : mNormal(inNormal), mOffset(inOffset) {}
@@ -12,6 +21,11 @@ struct HalfSpace2
 		return inPoint.GetDot(mNormal) - mOffset;
 	}
 
+	inline ESide GetSide(const fvec2& inPoint, float inEpsilon = cEpsilon) const
+	{
+		float dist = SignedDistance(inPoint);
+		return (dist > inEpsilon) ? esOutside : (dist < -inEpsilon) ? esInside : esEdge;
+	}
 
 	static const HalfSpace2 sCreateBetweenPoints(const fvec2& inPointA, const fvec2& inPointB)
 	{

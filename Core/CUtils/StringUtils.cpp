@@ -71,13 +71,13 @@ String gToString(float inFloat)
 	return String(buffer);
 }
 
-offset64 gFindInString(const String& inCorpus, const String& inSearchTerm, offset64 inStartOffset)
+size64 gFindInString(const String& inCorpus, const String& inSearchTerm, size64 inStartOffset)
 {
 	if (inCorpus.IsEmpty() || inSearchTerm.IsEmpty() || inCorpus.GetLength() < inSearchTerm.GetLength())
 		return cMaxSize64;
-	offset64 start_pos_max = inCorpus.GetLength() - inSearchTerm.GetLength();
-	offset64 matched_length = 0;
-	for (offset64 c = inStartOffset; c <= start_pos_max; c++)
+	size64 start_pos_max = inCorpus.GetLength() - inSearchTerm.GetLength();
+	size64 matched_length = 0;
+	for (size64 c = inStartOffset; c <= start_pos_max; c++)
 	{
 		char current_char = inCorpus[c];
 		matched_length =	(inSearchTerm[matched_length] == current_char) ? matched_length + 1 :

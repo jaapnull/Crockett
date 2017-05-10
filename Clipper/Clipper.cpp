@@ -1,12 +1,13 @@
 #include <CCore/String.h>
+#include <CMath/Math.h>
 #include <CMath/Vector.h>
+#include <CGeo/HalfSpace2.h>
+#include <CGeo/LineSegment2.h>
+#include <CGeo/Polygon2.h>
 #include <CReflection/Reflection.h>
 #include <CReflection/ObjectWriter.h>
 #include <CFile/File.h>
 #include <CUtils/Sort.h>
-#include <CMath/Math.h>
-#include <CGeo/HalfSpace2.h>
-#include <CGeo/LineSegment2.h>
 
 #include <unordered_map>
 
@@ -57,23 +58,6 @@ struct HalfSpaceMask
 
 
 
-struct Polygon2
-{
-	void GetSplit(const HalfSpace2& inSplitPlane, Polygon2& inA, Polygon2& inB) const
-	{
-		Polygon2 p;
-		for (fvec2 c : mCorners)
-		{
-			if (inSplitPlane.SignedDistance(c) < 0)
-				inA.mCorners.Append(c);
-			else
-				inB.mCorners.Append(c);
-		}
-	}
-
-	Array<fvec2> mCorners;
-
-};
 
 
 class MyWindow : public Window, public IPaintHandler, IMouseHandler, IKeyHandler
@@ -87,7 +71,6 @@ public:
 		mCanvas.SetDefaultColor(DIBColor(255,255,255));
 		AddHandler(&mMouseHandler);
 		AddHandler(&mKeyboard);
-
 		SetupHalfSpaces();
 	}
 
@@ -112,6 +95,7 @@ public:
 	virtual void OnMouseMove(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
 	{
 		fvec2 pos = TransformScreenToClip(inPosition);
+		mLastMouse = pos;
 		const float clip_space_selection_range = 0.1f;
 		
 		int idx = 0;
@@ -154,13 +138,7 @@ public:
 		else
 		{
 			if (mPolygons.IsEmpty()) mPolygons.AppendEmpty();
-
-			mPolygons[0].mCorners.Append(pos);
-			//mMarkers.Append(pos);
-			//if ((mMarkers.GetLength() & 1) == 0)
-			//{
-			//	mLines.Append(LineSegment2(mMarkers[mMarkers.GetLength()-2], mMarkers.Back()));
-			//}
+			mPolygons[0].AppendVertex(pos);
 		}
 		FillHalfSpaceData();
 		Redraw();
@@ -201,13 +179,12 @@ public:
 		mMarkers.Clear();
 		mLines.Clear();
 
-		mHalfSpaces.Clear();
 
+		mHalfSpaces.Clear();
 		mHalfSpaces.Append(HalfSpace2(0,1,1));
 		mHalfSpaces.Append(HalfSpace2(0,-1,1));
 		mHalfSpaces.Append(HalfSpace2(1,0,1));
 		mHalfSpaces.Append(HalfSpace2(-1,0,1));
-		//mHalfSpaces.Append(HalfSpace2(.707f,-.707f,0,	"Diag"));
 
 		if (mPointsSet >= 1)
 		{
@@ -222,7 +199,7 @@ public:
 		if (mPointsSet >= 2)
 		{
 			mMarkers.Append(mP[1]);
-			mLines.Append(LineSegment2(mP[0], mP[1]));
+			//mLines.Append(LineSegment2(mP[0], mP[1]));
 			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2(-1,-1)));
 			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2( 1,-1)));
 			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2(-1, 1)));
@@ -233,14 +210,42 @@ public:
 		if (mPointsSet >= 3)
 		{
 			mMarkers.Append(mP[2]);
-			mLines.Append(LineSegment2(mP[1], mP[2]));
-			mLines.Append(LineSegment2(mP[2], mP[0]));
+			//mLines.Append(LineSegment2(mP[1], mP[2]));
+			//mLines.Append(LineSegment2(mP[2], mP[0]));
 			std::cout << mM[2].ToString() << std::endl;
+		}
+
+
+
+		Polygon2 p;
+		p.AppendVertex(fvec2(-mVisibleRange,  mVisibleRange) * 0.9f);
+		p.AppendVertex(fvec2( mVisibleRange,  mVisibleRange) * 0.9f);
+		p.AppendVertex(fvec2( mVisibleRange, -mVisibleRange) * 0.9f);
+		p.AppendVertex(fvec2(-mVisibleRange, -mVisibleRange) * 0.9f);
+		
+
+		mPolygons.Clear();
+		mPolygons.Append(p);
+
+		int m = 0;
+		for (const HalfSpace2& hs : mHalfSpaces)
+		{
+			Array<Polygon2> output;
+			for (const Polygon2& p : mPolygons)
+			{
+				Polygon2 i,o;
+				p.SplitConvex(hs, i, o);
+				if (o.GetVertexCount() >= 3) output.Append(o);
+				if (i.GetVertexCount() >= 3) output.Append(i);
+			}
+			mPolygons = output;
+			//if (++m == 1) break;
 		}
 	}
 
 	void FillHalfSpaceData()
 	{
+		return;
 		gAssert(mHalfSpaceData.GetWidth() == mCanvas.GetDib().GetWidth());
 		gAssert(mHalfSpaceData.GetHeight() == mCanvas.GetDib().GetHeight());
 		
@@ -265,6 +270,8 @@ public:
 
 	void DrawField()
 	{
+		mCanvas.GetDib().SetAll(DIBColor(128,64,128));
+		return;
 		DIB& dib = mCanvas.GetDib();
 		fvec2 corner(-mVisibleRange, -mVisibleRange);
 		float stepx = float(mVisibleRange*2.0f)/float(dib.GetWidth());
@@ -282,8 +289,10 @@ public:
 	void DrawLines()
 	{
 		DIB& dib = mCanvas.GetDib();
+		ColorPen<DIBColor> pen(dib);
 
 		int idx = 0;
+		if (false)
 		for (const HalfSpace2& hs : mHalfSpaces)
 		{
 
@@ -334,71 +343,76 @@ public:
 			p1.x = gClamp<float>(p1.x + .5f, 0, (float) GetWidth()-1);
 			p1.y = gClamp<float>(p1.y + .5f, 0, (float) GetHeight()-1);
 
-			ColorPen<DIBColor> pen(dib);
 			pen.SetColor((idx == mMouseOverHalfSpace) ? DIBColor(255,255,255) : DIBColor(0,0,0));
 			pen.DrawLine(p0, p1);
 			pen.DrawLine(a0, a1);
 			idx++;
 
-			pen.SetColor(DIBColor(255,255,0));
+		}
+		pen.SetColor(DIBColor(255,255,0));
 
 
-			Array<LineSegment2> lines = mLines;
-			Array<fvec2> points = mMarkers;
+		Array<LineSegment2> lines = mLines;
+		Array<fvec2> points = mMarkers;
 
-			for (Polygon2& plgon : mPolygons)
+		struct CCW_Sort
+		{
+			fvec2 mMid;
+			bool operator()(const fvec2& inA, const fvec2& inB) { return fvec2(inA-mMid).GetCross(inB-mMid) < 0.0f; }
+		} ccws;
+
+		//for (const LineSegment2& s : lines)
+		//{
+		//	fvec2 p0 = TransformClipToScreen(s.mTo);
+		//	fvec2 p1 = TransformClipToScreen(s.mFrom);
+		//	pen.DrawLine(p0, p1);
+		//}
+		//
+		//for (const fvec2& f : points)
+		//{
+		//	ivec2 p(TransformClipToScreen(f));
+		//	pen.DrawLine(ivec2(p.x-5, p.y-5), ivec2(p.x-5, p.y+5));
+		//	pen.DrawLine(ivec2(p.x-5, p.y+5), ivec2(p.x+5, p.y+5));
+		//	pen.DrawLine(ivec2(p.x+5, p.y+5), ivec2(p.x+5, p.y-5));
+		//	pen.DrawLine(ivec2(p.x+5, p.y-5), ivec2(p.x-5, p.y-5));
+		//}
+
+		for (Polygon2& plgon : mPolygons)
+		{
+			if (plgon.IsEmpty()) 
+				continue;
+
+			if (plgon.CheckSide(mLastMouse) != HalfSpace2::esOutside)
 			{
-				if (plgon.mCorners.IsEmpty()) 
-					continue;
+				pen.SetColor(DIBColor(255,255,255));
+			}
+			else
+			{
+				pen.SetColor(DIBColor(128,128,128));
+			}
 
-				fvec2 avg = fvec2::sZero();
-				for (const fvec2& p : plgon.mCorners) avg += p;
-				avg /= float(plgon.mCorners.GetLength());
-				points.Append(avg);
+			
 
-				struct CCW_Sort
+			fvec2 avg = fvec2::sZero();
+			for (const fvec2& p : plgon) avg += p;
+			avg /= float(plgon.GetVertexCount());
+			points.Append(avg);
+
+			ccws.mMid = avg + fvec2(0.1f, 0.0);
+
+			fvec2 prev = plgon.Back();
+			for (const fvec2& p : plgon)
+			{
+				points.Append(p);
+				fvec2 shifted_p = p - ((p-avg).GetNormalised() * .1f);
+				fvec2 shifted_prev = prev - ((prev-avg).GetNormalised() * .1f);
+				if (prev != p) 
 				{
-					fvec2 mMid;
-					bool operator()(const fvec2& inA, const fvec2& inB) { return fvec2(inA-mMid).GetCross(inB-mMid) < 0.0f; }
-				};
-
-				CCW_Sort ccws;
-				ccws.mMid = avg;
-				gSort(plgon.mCorners.begin(), plgon.mCorners.end(), ccws);
-
-				fvec2 prev = plgon.mCorners.Back();
-				for (const fvec2& p : plgon.mCorners)
-				{
-					points.Append(p);
-					fvec2 shifted_p = p + ((p-avg).GetNormalised() * .1f);
-					fvec2 shifted_prev = prev + ((prev-avg).GetNormalised() * .1f);
-					if (prev != p) 
-					{
-						lines.Append(LineSegment2(shifted_prev, shifted_p));
-						lines.Append(LineSegment2(prev, p));
-					}
-					prev = p;
+					pen.DrawLine(TransformClipToScreen(prev), TransformClipToScreen(p));
 				}
+				prev = p;
 			}
-
-
-
-			for (const LineSegment2& s : lines)
-			{
-				fvec2 p0 = TransformClipToScreen(s.mTo);
-				fvec2 p1 = TransformClipToScreen(s.mFrom);
-				pen.DrawLine(p0, p1);
-			}
-
-			for (const fvec2& f : points)
-			{
-				ivec2 p(TransformClipToScreen(f));
-				pen.DrawLine(ivec2(p.x-5, p.y-5), ivec2(p.x-5, p.y+5));
-				pen.DrawLine(ivec2(p.x-5, p.y+5), ivec2(p.x+5, p.y+5));
-				pen.DrawLine(ivec2(p.x+5, p.y+5), ivec2(p.x+5, p.y-5));
-				pen.DrawLine(ivec2(p.x+5, p.y-5), ivec2(p.x-5, p.y-5));
-			}
-
+		
 		}
 	}
 
@@ -440,6 +454,7 @@ private:
 	Array<LineSegment2>			mLines;
 	Array<Polygon2>				mPolygons;
 
+	fvec2						mLastMouse = fvec2(0,0);
 	fvec2						mP[3];
 	HalfSpaceMask				mM[3];
 

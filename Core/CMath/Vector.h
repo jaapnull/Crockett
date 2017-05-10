@@ -188,6 +188,13 @@ public:
 		return *this;
 	}
 
+	bool IsNear(const BaseVector<T, i>& other) const
+	{
+		for (unsigned int x = 0; x < i; x++)
+			if (!gIsNear(other.mField[x], mField[x])) return false;
+		return true;
+	}
+
 	T GetDot(const BaseVector<T, i>& other) const
 	{
 		T accum = 0;

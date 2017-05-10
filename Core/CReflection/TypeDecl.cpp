@@ -1,6 +1,6 @@
 #include <CReflection/TypeDecl.h>
 
-size64 TypeDecl::GetSizeInBytes() const
+uint64 TypeDecl::GetSizeInBytes() const
 {
 	if (IsNakedCompound())
 	{
@@ -38,7 +38,7 @@ size64 TypeDecl::GetSizeInBytes() const
 }
 
 
-size64 TypeDecl::GetAlignment() const
+uint64 TypeDecl::GetAlignment() const
 {
 	if (mModifiers.IsEmpty())
 	{

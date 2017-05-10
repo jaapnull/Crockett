@@ -89,6 +89,9 @@
     <ClInclude Include="CGeo\HalfSpace2.h">
       <Filter>CGeo</Filter>
     </ClInclude>
+    <ClInclude Include="CGeo\Polygon2.h">
+      <Filter>CGeo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />

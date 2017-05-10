@@ -172,6 +172,57 @@ public:
 		mEndValid			= mData + inNewElementCount;									// Update element count to new value
 	}
 
+
+	void Insert(const T& inNewElement, size64 inBeforeElement)
+	{
+		// two cases: one where we do in-place move, one where we do a resize followed by a split copy
+		if (mEndReserved - mEndValid >= 1)
+		{
+			// This breaks if *somehow* mBeginData < sizeof(T)
+			// We increase mEndValid because we use one element more
+			mEndValid++; 
+			T* i = mEndValid;
+			for (; i > mData + inBeforeElement; i--)
+			{
+				// move elements forwards
+				i[1] == i[0];
+			}
+			i[0] = inNewElement;
+		}
+		else
+		{
+			size64 new_size = GetLength() + 1;
+			// Full new alloc 
+			T* new_data = TAllocator::sRawAlloc(new_size);
+			// Copy over the "before" part
+			for (size64 i = 0; i < inBeforeElement; i++)
+			{
+				new (new_data + i) T(mData[i]);
+			}
+
+			// Copy in the new element
+			new (new_data + inBeforeElement) T(inNewElement);
+			
+			// Copy in the "after" part
+			for (size64 i = inBeforeElement+1; i < GetLength()+1; i++)
+			{
+				new (new_data + i) T(mData[i]);
+			}
+
+			// Free old data
+			TAllocator::sFreeAndDestruct(mData, GetLength());
+			
+			// Update members with newly allocated data
+			mData = new_data;
+			mEndValid = new_data + new_size;
+			mEndReserved = mEndValid;
+		}
+	}
+
+	// --------------------------------------------------------------------------------------------------------
+	// Adds an empty T at the end of the buffer
+	// Resizes/Reallocs the buffer if needed.
+	// --------------------------------------------------------------------------------------------------------
 	void AppendEmpty()
 	{
 		Resize(GetLength()+1);

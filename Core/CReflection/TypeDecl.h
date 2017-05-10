@@ -102,7 +102,7 @@ struct ClassMember
 {
 	TypeDecl						mType;
 	String							mName;
-	offset64						mOffset;
+	size64						mOffset;
 };
 
 

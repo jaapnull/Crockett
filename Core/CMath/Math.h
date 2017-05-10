@@ -11,6 +11,9 @@ static const double cPi_d = 3.14159265358979323846;
 static const float cSqrt2_f = 1.41421356237309504880f;
 static const double cSqrt2_d = 1.41421356237309504880;
 
+static const float cEpsilon = 1.192092896e-07f;	// FLT_EPSILON
+
+
 // TODO move these to utils.h or something
 inline float gFloatRand()
 {
@@ -116,4 +119,10 @@ template <typename T>
 inline const T& gMax(const T& A, const T& B)
 {
 	return A > B ? A : B;
+}
+
+inline bool gIsNear(float inA, float inB)
+{
+	float e = gMax(inA, inB) * cEpsilon;
+	return gAbs(inA-inB) <= e;
 }

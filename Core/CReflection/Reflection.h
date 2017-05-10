@@ -46,7 +46,7 @@ public:
 	{
 		ClassMember member_info;
 		member_info.mType = gInspectDeclaration<T>();
-		member_info.mOffset = (offset64)&inMemberObject;	// since inMemberObject is a member of a null-object, each offset is relative to zero
+		member_info.mOffset = (size64)&inMemberObject;	// since inMemberObject is a member of a null-object, each offset is relative to zero
 		member_info.mName = inIdentifier;
 		mTargetDescription.mMembers.Append(member_info);
 	}

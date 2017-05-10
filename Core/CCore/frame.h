@@ -22,8 +22,8 @@ public:
 
 	void SetAll(const T& inValue)
 	{
-		offset64 byte_addres = ((offset64) GetBaseData());
-		byte_addres += ((offset64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
+		size64 byte_addres = ((size64) GetBaseData());
+		byte_addres += ((size64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
 
 		T* pointer = (T*) byte_addres;
 
@@ -33,7 +33,7 @@ public:
 			{
 				pointer[x] = inValue;
 			}
-			pointer = (T*) (offset64(pointer) + GetPitch());
+			pointer = (T*) (size64(pointer) + GetPitch());
 		}			
 	}
 
@@ -45,8 +45,8 @@ public:
 			gMin<int>(GetWidth(), inRegion.mRight),
 			gMin<int>(GetHeight(), inRegion.mBottom)
 			);
-		offset64 byte_addres = ((offset64)GetBaseData());
-		byte_addres += ((offset64)(mHeight - 1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
+		size64 byte_addres = ((size64)GetBaseData());
+		byte_addres += ((size64)(mHeight - 1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
 
 		T* pointer = (T*)(byte_addres + mPitch * clamped_reg.mTop);
 
@@ -56,14 +56,14 @@ public:
 			{
 				pointer[x] = inValue;
 			}
-			pointer = (T*)(offset64(pointer) + GetPitch());
+			pointer = (T*)(size64(pointer) + GetPitch());
 		}
 	}
 
 	inline void Set(int inX, int inY, T inValue)
 	{
-		offset64 byte_addres = ((offset64 ) GetBaseData());
-		byte_addres += ((offset64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
+		size64 byte_addres = ((size64 ) GetBaseData());
+		byte_addres += ((size64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
 		byte_addres += inX * sizeof(T) + inY * mPitch;;
 		*((T*)byte_addres) = inValue;
 	}
@@ -71,9 +71,9 @@ public:
 	inline T& Get(int x, int y)
 	{
 		assert(x < (int)GetWidth() && y < (int)GetHeight());
-		offset64  byte_addres = ((offset64 ) GetBaseData());
-		byte_addres += ((offset64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
-		offset64  i = x * sizeof(T) + y * mPitch;
+		size64  byte_addres = ((size64 ) GetBaseData());
+		byte_addres += ((size64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
+		size64  i = x * sizeof(T) + y * mPitch;
 		byte_addres += i;
 		return *((T*)byte_addres);
 	}
@@ -81,8 +81,8 @@ public:
 	inline const T& Get(int x, int y) const
 	{
 		assert(x < (int)GetWidth() && y < (int)GetHeight());
-		offset64 byte_addres = ((offset64) GetBaseData());
-		byte_addres += ((offset64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
+		size64 byte_addres = ((size64) GetBaseData());
+		byte_addres += ((size64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
 		byte_addres += x * sizeof(T) + y * mPitch;
 		return *((T*)byte_addres);
 	}

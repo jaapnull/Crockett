@@ -6,6 +6,7 @@
 #include <CCore/Types.h>
 #include <CCore/Array.h>
 #include <CCore/String.h>
+#include <CGeo/LineSegment2.h>
 // ------------------------------------------------------------------------------------------------------------
 // Brush shapes of the pen
 // ------------------------------------------------------------------------------------------------------------
@@ -125,7 +126,10 @@ public:
 		if (xstep > 0)
 			for (int x = x0; x <= x1; x+= xstep)
 			{		
-				if (steep) mCanvas.Set(y,x, mColor); else mCanvas.Set(x,y, mColor);
+				if (steep) 
+					mCanvas.Set(y,x, mColor); 
+				else 
+					mCanvas.Set(x,y, mColor);
 				error -= deltay;
 				if (error < 0)
 				{
@@ -136,7 +140,11 @@ public:
 		else
 			for (int x = x0; x >= x1; x+= xstep)
 			{		
-				if (steep) mCanvas.Set(y,x, mColor); else mCanvas.Set(x,y, mColor);
+				if (steep) 
+					mCanvas.Set(y,x, mColor);
+				else
+					mCanvas.Set(x,y, mColor);
+
 				error -= deltay;
 				if (error < 0)
 				{
@@ -147,7 +155,21 @@ public:
 
 	}
 	
-	inline void DrawLine(ivec2 inStart, ivec2 inEnd) { DrawLine(inStart.x, inStart.y, inEnd.x, inEnd.y); }
+	inline void DrawLine(ivec2 inStart, ivec2 inEnd)
+	{
+		// clip against edge half-spaces of canvas
+		LineSegment2 ls(inStart, inEnd);
+		if (!ls.Clip(HalfSpace2(fvec2(1.0f, 0.0f), 5.0f)))
+			return;
+		if (!ls.Clip(HalfSpace2(fvec2(0.0f, 1.0f), 5.0f)))
+			return;
+		if (!ls.Clip(HalfSpace2(fvec2(-1.0f, 0.0f), -float(mCanvas.GetHeight()-5))))
+			return;
+		if (!ls.Clip(HalfSpace2(fvec2(0.0f, -1.0f), -float(mCanvas.GetWidth()-5))))
+			return;
+
+		DrawLine(gRoundToInt(ls.mFrom.x), gRoundToInt(ls.mFrom.y), gRoundToInt(ls.mTo.x), gRoundToInt(ls.mTo.y));
+	}
 
 
 	private:

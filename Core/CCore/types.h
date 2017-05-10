@@ -30,7 +30,6 @@ typedef unsigned char		byte;
 
 // large types	
 typedef uintptr_t			size64;		// Size of arrays/buffers/etc
-typedef uintptr_t			offset64;	// Offset within array; maximum offset between pointers
 
 const size64				cMaxSize64 = size64(-1);
 const uint					cMaxUint = uint(-1);

@@ -38,7 +38,7 @@ inline bool gIsAlignedTo(void* inPointer)
 
 /// template helper to offset [T]pointer by [inBytes] bytes
 template <class T>
-inline T* gOffsetPointer(T* inPointer, offset64 inBytes)
+inline T* gOffsetPointer(T* inPointer, size64 inBytes)
 {
 	T* offset_pointer = reinterpret_cast<T*>(uint64(inPointer) + inBytes);
 	gAssert(gIsAlignedTo<__alignof(T)>(offset_pointer));
