@@ -1,6 +1,7 @@
 #include <CCore/String.h>
 #include <CMath/Math.h>
 #include <CMath/Vector.h>
+#include <CUtils/DebugFont.h>
 #include <CGeo/HalfSpace2.h>
 #include <CGeo/LineSegment2.h>
 #include <CGeo/Polygon2.h>
@@ -23,6 +24,8 @@
 #error Windows Header Slip
 #endif
 
+
+uint16 gCharacters[100];
 
 
 struct HalfSpaceMask
@@ -50,7 +53,13 @@ struct HalfSpaceMask
 		}
 		return s;
 	}
+};
 
+struct Region
+{
+	HalfSpaceMask	mMask;
+	Polygon2		mPolygon;
+	fvec2			mMidPoint;
 };
 
 
@@ -185,6 +194,9 @@ public:
 		mHalfSpaces.Append(HalfSpace2(0,-1,1));
 		mHalfSpaces.Append(HalfSpace2(1,0,1));
 		mHalfSpaces.Append(HalfSpace2(-1,0,1));
+		mHalfSpaces.Append(HalfSpace2(0.707f,-0.707f,0));
+		mHalfSpaces.Append(HalfSpace2(-0.707f,-0.707f,0));
+
 
 		if (mPointsSet >= 1)
 		{
@@ -353,7 +365,7 @@ public:
 
 
 		Array<LineSegment2> lines = mLines;
-		Array<fvec2> points = mMarkers;
+		
 
 		struct CCW_Sort
 		{
@@ -361,59 +373,76 @@ public:
 			bool operator()(const fvec2& inA, const fvec2& inB) { return fvec2(inA-mMid).GetCross(inB-mMid) < 0.0f; }
 		} ccws;
 
-		//for (const LineSegment2& s : lines)
-		//{
-		//	fvec2 p0 = TransformClipToScreen(s.mTo);
-		//	fvec2 p1 = TransformClipToScreen(s.mFrom);
-		//	pen.DrawLine(p0, p1);
-		//}
-		//
-		//for (const fvec2& f : points)
-		//{
-		//	ivec2 p(TransformClipToScreen(f));
-		//	pen.DrawLine(ivec2(p.x-5, p.y-5), ivec2(p.x-5, p.y+5));
-		//	pen.DrawLine(ivec2(p.x-5, p.y+5), ivec2(p.x+5, p.y+5));
-		//	pen.DrawLine(ivec2(p.x+5, p.y+5), ivec2(p.x+5, p.y-5));
-		//	pen.DrawLine(ivec2(p.x+5, p.y-5), ivec2(p.x-5, p.y-5));
-		//}
+
+		Array<fvec2> points_unselected = mMarkers;
+		Array<fvec2> points_selected;
+		Array<LineSegment2> lines_selected;
+		Array<LineSegment2> lines_unselected;
 
 		for (Polygon2& plgon : mPolygons)
 		{
 			if (plgon.IsEmpty()) 
 				continue;
 
-			if (plgon.CheckSide(mLastMouse) != HalfSpace2::esOutside)
-			{
-				pen.SetColor(DIBColor(255,255,255));
-			}
-			else
-			{
-				pen.SetColor(DIBColor(128,128,128));
-			}
-
-			
+			bool is_selected = (plgon.CheckSide(mLastMouse) != HalfSpace2::esOutside);
+			Array<LineSegment2>& out_list = is_selected ? lines_selected : lines_unselected;
 
 			fvec2 avg = fvec2::sZero();
 			for (const fvec2& p : plgon) avg += p;
 			avg /= float(plgon.GetVertexCount());
-			points.Append(avg);
+			points_selected.Append(avg);
 
 			ccws.mMid = avg + fvec2(0.1f, 0.0);
+
+
+			gDrawDebugFontText("Whaddap!", dib, ivec2(TransformClipToScreen(avg)) + ivec2(4,-2), DIBColor(0,0,0));
+			gDrawDebugFontText("Whaddap!", dib, ivec2(TransformClipToScreen(avg)) + ivec2(4,-3), DIBColor(255,255,255));
 
 			fvec2 prev = plgon.Back();
 			for (const fvec2& p : plgon)
 			{
-				points.Append(p);
+				points_unselected.Append(p);
 				fvec2 shifted_p = p - ((p-avg).GetNormalised() * .1f);
 				fvec2 shifted_prev = prev - ((prev-avg).GetNormalised() * .1f);
 				if (prev != p) 
 				{
-					pen.DrawLine(TransformClipToScreen(prev), TransformClipToScreen(p));
+					out_list.Append(LineSegment2(prev, p));
 				}
 				prev = p;
 			}
-		
 		}
+
+
+
+		pen.SetColor(DIBColor(128,128,128));
+		for (const LineSegment2& ls : lines_unselected)
+			pen.DrawLine(TransformClipToScreen(ls.mFrom), TransformClipToScreen(ls.mTo));
+
+		for (const fvec2& p : points_unselected)
+		{
+			fvec2 ps = TransformClipToScreen(p);
+			pen.DrawLine(ps + fvec2(-1,-1), ps + fvec2(-1, 1));
+			pen.DrawLine(ps + fvec2(-1, 1), ps + fvec2( 1, 1));
+			pen.DrawLine(ps + fvec2( 1, 1), ps + fvec2( 1,-1));
+			pen.DrawLine(ps + fvec2( 1,-1), ps + fvec2(-1,-1));
+		}
+
+		pen.SetColor(DIBColor(255,255,255));
+		for (const LineSegment2& ls : lines_selected)
+			pen.DrawLine(TransformClipToScreen(ls.mFrom), TransformClipToScreen(ls.mTo));
+
+		
+		for (const fvec2& p : points_selected)
+		{
+			fvec2 ps = TransformClipToScreen(p);
+			pen.DrawLine(ps + fvec2(-1,-1), ps + fvec2(-1, 1));
+			pen.DrawLine(ps + fvec2(-1, 1), ps + fvec2( 1, 1));
+			pen.DrawLine(ps + fvec2( 1, 1), ps + fvec2( 1,-1));
+			pen.DrawLine(ps + fvec2( 1,-1), ps + fvec2(-1,-1));
+		}
+
+		//gDrawDebugFontText("The Quick Brown Fox Jumped Over The Lazy Dog!", dib, ivec2(3,3), DIBColor(0,0,0));
+		//gDrawDebugFontText("The Quick Brown Fox Jumped Over The Lazy Dog!", dib, ivec2(2,2), DIBColor(255,255,0));
 	}
 
 	void Redraw()
@@ -469,9 +498,42 @@ private:
 int main()
 {
 
-	Test_Sort();
+	DIB alphabet;
+	alphabet.LoadFromFile(L"./alphabet.bmp");
+	for (char c = ' '; c <= '~'; c++)
+	{
+		int ggg = c-' ';
+		gCharacters[ggg] = 0;
+		int cx = ggg % 10;
+		int cy = ggg / 10;
+		uint16 z = 0;
+		bool first_line_empty = true;
+		for (int y = cy * 7; y < (cy * 7) + 6; y++)
+		{
+			if (z > 15) break;
+			for (int x = cx* 4; x < cx * 4 + 3; x++)
+			{
+				DIBColor c = alphabet.Get(x,y);
+				first_line_empty &= (DIBColor(255,255,255).EqualsIgnoreAlpha(c));
+				if (DIBColor(0,0,0).EqualsIgnoreAlpha(c)) 
+					gCharacters[ggg] |= (1 << z);
+				z++;
+			}
+			if (first_line_empty && y == cy*7) { z = 0; gCharacters[ggg] |= 0x8000;}
+		}
+		
+	}
+	uchar c_min = ' ';
+	uchar c_max = '~';
+	uint char_count = c_max - c_min;
 
-	gMainWindow.Create(L"ComeDither", 1024, 1025);
+	for (uint x = 0; x < char_count; x++)
+	{
+		std::cout << std::hex << (gCharacters[x]) << ", /*" << char(c_min + x) << "*/" << std::endl;
+	}
+
+
+	gMainWindow.Create(L"ComeDither", 1024, 1024);
 	gMainWindow.Show(true);
 	gMainWindow.Redraw();
 

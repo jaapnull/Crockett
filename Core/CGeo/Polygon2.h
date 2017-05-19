@@ -3,6 +3,7 @@
 #include <CMath/Vector.h>
 #include <CGeo/HalfSpace2.h>
 #include <CGeo/LineSegment2.h>
+#include <CGeo/Quad.h>
 
 class Polygon2
 {
@@ -10,6 +11,21 @@ public:
 
 	void InsertVertex(const fvec2& inNewVertex, size64 inBeforeIndex)	{ mVertices.Insert(inNewVertex, inBeforeIndex); }
 	void AppendVertex(const fvec2& inNewVertex)							{ mVertices.Append(inNewVertex); }
+
+	const BoundingBox2 GetBoundingBox() const
+	{
+		if (mVertices.IsEmpty())
+			return BoundingBox2();
+		fvec2 v_min = mVertices[0];
+		fvec2 v_max = mVertices[0];
+		for (fvec2 v : mVertices)
+		{
+			v_min = gMin(v_min, v);
+			v_max = gMax(v_max, v);
+		}
+		return BoundingBox2(v_min, v_max);
+	}
+	
 
 	HalfSpace2::ESide CheckSide(const fvec2& inPoint)
 	{

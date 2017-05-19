@@ -110,13 +110,13 @@ inline int gRoundToNearestInt(float r)
 }
 
 template <typename T>
-inline const T& gMin(const T& A, const T& B)
+inline const T gMin(const T& A, const T& B)
 {
 	return A < B ? A : B;
 }
 
 template <typename T>
-inline const T& gMax(const T& A, const T& B)
+inline const T gMax(const T& A, const T& B)
 {
 	return A > B ? A : B;
 }

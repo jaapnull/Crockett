@@ -92,6 +92,9 @@
     <ClInclude Include="CGeo\Polygon2.h">
       <Filter>CGeo</Filter>
     </ClInclude>
+    <ClInclude Include="CUtils\DebugFont.h">
+      <Filter>CUtils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />

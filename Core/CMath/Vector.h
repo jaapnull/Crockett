@@ -1,6 +1,7 @@
 #pragma once
 #include <stdarg.h>
 #include <CCore/Assert.h>
+#include <CMath/Math.h>
 
 template <class T, int I> class BaseVector
 {
@@ -481,6 +482,20 @@ class fvec3 : public Vector<float, 3>
 
 	fvec3 GetCross(const fvec3& inOther)														{ return fvec3(y*inOther.z - inOther.y*z, z*inOther.x - inOther.z*x, x*inOther.y - inOther.x*y); }
 };
+
+
+
+template<>
+inline const fvec2 gMin(const fvec2& A, const fvec2& B)
+{
+	return fvec2(A.x < B.x ? A.x : B.x, A.y < B.y ? A.y : B.y);
+}
+
+template<>
+inline const fvec2 gMax(const fvec2& A, const fvec2& B)
+{
+	return fvec2(A.x > B.x ? A.x : B.x, A.y > B.y ? A.y : B.y);
+}
 
 typedef Vector<float, 4> fvec4;
 

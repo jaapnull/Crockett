@@ -163,9 +163,9 @@ public:
 			return;
 		if (!ls.Clip(HalfSpace2(fvec2(0.0f, 1.0f), 5.0f)))
 			return;
-		if (!ls.Clip(HalfSpace2(fvec2(-1.0f, 0.0f), -float(mCanvas.GetHeight()-5))))
+		if (!ls.Clip(HalfSpace2(fvec2(-1.0f, 0.0f), -float(mCanvas.GetWidth()-5))))
 			return;
-		if (!ls.Clip(HalfSpace2(fvec2(0.0f, -1.0f), -float(mCanvas.GetWidth()-5))))
+		if (!ls.Clip(HalfSpace2(fvec2(0.0f, -1.0f), -float(mCanvas.GetHeight()-5))))
 			return;
 
 		DrawLine(gRoundToInt(ls.mFrom.x), gRoundToInt(ls.mFrom.y), gRoundToInt(ls.mTo.x), gRoundToInt(ls.mTo.y));

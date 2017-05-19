@@ -13,8 +13,20 @@ public:
 	T GetHeight() const {return mBottom - mTop;}
 
 	Rect() {}
+	Rect(const Vector<T, 2>& inMin, const Vector<T, 2>& inMax) : mLeft(inMin.x), mTop(inMin.y), mRight(inMax.x), mBottom(inMax.y) {}
 	Rect(const T& inLeft, const T& inTop, const T& inRight, const T& inBottom) : mLeft(inLeft), mTop(inTop), mRight(inRight), mBottom(inBottom) {}
 	Rect(const T& inWidth, const T& inHeight) : mLeft(0), mTop(0), mRight(inWidth), mBottom(inHeight) {}
+
+
+	const Rect<T> GetGrown(float inGrow) const
+	{
+		Rect<T> r = *this;
+		r.mLeft -= inGrow;
+		r.mRight += inGrow;
+		r.mTop -= inGrow;
+		r.mBottom += inGrow;
+		return r;
+	}
 
 	Rect<T> Scale(const T& inScale)
 	{
@@ -315,6 +327,8 @@ std::ostream& operator<<(std::ostream& inStream, const Rect<T>& inRect)
 }
 
 typedef Rect<int> IRect;
+
+typedef Rect<float> BoundingBox2;
 
 class FRect : public Rect<float>
 {
