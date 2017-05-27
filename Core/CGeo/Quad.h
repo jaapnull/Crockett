@@ -18,7 +18,7 @@ public:
 	Rect(const T& inWidth, const T& inHeight) : mLeft(0), mTop(0), mRight(inWidth), mBottom(inHeight) {}
 
 
-	const Rect<T> GetGrown(float inGrow) const
+	const Rect<T> GetGrown(T inGrow) const
 	{
 		Rect<T> r = *this;
 		r.mLeft -= inGrow;

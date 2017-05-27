@@ -22,7 +22,7 @@ bool gDoMessageLoop(bool inBlocking)
 		if (do_blocking_retrieval == true)
 		{
 			// blocking function waiting of at least a single message
-			message_found = GetMessage(&message, 0, 0, 0) != 0;
+ 			message_found = GetMessage(&message, 0, 0, 0) != 0;
 			// only the first call is blocking, afterwards we clean up any waiting messages using non-blocking calls
 			do_blocking_retrieval = false;
 		}

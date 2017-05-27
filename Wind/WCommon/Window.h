@@ -14,6 +14,7 @@ public:
 	virtual MessageReturnCode	HandleMessage(Window* inParent, uint inMessage, MessageParam inParamA, MessageParam inParamB);
 	virtual void				Create(const WString title, unsigned int width, unsigned int height);
 	virtual void				OnSize(const ivec2& inNewSize)			{ }
+	void						Resize(uint inWidth, uint inHeight);
 	void						Close();
 	void						Destroy();
 	void						Show(bool visible);
