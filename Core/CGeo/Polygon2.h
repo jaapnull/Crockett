@@ -57,7 +57,7 @@ public:
 		HalfSpace2::ESide prev_side = inSplitPlane.GetSide(prev_vert);
 		for (const fvec2& v : mVertices)
 		{
-			HalfSpace2::ESide new_side = inSplitPlane.GetSide(v);
+			HalfSpace2::ESide new_side = inSplitPlane.GetSide(v, cEpsilon * 2.0f * (gAbs(v.x) + gAbs(v.y)));
 			if ((prev_side == HalfSpace2::esInside && new_side == HalfSpace2::esOutside) || (prev_side == HalfSpace2::esOutside && new_side == HalfSpace2::esInside))
 			{
 				fvec2 intersect_point;

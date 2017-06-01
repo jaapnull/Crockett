@@ -114,8 +114,8 @@ uint	Window::GetHeight() const					{ RECT r; GetClientRect(gHandleToHWND(mHandle
 void	Window::Close()								{ if (mHandle) CloseWindow(gHandleToHWND(mHandle)); }
 void	Window::Resize(uint inWidth, uint inHeight) 
 { 
-	RECT r = { 0,0,inWidth, inHeight };
-	bool b = AdjustWindowRectEx(&r, GetWindowLong(gHandleToHWND(mHandle), GWL_STYLE), false, GetWindowLong(gHandleToHWND(mHandle), GWL_EXSTYLE));
+	RECT r = { 0,0, (LONG) inWidth, (LONG) inHeight };
+	BOOL b = AdjustWindowRectEx(&r, GetWindowLong(gHandleToHWND(mHandle), GWL_STYLE), false, GetWindowLong(gHandleToHWND(mHandle), GWL_EXSTYLE));
 	SetWindowPos(gHandleToHWND(mHandle), 0, -1, -1, r.right-r.left, r.bottom-r.top, SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE); 
 }
 void	Window::Destroy()							{ if (mHandle) DestroyWindow(gHandleToHWND(mHandle)); SetWindowLongPtr(gHandleToHWND(mHandle), GWLP_USERDATA, 0); mHandle = 0; }

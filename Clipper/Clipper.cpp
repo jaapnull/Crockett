@@ -80,13 +80,19 @@ public:
 		mCanvas.SetDefaultColor(DIBColor(255,255,255));
 		AddHandler(&mMouseHandler);
 		AddHandler(&mKeyboard);
+		mGridHalfSpaces.Clear();
+		mGridHalfSpaces.Append(HalfSpace2(0, 1, 1));
+		mGridHalfSpaces.Append(HalfSpace2(0, -1, 1));
+		mGridHalfSpaces.Append(HalfSpace2(1, 0, 1));
+		mGridHalfSpaces.Append(HalfSpace2(-1, 0, 1));
+		mGridHalfSpaces.Append(HalfSpace2(0.707f, -0.707f, 0));
+		mGridHalfSpaces.Append(HalfSpace2(-0.707f, -0.707f, 0));
 		SetupHalfSpaces();
+
 	}
 
 	virtual void OnSize(const ivec2& inNewSize) override
 	{
-		mHalfSpaceData.Resize(inNewSize.x, inNewSize.y);
-		FillHalfSpaceData();
 		Redraw();
 	}
 
@@ -110,7 +116,7 @@ public:
 		int idx = 0;
 		int previous_selected = mMouseOverHalfSpace;
 		mMouseOverHalfSpace = -1;
-		for (const HalfSpace2& hs : mHalfSpaces)
+		for (const HalfSpace2& hs : mGridHalfSpaces)
 		{
 			if (gAbs(hs.SignedDistance(pos)) < clip_space_selection_range)
 			{
@@ -128,7 +134,7 @@ public:
 		{
 			if (mMouseOverHalfSpace >= 0)
 			{
-				HalfSpace2& hs = mHalfSpaces[mMouseOverHalfSpace];
+				HalfSpace2& hs = mGridHalfSpaces[mMouseOverHalfSpace];
 				std::cout << std::hex << hs.mOffset << ":" << hs.mNormal.x << ',' << hs.mNormal.y << std::endl;
 			}
 			DrawLines();
@@ -144,12 +150,6 @@ public:
 			mPointsSet--;
 			SetupHalfSpaces();
 		}
-		else
-		{
-			if (mPolygons.IsEmpty()) mPolygons.AppendEmpty();
-			mPolygons[0].AppendVertex(pos);
-		}
-		FillHalfSpaceData();
 		Redraw();
 	}
 
@@ -162,26 +162,13 @@ public:
 
 	void AddPoint(fvec2 inPoint)
 	{
-		if (mPointsSet == 0)		{ mP[mPointsSet] = inPoint; mM[mPointsSet] = HalfSpaceMask(0xF, CreateFieldForCoord(inPoint));	mPointsSet++;  }
-		else if (mPointsSet == 1)	{ mP[mPointsSet] = inPoint; mM[mPointsSet] = HalfSpaceMask(0xFF, CreateFieldForCoord(inPoint));	mPointsSet++;  }
-		else if (mPointsSet == 2)	{ mP[mPointsSet] = inPoint; mM[mPointsSet] = HalfSpaceMask(0xFFF, CreateFieldForCoord(inPoint));mPointsSet++;  }
+		if (mPointsSet == 0)		{ mP[mPointsSet] = inPoint; mPointsSet++; }
+		else if (mPointsSet == 1)	{ mP[mPointsSet] = inPoint; mPointsSet++; }
+		else if (mPointsSet == 2)	{ mP[mPointsSet] = inPoint; mPointsSet++; }
 		SetupHalfSpaces();
-		FillHalfSpaceData();
 		Redraw();
 	}
 
-	uint32 CreateFieldForCoord(const fvec2& inPos)
-	{
-		int idx = 0;
-		uint32 mask = 0;
-		for (const HalfSpace2& hs : mHalfSpaces)
-		{
-			float d = hs.SignedDistance(inPos);
-			if (d > 0) mask |= (0x1 << idx);
-			idx++;
-		}
-		return mask;
-	}
 
 	void SetupHalfSpaces()
 	{
@@ -189,42 +176,31 @@ public:
 		mLines.Clear();
 
 
-		mHalfSpaces.Clear();
-		mHalfSpaces.Append(HalfSpace2(0,1,1));
-		mHalfSpaces.Append(HalfSpace2(0,-1,1));
-		mHalfSpaces.Append(HalfSpace2(1,0,1));
-		mHalfSpaces.Append(HalfSpace2(-1,0,1));
-		mHalfSpaces.Append(HalfSpace2(0.707f,-0.707f,0));
-		mHalfSpaces.Append(HalfSpace2(-0.707f,-0.707f,0));
 
 
 		if (mPointsSet >= 1)
 		{
 			mMarkers.Append(mP[0]);
-			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2(-1,-1)));
-			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2( 1,-1)));
-			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2(-1, 1)));
-			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2( 1, 1)));
-			std::cout << mM[0].ToString() << std::endl;
+			mPointAHalfSpaces.Clear();
+			mPointAHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2(-1,-1)));
+			mPointAHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2( 1,-1)));
+			mPointAHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2(-1, 1)));
+			mPointAHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2( 1, 1)));
 		}
 
 		if (mPointsSet >= 2)
 		{
 			mMarkers.Append(mP[1]);
-			//mLines.Append(LineSegment2(mP[0], mP[1]));
-			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2(-1,-1)));
-			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2( 1,-1)));
-			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2(-1, 1)));
-			mHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2( 1, 1)));
-			std::cout << mM[1].ToString() << std::endl;
+			mPointBHalfSpaces.Clear();
+			mPointBHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2(-1,-1)));
+			mPointBHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2( 1,-1)));
+			mPointBHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2(-1, 1)));
+			mPointBHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2( 1, 1)));
 		}
 
 		if (mPointsSet >= 3)
 		{
 			mMarkers.Append(mP[2]);
-			//mLines.Append(LineSegment2(mP[1], mP[2]));
-			//mLines.Append(LineSegment2(mP[2], mP[0]));
-			std::cout << mM[2].ToString() << std::endl;
 		}
 
 
@@ -235,12 +211,11 @@ public:
 		p.AppendVertex(fvec2( mVisibleRange, -mVisibleRange) * 0.9f);
 		p.AppendVertex(fvec2(-mVisibleRange, -mVisibleRange) * 0.9f);
 		
-
 		mPolygons.Clear();
 		mPolygons.Append(p);
 
 		int m = 0;
-		for (const HalfSpace2& hs : mHalfSpaces)
+		for (const HalfSpace2& hs : mGridHalfSpaces)
 		{
 			Array<Polygon2> output;
 			for (const Polygon2& p : mPolygons)
@@ -251,61 +226,24 @@ public:
 				if (i.GetVertexCount() >= 3) output.Append(i);
 			}
 			mPolygons = output;
-			//if (++m == 1) break;
-		}
-	}
-
-	void FillHalfSpaceData()
-	{
-		return;
-		gAssert(mHalfSpaceData.GetWidth() == mCanvas.GetDib().GetWidth());
-		gAssert(mHalfSpaceData.GetHeight() == mCanvas.GetDib().GetHeight());
-		
-		if (!mHalfSpaces.IsEmpty())
-		{
-			fvec2 corner(-mVisibleRange, -mVisibleRange);
-			float stepx = float(mVisibleRange*2.0f)/float(mHalfSpaceData.GetWidth());
-			float stepy = float(mVisibleRange*2.0f)/float(mHalfSpaceData.GetHeight());
-			for (uint x = 0; x < mHalfSpaceData.GetWidth(); x++)
-			for (uint y = 0; y < mHalfSpaceData.GetHeight(); y++)
-			{
-				fvec2 pos = corner + fvec2(float(x) * stepx, float(y) * stepy);
-				mHalfSpaceData.Set(x,y, CreateFieldForCoord(pos));
-			}
-		}
-		else
-		{
-			mHalfSpaceData.SetAll(0);
-		}
-	}
-
-
-	void DrawField()
-	{
-		mCanvas.GetDib().SetAll(DIBColor(128,64,128));
-		return;
-		DIB& dib = mCanvas.GetDib();
-		fvec2 corner(-mVisibleRange, -mVisibleRange);
-		float stepx = float(mVisibleRange*2.0f)/float(dib.GetWidth());
-		float stepy = float(mVisibleRange*2.0f)/float(dib.GetHeight());
-
-		for (uint x = 0; x < dib.GetWidth(); x++)
-		for (uint y = 0; y < dib.GetHeight(); y++)
-		{
-			uint32 mask = mHalfSpaceData.Get(x,y);
-			uint32 h = ((uint64(mask) * 5317ll) % uint64(0x600));
-			dib.Set(x, y,  DIBColor::sFromHSVInt(h, 128, 255));
 		}
 	}
 
 	void DrawLines()
 	{
 		DIB& dib = mCanvas.GetDib();
+		dib.SetAll(DIBColor(128, 64, 32));
 		ColorPen<DIBColor> pen(dib);
+
+
+		Array<HalfSpace2> all_half_spaces;
+		all_half_spaces.Append(mGridHalfSpaces);
+		all_half_spaces.Append(mPointAHalfSpaces);
+		all_half_spaces.Append(mPointBHalfSpaces);
 
 		int idx = 0;
 		if (false)
-		for (const HalfSpace2& hs : mHalfSpaces)
+		for (const HalfSpace2& hs : all_half_spaces)
 		{
 
 			fvec2 o = hs.mNormal * hs.mOffset;
@@ -440,14 +378,10 @@ public:
 			pen.DrawLine(ps + fvec2( 1, 1), ps + fvec2( 1,-1));
 			pen.DrawLine(ps + fvec2( 1,-1), ps + fvec2(-1,-1));
 		}
-
-		//gDrawDebugFontText("The Quick Brown Fox Jumped Over The Lazy Dog!", dib, ivec2(3,3), DIBColor(0,0,0));
-		//gDrawDebugFontText("The Quick Brown Fox Jumped Over The Lazy Dog!", dib, ivec2(2,2), DIBColor(255,255,0));
 	}
 
 	void Redraw()
 	{
-		DrawField();
 		DrawLines();
 		Invalidate();
 	}
@@ -469,8 +403,9 @@ private:
 
 
 	// Handlers
-	Array<HalfSpace2>			mHalfSpaces;
-	DataFrame<uint32>			mHalfSpaceData;
+	Array<HalfSpace2>			mGridHalfSpaces;
+	Array<HalfSpace2>			mPointAHalfSpaces;
+	Array<HalfSpace2>			mPointBHalfSpaces;
 
 	KeyboardHandler				mKeyboard;
 	MouseHandler				mMouseHandler;
@@ -485,7 +420,6 @@ private:
 
 	fvec2						mLastMouse = fvec2(0,0);
 	fvec2						mP[3];
-	HalfSpaceMask				mM[3];
 
 } gMainWindow;
 

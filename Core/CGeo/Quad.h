@@ -149,6 +149,10 @@ public:
 		return fragments;
 	}
 
+	Vector<T, 2> GetCenter() const
+	{
+		return Vector<T, 2>((mLeft + mRight) / T(2), (mTop + mBottom) / T(2));
+	}
 
 	void Intersect(const Rect<T>& other)
 	{
@@ -189,12 +193,6 @@ public:
 	Vector<T, 2> GetMax() const
 	{
 		return Vector<T, 2>(mRight, mBottom);
-	}
-
-
-	Vector<T, 2> GetCenter() const
-	{
-		return Vector<T, 2>((mLeft+mRight)/T(2), (mTop+mBottom)/T(2));
 	}
 
 
