@@ -196,6 +196,13 @@ public:
 		return true;
 	}
 
+	bool IsNearZero() const
+	{
+		for (unsigned int x = 0; x < i; x++)
+			if (!gIsNear(0.0f, mField[x])) return false;
+		return true;
+	}
+
 	T GetDot(const BaseVector<T, i>& other) const
 	{
 		T accum = 0;
@@ -232,13 +239,19 @@ public:
 		(*this)/=f;
 	}
 
-	Vector<T,i> GetNormalised() const
+	void SafeNormalize()
+	{
+		float f = GetLength();
+		(*this) /= (f == 0.0f) ? 1.0f : f;
+	}
+
+	Vector<T,i> GetNormalized() const
 	{
 		float f = GetLength();
 		return (*this) / f;
 	}
 
-	Vector<T, i> GetSafeNormalised() const
+	Vector<T, i> GetSafeNormalized() const
 	{
 		float f = GetLength();
 		return f == 0 ? Vector::sZero() : (*this) / f;
@@ -412,6 +425,12 @@ public:
 			mField[x] = other.mField[x];
 	}
 
+	bool IsRational() const
+	{
+		for (unsigned int x = 0; x < i; x++)
+			if (isnan(mField[x])) return false;
+		return true;
+	}
 
 	Vector()
 	{
@@ -471,6 +490,13 @@ public:
 	float GetCross(const fvec2 inOther)															{ return x*inOther.y - inOther.x*y; }
 };
 
+#include <iostream>
+
+inline std::ostream& operator<<(std::ostream& os, const fvec2& vec)
+{
+	os << vec.x << ',' << vec.y;
+	return os;
+}
 
 class fvec3 : public Vector<float, 3>
 {

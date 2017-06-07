@@ -4,7 +4,7 @@
 #include <CCore/String.h>
 #include <CCore/Frame.h>
 
-template<typename T_Pixel>
+template<typename T_Pixel, uint T_Scale = 1>
 void gDrawDebugFontChar(uchar inChar, BaseFrame<T_Pixel>& inFrame, const ivec2& inOffset, const T_Pixel& inColor)
 {
 
@@ -33,18 +33,22 @@ void gDrawDebugFontChar(uchar inChar, BaseFrame<T_Pixel>& inFrame, const ivec2& 
 	for (int y = 0; y < 5; y++)
 	for (int x = 0; x < 3; x++)
 	{
-		if (debug_chars[inChar-f_start] & (1 << p_count))
-			inFrame.Set(inOffset.x + x, inOffset.y + y + offset_y, inColor);
+		if (debug_chars[inChar - f_start] & (1 << p_count))
+		{
+			for (int sy = 0; sy < T_Scale; sy++)
+			for (int sx = 0; sx < T_Scale; sx++)
+				inFrame.SetSafe(inOffset.x + (T_Scale * x) + sx, inOffset.y + T_Scale * (y + offset_y) + sy, inColor);
+		}
 		p_count++;
 	}
 }
 
 
-template<typename T_Pixel>
+template<typename T_Pixel, uint inSize = 1>
 void gDrawDebugFontText(const String& inText, BaseFrame<T_Pixel>& inFrame, const ivec2& inOffset, const T_Pixel& inColor)
 {
-	const uint font_spacing_h = 4;
-	const uint font_spacing_v = 9;
+	const uint font_spacing_h = 4 * inSize;
+	const uint font_spacing_v = 9 * inSize;
 	ivec2 cursor = inOffset;
 	for (char c : inText)
 	{
@@ -55,8 +59,9 @@ void gDrawDebugFontText(const String& inText, BaseFrame<T_Pixel>& inFrame, const
 		}
 		else
 		{
-			gDrawDebugFontChar(c, inFrame, cursor, inColor);
+			gDrawDebugFontChar<T_Pixel, inSize>(c, inFrame, cursor, inColor);
 			cursor.x += font_spacing_h;
 		}
 	}
 }
+

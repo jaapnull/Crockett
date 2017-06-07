@@ -60,14 +60,14 @@ String gToString(uint inUint)
 String gToString(double inDouble)
 {
 	char buffer[10];
-	sprintf_s(buffer, 10, "%f", inDouble);
+	sprintf_s(buffer, 10, "%.2f", inDouble);
 	return String(buffer);
 }
 
 String gToString(float inFloat)
 {
 	char buffer[10];
-	sprintf_s(buffer, 10, "%f", inFloat);
+	sprintf_s(buffer, 10, "%.2f", inFloat);
 	return String(buffer);
 }
 

@@ -60,6 +60,13 @@ public:
 		}
 	}
 
+	inline void SetSafe(int inX, int inY, T inValue)
+	{
+		if (inX < 0 || inX >= (int) mWidth || inY < 0 || inY >= (int) mHeight)
+			return;
+		Set(inX, inY, inValue);
+	}
+
 	inline void Set(int inX, int inY, T inValue)
 	{
 		size64 byte_addres = ((size64 ) GetBaseData());

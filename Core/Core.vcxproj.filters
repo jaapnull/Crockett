@@ -95,6 +95,9 @@
     <ClInclude Include="CUtils\DebugFont.h">
       <Filter>CUtils</Filter>
     </ClInclude>
+    <ClInclude Include="CUtils\Region2.h">
+      <Filter>CUtils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />

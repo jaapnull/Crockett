@@ -126,10 +126,10 @@ public:
 		if (xstep > 0)
 			for (int x = x0; x <= x1; x+= xstep)
 			{		
-				if (steep) 
-					mCanvas.Set(y,x, mColor); 
-				else 
-					mCanvas.Set(x,y, mColor);
+				if (steep)
+					DrawDot(y, x);// mCanvas.Set(y, x, mColor);
+				else
+					DrawDot(x, y);// mCanvas.Set(x, y, mColor);
 				error -= deltay;
 				if (error < 0)
 				{
@@ -141,9 +141,9 @@ public:
 			for (int x = x0; x >= x1; x+= xstep)
 			{		
 				if (steep) 
-					mCanvas.Set(y,x, mColor);
+					DrawDot(y, x);// mCanvas.Set(y, x, mColor);
 				else
-					mCanvas.Set(x,y, mColor);
+					DrawDot(x, y);// mCanvas.Set(x, y, mColor);
 
 				error -= deltay;
 				if (error < 0)

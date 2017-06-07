@@ -27,7 +27,7 @@ public:
 	}
 	
 
-	HalfSpace2::ESide CheckSide(const fvec2& inPoint)
+	HalfSpace2::ESide CheckSide(const fvec2& inPoint) const
 	{
 		if (GetVertexCount() == 1) return inPoint.IsNear(mVertices[0]) ? HalfSpace2::esEdge : HalfSpace2::esOutside;
 		if (GetVertexCount() == 2) return LineSegment2(mVertices[0], mVertices[1]).PointOnSegment(inPoint) ? HalfSpace2::esEdge : HalfSpace2::esOutside;
@@ -52,7 +52,6 @@ public:
 		if (mVertices.IsEmpty())
 			return;
 
-
 		fvec2 prev_vert = mVertices.Back();
 		HalfSpace2::ESide prev_side = inSplitPlane.GetSide(prev_vert);
 		for (const fvec2& v : mVertices)
@@ -66,7 +65,6 @@ public:
 				{
 					float f0 = inSplitPlane.SignedDistance(prev_vert);
 					float f1 = inSplitPlane.SignedDistance(v);
-					std::cout << f0 << ',' << f1 << std::endl;
 				}
 				outOuter.AppendVertex(intersect_point);
 				outInner.AppendVertex(intersect_point);
@@ -92,7 +90,7 @@ public:
 	const fvec2*		end() const										{ return mVertices.end(); }
 	fvec2*				begin()											{ return mVertices.begin(); }
 	fvec2*				end()											{ return mVertices.end(); }
-private:
+protected:
 	Array<fvec2> mVertices;
 
 };

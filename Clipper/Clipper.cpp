@@ -25,48 +25,247 @@
 #endif
 
 
-uint16 gCharacters[100];
-
-
-struct HalfSpaceMask
+struct Node;
+struct NodeIndex
 {
-	HalfSpaceMask() {}
-	HalfSpaceMask(uint32 inMask, uint32 inOrientation) : mMask(inMask), mOrientation(inOrientation) {}
-	uint32 mMask;
-	uint32 mOrientation;
+	NodeIndex() {}
+	NodeIndex(uint inIndex) : mIndex(inIndex) {}
+	bool operator==(const NodeIndex& inIndex) const		{ return mIndex == inIndex.mIndex; }
+	bool operator<(const NodeIndex& inIndex) const		{ return mIndex < inIndex.mIndex; }
+	bool operator!=(const NodeIndex& inIndex) const		{ return mIndex != inIndex.mIndex; }
+	bool IsValid() const								{ return mIndex != 0xFFFFFFFF; }
+	const Node* operator->() const;
+	Node* operator->();
 
-	const String ToString()
+	uint32 mIndex = 0xFFFFFFFF;
+};
+
+struct Edge;
+struct EdgeIndex
+{
+	EdgeIndex() {}
+	EdgeIndex(uint inIndex) : mIndex(inIndex) {}
+	bool operator==(const EdgeIndex& inIndex) const		{ return mIndex == inIndex.mIndex; }
+	bool operator<(const EdgeIndex& inIndex) const		{ return mIndex < inIndex.mIndex; }
+	bool operator!=(const EdgeIndex& inIndex) const		{ return mIndex != inIndex.mIndex; }
+	bool IsValid() const								{ return mIndex != 0xFFFFFFFF; }
+	const Edge* operator->() const;
+	Edge* operator->();
+
+	uint32 mIndex;
+};
+
+struct Node
+{
+	Node() {}
+	Node(const fvec2& inPos) : mPosition(inPos) {}
+	fvec2				mPosition;
+	Array<EdgeIndex>	mEdges;
+};
+
+Array<Node>			gNodes;
+const Node* NodeIndex::operator->() const	{ return gNodes.GetData() + mIndex; }
+Node* NodeIndex::operator->()				{ return gNodes.GetData() + mIndex; }
+
+
+struct Edge
+{
+	Edge() {}
+	Edge(NodeIndex inNodeA, NodeIndex inNodeB)
 	{
-		String s;
-		for (int i = 0; i < 32; i++)
-		{
-			if ((i&7)==0) s.Append('.');
-			if (mMask&(1 << (31 - i)))
-			{
-				if(mOrientation&(1 << (31-i)))
-					s.Append('1');
-				else
-					s.Append('0');
-			}
-			else
-				s.Append('u');
-		}
-		return s;
+		mNodes.Append(inNodeA);
+		mNodes.Append(inNodeB);
+		mHalfSpace = HalfSpace2::sCreateBetweenPoints(inNodeA->mPosition, inNodeB->mPosition);
 	}
+
+	void AddNode(NodeIndex inNode)
+	{
+		gAssert(mNodes.Find(inNode) == cMaxSize64);
+		mNodes.Append(inNode);
+	}
+
+	HalfSpace2			mHalfSpace;
+	Array<NodeIndex>	mNodes;
 };
 
-struct Region
+Array<Edge>			gEdges;
+const Edge* EdgeIndex::operator->() const	{ return gEdges.GetData() + mIndex; }
+Edge* EdgeIndex::operator->()				{ return gEdges.GetData() + mIndex; }
+
+
+NodeIndex gCreateNodeFromPoint(const fvec2& inPoint)
 {
-	HalfSpaceMask	mMask;
-	Polygon2		mPolygon;
-	fvec2			mMidPoint;
+	gNodes.Append(Node(inPoint)); 
+	return NodeIndex((uint) gNodes.GetLength()-1); 
+}
+
+
+NodeIndex gFindOrCreateNodeFromPoint(const fvec2& inPoint)
+{
+	for (uint n = 0; n < gNodes.GetLength(); n++)
+	{
+		if (gNodes[n].mPosition == inPoint) 
+			return NodeIndex(n);
+	}	
+	return gCreateNodeFromPoint(inPoint);
+}
+
+
+NodeIndex gFindOrCreateEdgeIntersection(EdgeIndex inEdgeA, EdgeIndex inEdgeB)
+{
+
+	uint inHitA = 0xFFFFFFFF;
+	uint inHitB = 0xFFFFFFFF;
+	for (NodeIndex n0 : inEdgeA->mNodes)
+	for (NodeIndex n1 : inEdgeB->mNodes)
+	{
+		if (n0 == n1)
+			return n0;
+	}
+
+	fvec2 intersection;
+	if (inEdgeA->mHalfSpace.GetIntersect(inEdgeB->mHalfSpace, intersection))
+	{
+		NodeIndex new_intersection = gFindOrCreateNodeFromPoint(intersection);
+		new_intersection->mEdges.Append(inEdgeA);
+		new_intersection->mEdges.Append(inEdgeB);
+		inEdgeA->AddNode(new_intersection);
+		inEdgeB->AddNode(new_intersection);
+		return new_intersection;
+	}
+	else
+	{
+		return 0xFFFFFFFF;
+	}
+}
+
+
+EdgeIndex gCreateEdgeFromNodes(NodeIndex inNodeA, NodeIndex inNodeB)
+{
+	EdgeIndex ei((uint) gEdges.GetLength());
+	inNodeA->mEdges.Append(ei);
+	inNodeB->mEdges.Append(ei);
+	gEdges.Append(Edge(inNodeA, inNodeB));
+
+	for (uint i = 0; i < gEdges.GetLength()-1; i++)
+	{
+		gFindOrCreateEdgeIntersection(EdgeIndex(i), EdgeIndex(ei));
+	}
+
+	return ei;
+}
+
+EdgeIndex gFindOrCreateEdgeFromNodes(NodeIndex inNodeA, NodeIndex inNodeB)
+{
+	for (EdgeIndex e : inNodeA->mEdges)
+	{
+		if (e->mNodes.Find(inNodeB) != cMaxSize64)
+		{
+			return e;
+		}
+	}
+	return gCreateEdgeFromNodes(inNodeA, inNodeB);
+}
+
+
+EdgeIndex gCreateEdgeFromPoints(const fvec2& inPointA, const fvec2& inPointB)
+{
+	NodeIndex n0 = gFindOrCreateNodeFromPoint(inPointA);
+	NodeIndex n1 = gFindOrCreateNodeFromPoint(inPointB);
+	return gFindOrCreateEdgeFromNodes(n0, n1);
+}
+
+EdgeIndex gGetSharedEdge(NodeIndex inNodeA, NodeIndex inNodeB)
+{
+	for (EdgeIndex ei : inNodeA->mEdges)
+	{
+		if (ei->mNodes.Find(inNodeB))
+		{
+			return ei;
+		}
+	}
+	return 0xFFFFFFFF;
+}
+
+
+struct Ring
+{
+
+	Ring(Array<fvec2>& inPoints)
+	{
+		if (inPoints.IsEmpty()) return;
+
+		NodeIndex prev_n = gFindOrCreateNodeFromPoint(inPoints.Back());
+		for (fvec2& f : inPoints)
+		{
+			NodeIndex n = gFindOrCreateNodeFromPoint(f);
+			mNodes.Append(n);
+			mEdges.Append(gFindOrCreateEdgeFromNodes(prev_n, n));
+			prev_n = n;
+		}
+	}
+
+
+	void AddNode(NodeIndex inNode, EdgeIndex inEdge)
+	{
+		gAssert(mNodes.IsEmpty() || gGetSharedEdge(mNodes.Back(), inNode).IsValid());
+		mNodes.Append(inNode);
+		mEdges.Append(inEdge);
+	}
+
+	Array<NodeIndex> mNodes;
+	Array<EdgeIndex> mEdges;
 };
+Array<Ring> gRings;
 
 
+Array<fvec2> gPoints;
+
+void gSetupScene()
+{
+	gNodes.Clear();
+	gEdges.Clear();
+	fvec2 corners[4] = { fvec2(-1,-1), fvec2(1,-1), fvec2(1, 1), fvec2(-1, 1) };
+	float se = 4.0f;
+	fvec2 screen_edges[4] = { fvec2(-se,-se), fvec2(se,-se), fvec2(se, se), fvec2(-se, se) };
+
+	////
+
+	Array<fvec2> points;
+	for (fvec2 c : screen_edges)
+	{
+		gFindOrCreateNodeFromPoint(c);
+		points.Append(c);
+	}
+	
+	NodeIndex prev = gFindOrCreateNodeFromPoint(corners[3]);
+	for (fvec2& c : corners)
+	{
+		NodeIndex p = gFindOrCreateNodeFromPoint(c);
+		gFindOrCreateEdgeFromNodes(p, prev);
+		prev = p;
+	}
+
+	
+	gRings.Append(Ring(points));
 
 
+	for (fvec2& p : gPoints)
+	{
+		NodeIndex n_p = gFindOrCreateNodeFromPoint(p);
 
+		for (fvec2& c : corners)
+		{
+			NodeIndex n_c = gFindOrCreateNodeFromPoint(c);
+			EdgeIndex e = gFindOrCreateEdgeFromNodes(n_p, n_c);
 
+//			for (uint ie = 0; ie < gEdges.GetLength(); ie++)
+//				gFindOrCreateEdgeIntersection(e, EdgeIndex(ie));
+		}
+
+	}
+
+}
 
 
 class MyWindow : public Window, public IPaintHandler, IMouseHandler, IKeyHandler
@@ -80,15 +279,6 @@ public:
 		mCanvas.SetDefaultColor(DIBColor(255,255,255));
 		AddHandler(&mMouseHandler);
 		AddHandler(&mKeyboard);
-		mGridHalfSpaces.Clear();
-		mGridHalfSpaces.Append(HalfSpace2(0, 1, 1));
-		mGridHalfSpaces.Append(HalfSpace2(0, -1, 1));
-		mGridHalfSpaces.Append(HalfSpace2(1, 0, 1));
-		mGridHalfSpaces.Append(HalfSpace2(-1, 0, 1));
-		mGridHalfSpaces.Append(HalfSpace2(0.707f, -0.707f, 0));
-		mGridHalfSpaces.Append(HalfSpace2(-0.707f, -0.707f, 0));
-		SetupHalfSpaces();
-
 	}
 
 	virtual void OnSize(const ivec2& inNewSize) override
@@ -100,9 +290,13 @@ public:
 	{
 	}
 
+	virtual void OnKeyDown(const uint inKeyCode)
+	{
+		Redraw();
+	}
+
 	virtual void OnMouseLeave() override
 	{
-		mMouseOverHalfSpace = -1;
 		DrawLines();
 		Invalidate();
 	}
@@ -111,44 +305,16 @@ public:
 	{
 		fvec2 pos = TransformScreenToClip(inPosition);
 		mLastMouse = pos;
-		const float clip_space_selection_range = 0.1f;
-		
-		int idx = 0;
-		int previous_selected = mMouseOverHalfSpace;
-		mMouseOverHalfSpace = -1;
-		for (const HalfSpace2& hs : mGridHalfSpaces)
-		{
-			if (gAbs(hs.SignedDistance(pos)) < clip_space_selection_range)
-			{
-				if (mMouseOverHalfSpace != idx)
-				{
-					mMouseOverHalfSpace = idx;
-					DrawLines();
-					Invalidate();
-				}
-				break;
-			}
-			idx++;
-		}
-		if (previous_selected != mMouseOverHalfSpace)
-		{
-			if (mMouseOverHalfSpace >= 0)
-			{
-				HalfSpace2& hs = mGridHalfSpaces[mMouseOverHalfSpace];
-				std::cout << std::hex << hs.mOffset << ":" << hs.mNormal.x << ',' << hs.mNormal.y << std::endl;
-			}
-			DrawLines();
-			Invalidate();
-		}
+		Redraw();
 	}
 
 	virtual void OnMouseRightDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
 	{
 		fvec2 pos = TransformScreenToClip(inPosition);
-		if (mPointsSet > 0)
+		if (!gPoints.IsEmpty())
 		{
-			mPointsSet--;
-			SetupHalfSpaces();
+			gPoints.Pop();
+			gSetupScene();
 		}
 		Redraw();
 	}
@@ -156,203 +322,92 @@ public:
 	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
 	{
 		fvec2 pos = TransformScreenToClip(inPosition);
-		if (mMouseOverHalfSpace == -1)
-			AddPoint(pos);
-	}
 
-	void AddPoint(fvec2 inPoint)
-	{
-		if (mPointsSet == 0)		{ mP[mPointsSet] = inPoint; mPointsSet++; }
-		else if (mPointsSet == 1)	{ mP[mPointsSet] = inPoint; mPointsSet++; }
-		else if (mPointsSet == 2)	{ mP[mPointsSet] = inPoint; mPointsSet++; }
-		SetupHalfSpaces();
+		gPoints.Append(mLastMouse);
+		gSetupScene();
 		Redraw();
+
 	}
 
 
-	void SetupHalfSpaces()
-	{
-		mMarkers.Clear();
-		mLines.Clear();
-
-
-
-
-		if (mPointsSet >= 1)
-		{
-			mMarkers.Append(mP[0]);
-			mPointAHalfSpaces.Clear();
-			mPointAHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2(-1,-1)));
-			mPointAHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2( 1,-1)));
-			mPointAHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2(-1, 1)));
-			mPointAHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[0], fvec2( 1, 1)));
-		}
-
-		if (mPointsSet >= 2)
-		{
-			mMarkers.Append(mP[1]);
-			mPointBHalfSpaces.Clear();
-			mPointBHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2(-1,-1)));
-			mPointBHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2( 1,-1)));
-			mPointBHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2(-1, 1)));
-			mPointBHalfSpaces.Append(HalfSpace2::sCreateBetweenPoints(mP[1], fvec2( 1, 1)));
-		}
-
-		if (mPointsSet >= 3)
-		{
-			mMarkers.Append(mP[2]);
-		}
-
-
-
-		Polygon2 p;
-		p.AppendVertex(fvec2(-mVisibleRange,  mVisibleRange) * 0.9f);
-		p.AppendVertex(fvec2( mVisibleRange,  mVisibleRange) * 0.9f);
-		p.AppendVertex(fvec2( mVisibleRange, -mVisibleRange) * 0.9f);
-		p.AppendVertex(fvec2(-mVisibleRange, -mVisibleRange) * 0.9f);
-		
-		mPolygons.Clear();
-		mPolygons.Append(p);
-
-		int m = 0;
-		for (const HalfSpace2& hs : mGridHalfSpaces)
-		{
-			Array<Polygon2> output;
-			for (const Polygon2& p : mPolygons)
-			{
-				Polygon2 i,o;
-				p.SplitConvex(hs, i, o);
-				if (o.GetVertexCount() >= 3) output.Append(o);
-				if (i.GetVertexCount() >= 3) output.Append(i);
-			}
-			mPolygons = output;
-		}
-	}
 
 	void DrawLines()
 	{
 		DIB& dib = mCanvas.GetDib();
-		dib.SetAll(DIBColor(128, 64, 32));
+		dib.SetAll(DIBColor(32, 32, 32));
 		ColorPen<DIBColor> pen(dib);
 
-
-		Array<HalfSpace2> all_half_spaces;
-		all_half_spaces.Append(mGridHalfSpaces);
-		all_half_spaces.Append(mPointAHalfSpaces);
-		all_half_spaces.Append(mPointBHalfSpaces);
-
-		int idx = 0;
-		if (false)
-		for (const HalfSpace2& hs : all_half_spaces)
+		struct Text
 		{
+			Text() {}
+			Text(const fvec2& inPos, const String& inText) : mPos(inPos), mText(inText) {}
+			fvec2 mPos;
+			String mText;
+		};
 
-			fvec2 o = hs.mNormal * hs.mOffset;
-			fvec2 d(hs.mNormal.y, -hs.mNormal.x);
-
-			HalfSpace2 hs0(0, 1,  mVisibleRange);
-			HalfSpace2 hs1(0, -1, mVisibleRange);
-			HalfSpace2 hs2(1, 0,  mVisibleRange);
-			HalfSpace2 hs3(-1, 0, mVisibleRange);
-
-			float t_min = FLT_MAX;
-			float t_max = -FLT_MAX;
-
-			float t0 = (-hs0.mOffset - o.y*hs0.mNormal.y - o.x*hs0.mNormal.x);
-			float det = d.GetDot(hs0.mNormal);
-			if (det < 0) t_min = gMin<float>(t_min, t0/det);
-			if (det > 0) t_max = gMax<float>(t_max, t0/det);
-
-			float t1 = (-hs1.mOffset - o.y*hs1.mNormal.y - o.x*hs1.mNormal.x);
-			det = d.GetDot(hs1.mNormal);
-			if (det < 0) t_min = gMin<float>(t_min, t1/det);
-			if (det > 0) t_max = gMax<float>(t_max, t1/det);
-
-			float t2 = (-hs2.mOffset - o.y*hs2.mNormal.y - o.x*hs2.mNormal.x);
-			det = d.GetDot(hs2.mNormal);
-			if (det < 0) t_min = gMin<float>(t_min, t2/det);
-			if (det > 0) t_max = gMax<float>(t_max, t2/det);
-
-			float t3 = (-hs3.mOffset - o.y*hs3.mNormal.y - o.x*hs3.mNormal.x); 
-			det = d.GetDot(hs3.mNormal);
-			if (det < 0) t_min = gMin<float>(t_min, t3/det);
-			if (det > 0) t_max = gMax<float>(t_max, t3/det);
-
-
-			fvec2 c0 = o + d*t_min;
-			fvec2 c1 = o + d*t_max;
-
-			fvec2 p0 = TransformClipToScreen(c0);
-			fvec2 p1 = TransformClipToScreen(c1);
-
-	
-			fvec2 a0 = TransformClipToScreen(o+fvec2(d.y*0.1f, d.x*-0.1f));
-			fvec2 a1 = TransformClipToScreen(o+d*0.2f);
-
-			p0.x = gClamp<float>(p0.x + .5f, 0, (float) GetWidth()-1);
-			p0.y = gClamp<float>(p0.y + .5f, 0, (float) GetHeight()-1);
-			p1.x = gClamp<float>(p1.x + .5f, 0, (float) GetWidth()-1);
-			p1.y = gClamp<float>(p1.y + .5f, 0, (float) GetHeight()-1);
-
-			pen.SetColor((idx == mMouseOverHalfSpace) ? DIBColor(255,255,255) : DIBColor(0,0,0));
-			pen.DrawLine(p0, p1);
-			pen.DrawLine(a0, a1);
-			idx++;
-
-		}
-		pen.SetColor(DIBColor(255,255,0));
-
-
-		Array<LineSegment2> lines = mLines;
-		
-
-		struct CCW_Sort
-		{
-			fvec2 mMid;
-			bool operator()(const fvec2& inA, const fvec2& inB) { return fvec2(inA-mMid).GetCross(inB-mMid) < 0.0f; }
-		} ccws;
-
-
-		Array<fvec2> points_unselected = mMarkers;
-		Array<fvec2> points_selected;
+		Array<Text> texts;
+		Array<LineSegment2> lines				= mLines;
+		Array<fvec2> points_selected			= mMarkers;
+		Array<fvec2> points_unselected;
 		Array<LineSegment2> lines_selected;
 		Array<LineSegment2> lines_unselected;
+		Array<LineSegment2> lines_dotted;
 
-		for (Polygon2& plgon : mPolygons)
+		////
+
+		int n_id = 0;
+		for (Node& n : gNodes)
 		{
-			if (plgon.IsEmpty()) 
-				continue;
-
-			bool is_selected = (plgon.CheckSide(mLastMouse) != HalfSpace2::esOutside);
-			Array<LineSegment2>& out_list = is_selected ? lines_selected : lines_unselected;
-
-			fvec2 avg = fvec2::sZero();
-			for (const fvec2& p : plgon) avg += p;
-			avg /= float(plgon.GetVertexCount());
-			points_selected.Append(avg);
-
-			ccws.mMid = avg + fvec2(0.1f, 0.0);
-
-
-			gDrawDebugFontText("Whaddap!", dib, ivec2(TransformClipToScreen(avg)) + ivec2(4,-2), DIBColor(0,0,0));
-			gDrawDebugFontText("Whaddap!", dib, ivec2(TransformClipToScreen(avg)) + ivec2(4,-3), DIBColor(255,255,255));
-
-			fvec2 prev = plgon.Back();
-			for (const fvec2& p : plgon)
+			points_unselected.Append(n.mPosition);
+			fvec2 avg_normal(0, 0);
+			for (EdgeIndex e : n.mEdges)
 			{
-				points_unselected.Append(p);
-				fvec2 shifted_p = p - ((p-avg).GetNormalised() * .1f);
-				fvec2 shifted_prev = prev - ((prev-avg).GetNormalised() * .1f);
-				if (prev != p) 
-				{
-					out_list.Append(LineSegment2(prev, p));
-				}
-				prev = p;
+				lines_unselected.Append(LineSegment2(n.mPosition - e->mHalfSpace.mNormal.GetPerp() * 0.1f, n.mPosition + e->mHalfSpace.mNormal.GetPerp() * 0.1f));
+				avg_normal += e->mHalfSpace.mNormal;
 			}
+			//texts.Append(Text(avg_normal.GetSafeNormalized() * 0.1f + n.mPosition, gToString(n_id++)));
 		}
 
+		mVisibleRange = 1.0f;
+
+		for (Ring& r : gRings)
+		{
+			if (r.mNodes.IsEmpty())
+				continue;
+
+			fvec2 prev = r.mNodes.Back()->mPosition;
+			for (NodeIndex n : r.mNodes)
+			{
+				fvec2 p = n->mPosition;
+				points_selected.Append(p);
+				lines_selected.Append(LineSegment2(prev, p));
+				prev = p;
+				mVisibleRange = gMax(mVisibleRange, gMax(gAbs(p.x), gAbs(p.y)));
+			}
+		}
+		mVisibleRange *= 1.1f;
+		mVisibleRangeRcp = 1.0f / mVisibleRange;
 
 
-		pen.SetColor(DIBColor(128,128,128));
+		for (Edge& e : gEdges)
+		{
+			for (NodeIndex n : e.mNodes)
+				points_unselected.Append(n->mPosition);
+
+			fvec2 m = e.mHalfSpace.mNormal * e.mHalfSpace.mOffset;
+			fvec2 p0 = m + e.mHalfSpace.mNormal.GetPerp() * mVisibleRange * 2.0f;
+			fvec2 p1 = m - e.mHalfSpace.mNormal.GetPerp() * mVisibleRange * 2.0f;
+			lines_dotted.Append(LineSegment2(p0, p1));
+		}
+
+		////
+
+		pen.SetColor(DIBColor(64,64,64));
+		pen.SetPattern(0xF0F0F0F0);
+		for (const LineSegment2& ls : lines_dotted)
+			pen.DrawLine(TransformClipToScreen(ls.mFrom), TransformClipToScreen(ls.mTo));
+		pen.SetPattern(-1);
+
 		for (const LineSegment2& ls : lines_unselected)
 			pen.DrawLine(TransformClipToScreen(ls.mFrom), TransformClipToScreen(ls.mTo));
 
@@ -365,6 +420,7 @@ public:
 			pen.DrawLine(ps + fvec2( 1,-1), ps + fvec2(-1,-1));
 		}
 
+		
 		pen.SetColor(DIBColor(255,255,255));
 		for (const LineSegment2& ls : lines_selected)
 			pen.DrawLine(TransformClipToScreen(ls.mFrom), TransformClipToScreen(ls.mTo));
@@ -378,6 +434,19 @@ public:
 			pen.DrawLine(ps + fvec2( 1, 1), ps + fvec2( 1,-1));
 			pen.DrawLine(ps + fvec2( 1,-1), ps + fvec2(-1,-1));
 		}
+
+		for (const Text& t : texts)
+		{
+			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(-1, -1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(-1, 0), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(-1, 1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(1, -1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(1, 0), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(1, 1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(0, 1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(0, -1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(0, 0), DIBColor(255, 255, 255));
+		}
 	}
 
 	void Redraw()
@@ -389,12 +458,12 @@ public:
 private:
 
 	// scale parameters
-	float mVisibleRange				= 3.0f;
-	float mVisibleRangeRcp			= 1.0f / 3.0f;
+	float mVisibleRange				= 6.0f;
+	float mVisibleRangeRcp			= 1.0f / mVisibleRange;
 
 	fvec2 TransformClipToScreen(const fvec2& inClipCoord)
 	{
-		return fvec2(((inClipCoord.x * mVisibleRangeRcp + 1.0f) * 0.5f) * float(GetWidth()), ((inClipCoord.y * mVisibleRangeRcp + 1.0f) * 0.5f) * float(GetHeight()));
+		return fvec2((((inClipCoord.x * mVisibleRangeRcp) + 1.0f) * 0.5f) * float(GetWidth()), (((inClipCoord.y * mVisibleRangeRcp) + 1.0f) * 0.5f) * float(GetHeight()));
 	}
 	fvec2 TransformScreenToClip(const fvec2& inClipCoord)
 	{
@@ -403,23 +472,17 @@ private:
 
 
 	// Handlers
-	Array<HalfSpace2>			mGridHalfSpaces;
-	Array<HalfSpace2>			mPointAHalfSpaces;
-	Array<HalfSpace2>			mPointBHalfSpaces;
+
+	bool						mStep2 = false;
 
 	KeyboardHandler				mKeyboard;
 	MouseHandler				mMouseHandler;
 	Canvas						mCanvas;
 
-	int							mPointsSet = 0;
-	int							mMouseOverHalfSpace = -1;
-	
 	Array<fvec2>				mMarkers;
 	Array<LineSegment2>			mLines;
-	Array<Polygon2>				mPolygons;
 
 	fvec2						mLastMouse = fvec2(0,0);
-	fvec2						mP[3];
 
 } gMainWindow;
 
@@ -432,41 +495,8 @@ private:
 int main()
 {
 
-	DIB alphabet;
-	alphabet.LoadFromFile(L"./alphabet.bmp");
-	for (char c = ' '; c <= '~'; c++)
-	{
-		int ggg = c-' ';
-		gCharacters[ggg] = 0;
-		int cx = ggg % 10;
-		int cy = ggg / 10;
-		uint16 z = 0;
-		bool first_line_empty = true;
-		for (int y = cy * 7; y < (cy * 7) + 6; y++)
-		{
-			if (z > 15) break;
-			for (int x = cx* 4; x < cx * 4 + 3; x++)
-			{
-				DIBColor c = alphabet.Get(x,y);
-				first_line_empty &= (DIBColor(255,255,255).EqualsIgnoreAlpha(c));
-				if (DIBColor(0,0,0).EqualsIgnoreAlpha(c)) 
-					gCharacters[ggg] |= (1 << z);
-				z++;
-			}
-			if (first_line_empty && y == cy*7) { z = 0; gCharacters[ggg] |= 0x8000;}
-		}
-		
-	}
-	uchar c_min = ' ';
-	uchar c_max = '~';
-	uint char_count = c_max - c_min;
 
-	for (uint x = 0; x < char_count; x++)
-	{
-		std::cout << std::hex << (gCharacters[x]) << ", /*" << char(c_min + x) << "*/" << std::endl;
-	}
-
-
+	gSetupScene();
 	gMainWindow.Create(L"ComeDither", 1024, 1024);
 	gMainWindow.Show(true);
 	gMainWindow.Redraw();

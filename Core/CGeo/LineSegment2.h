@@ -7,7 +7,13 @@ struct LineSegment2
 	LineSegment2() {}
 	LineSegment2(const fvec2& inFrom, const fvec2& inTo) : mFrom(inFrom), mTo(inTo) {}
 
+	inline float GetSignedDistance(const fvec2& inPoint) 
+	{
+		return (inPoint - mFrom).GetPerpDot((mTo - mFrom).GetNormalized());
+	}
+
 	inline fvec2 GetDiff() const { return mTo - mFrom; }
+
 	inline fvec2 GetInterpolated(float inI) const { return mFrom + GetDiff() * inI; }
 
 	inline bool PointOnSegment(const fvec2& inPoint)
@@ -60,7 +66,7 @@ struct LineSegment2
 		fvec2 r = inSegment.GetDiff();
 		fvec2 d = mFrom - inSegment.mFrom;
 		float c = r.GetCross(s);
-		if (c == 0) 
+		if (c == 0)
 			return false;
 
 		float u = d.GetCross(s) / c;

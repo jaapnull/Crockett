@@ -12,9 +12,13 @@ struct HalfSpace2
 		esEdge
 	};
 
+	bool operator==(const HalfSpace2& inOther) const { return mOffset == inOther.mOffset && mNormal == inOther.mNormal; }
+
 	HalfSpace2() {}
 	HalfSpace2(float inNormX, float inNormY, float inOffset) : mNormal(inNormX, inNormY), mOffset(inOffset) {}
 	HalfSpace2(const fvec2& inNormal, float inOffset) : mNormal(inNormal), mOffset(inOffset) {}
+
+	const HalfSpace2 GetInverse() const { return HalfSpace2(-mNormal, -mOffset); }
 
 	inline float SignedDistance(const fvec2& inPoint) const
 	{
@@ -30,7 +34,7 @@ struct HalfSpace2
 	static const HalfSpace2 sCreateBetweenPoints(const fvec2& inPointA, const fvec2& inPointB)
 	{
 			fvec2 s = inPointA-inPointB;
-			fvec2 n = s.GetPerp().GetNormalised();
+			fvec2 n = s.GetPerp().GetNormalized();
 			return HalfSpace2(n, n.GetDot(inPointA));
 	}
 

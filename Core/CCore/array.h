@@ -49,7 +49,7 @@ public:
 	void Pop()												{ Resize(GetLength() - 1); }						// Shrinks elements by one, destructing last element
 	void SwapRemove(size64 inIndex)							{ if (inIndex != GetLength() - 1) mData[inIndex] = Back(); Pop(); }
 
-	size64 Find(const T& inElement)							
+	size64 Find(const T& inElement) const
 	{ 
 		for (size64 i = 0; i < GetLength(); i++)
 		{
@@ -107,6 +107,11 @@ public:
 	// --------------------------------------------------------------------------------------------------------
 	void Set(const T* inData, size64 inLength)
 	{
+		if (inLength == 0)
+		{
+			Clear(true);
+			return;
+		}
 		gAssert(IsValid());
 		if (mData)
 		{
