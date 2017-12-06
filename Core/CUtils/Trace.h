@@ -42,7 +42,7 @@ public:
 		auto syncRet = sync();
 		if (c != TTraits::eof())
 		{
-			_buffer[0] = c;
+			_buffer[0] = (TChar) c;
 			setp(_buffer.data(), _buffer.data() + 1, _buffer.data() + _buffer.size());
 		}
 		return syncRet == -1 ? TTraits::eof() : 0;

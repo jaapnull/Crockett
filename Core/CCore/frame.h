@@ -14,11 +14,12 @@ protected:
 public:
 	BaseFrame() : mWidth(0), mData(0), mHeight(0), mPitch(0)					{}
 
-	inline uint			GetWidth()		const	{return mWidth;}
-	inline uint			GetHeight()		const	{return mHeight;}
-	inline int			GetPitch()		const	{return mPitch;}
-	inline T*			GetBaseData()			{return mData;}
-	inline const T*		GetBaseData()	const	{return mData;}
+	inline ivec2		GetDimensions() const	{ return ivec2(GetWidth(), GetHeight()); }
+	inline uint			GetWidth()		const	{ return mWidth;}
+	inline uint			GetHeight()		const	{ return mHeight;}
+	inline int			GetPitch()		const	{ return mPitch;}
+	inline T*			GetBaseData()			{ return mData;}
+	inline const T*		GetBaseData()	const	{ return mData;}
 
 	void SetAll(const T& inValue)
 	{
@@ -111,12 +112,12 @@ class DataFrame : public BaseFrame<T>
 {
 public:
 	bool mWrapped; //if true, the array is mWrapped and cannot be deleted or Resized
-	virtual void Resize(unsigned int w, unsigned int h, int mPitch = 0)
+	virtual void Resize(unsigned int w, unsigned int h, int inPitch = 0)
 	{
 		assert(!mWrapped);
 		if (mData) delete[] mData;
 		mData = new T[w*h];
-		BaseFrame::Resize(w, h, mPitch);
+		BaseFrame::Resize(w, h, inPitch);
 	}
 
 	DataFrame() : mWrapped(false)

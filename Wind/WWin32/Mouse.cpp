@@ -53,17 +53,29 @@ MessageReturnCode MouseHandler::HandleMessage(Window* inWindow, uint inMessage, 
 		mMouseLeaveTracking = true;
 	}
 
-	if (drag_release_event && mDragging)
+	if (mDragging)
 	{
-		mTarget->OnMouseDragStop(pos, buttons, inMessage == WM_MOUSELEAVE);
-		mDragging = false;
+		if (drag_release_event)
+		{
+			mTarget->OnMouseDragStop(pos, buttons, inMessage == WM_MOUSELEAVE);
+			mDragging = false;
+		}
+		else
+		{
+			mTarget->OnMouseDrag(pos, pos - mDragStart);
+			mDragPrevious = pos;
+		}
+	}
+	else
+	{
+		if (drag_start_event)
+		{
+			mDragStart = pos;
+			mDragPrevious = pos;
+			mDragging = true;
+		}
 	}
 
-	if (drag_start_event)
-	{
-		mDragStart = pos;
-		mDragging = true;
-	}
 
 	return mrcHandled;
 }

@@ -4,9 +4,9 @@
 #include <CCore/Array.h>
 
 // Define aliases for two implementation specific types, (HWND/HANDLE) and ATOM
-typedef void*	_Handle;
-typedef uint16	_Atom;
-typedef void*	MessageParam;
+typedef intptr_t	_Handle;
+typedef uint16		_Atom;
+typedef intptr_t	MessageParam;
 
 bool gDoMessageLoop(bool inBlocking);
 

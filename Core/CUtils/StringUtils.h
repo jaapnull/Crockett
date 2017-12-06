@@ -22,8 +22,9 @@ extern String	gToString(int inFloat);
 extern String	gToString(short inFloat);
 extern String	gToString(ushort inFloat);
 
+extern int		gOrderString(const String& inA, const String& inB);
 extern bool		gCompareStringsIgnoreCase(const String& inA, const String& inB);
-extern size64 gFindInString(const String& inCorpus, const String& inSearchTerm, size64 inStartOffset = 0);
+extern size64	gFindInString(const String& inCorpus, const String& inSearchTerm, size64 inStartOffset = 0);
 
 extern void		gStripWhitespace(String& ioString);
 

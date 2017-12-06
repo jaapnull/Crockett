@@ -177,7 +177,7 @@ void DIB::DrawImageColoredKey(int inDestX, int inDestY, const DIB& image, int in
 	if (y + height > int(GetHeight()))	{ height -= (y + height - GetHeight()); }
 	assert(y + height <= int(GetHeight()));
 
-	if (height < 0 || width < 0) return;
+	if (height <= 0 || width <= 0) return;
 	
 	// left upper corner
 	DIBColor* src = (DIBColor*)(&(image.Get(inSrcX, inSrcY)));
@@ -190,16 +190,107 @@ void DIB::DrawImageColoredKey(int inDestX, int inDestY, const DIB& image, int in
 			if ((src[c].mIntValue & 0xFFFFFF) != (inKey.mIntValue & 0xFFFFFF))
 			{
 				dst[c].mIntValue = src[c].mIntValue; //+= 0x001F1F1F;// = src[c];
-				//dst[c].mIntValue += 0x000008;// (src[c].mIntValue & 0xFCFCFCFC) >> 2;//  0x001F1F1F;// = src[c];
 			}
 		}
-		
-		//memcpy(dst, src, (width) * sizeof(DIBColor));
 		src = (DIBColor*) ((byte*)src + image.GetPitch());
 		dst = (DIBColor*)((byte*)dst + GetPitch());
 	}
 }
 
+
+void DIB::DrawImageColoredKeyStretched(const IRect& inDest, const DIB& inSrcImage, const IRect& inSource, const DIBColor &inKey)
+{
+	fvec2 src_dest_scale = fvec2(inSource.GetDimensions()) / fvec2(inDest.GetDimensions());
+	IRect intersected = inDest.GetIntersect(IRect(0, 0, GetWidth(), GetHeight()));
+	if (intersected.HasInversions() || intersected.GetSurfaceArea() <= 0) return;
+
+
+	float flt_x = inSource.mLeft + float(intersected.mLeft - inDest.mLeft) * src_dest_scale.x;
+	float flt_y = inSource.mTop + float(intersected.mTop - inDest.mTop) * src_dest_scale.y;
+
+
+	//std::wcout << src_dest_scale.x << ":" << src_dest_scale.y << std::endl;
+	const DIBColor* src_scanline = &(inSrcImage.Get(int(flt_x), int(flt_y)));
+	DIBColor* dst_scanline = &(Get(intersected.mLeft, intersected.mTop));
+	int scanlines = uint(flt_y);
+
+
+	//std::wcout << " first scan: " << src_scanline - inSrcImage.GetBaseData() << std::endl;
+	//std::wcout << " x: " << (src_scanline - inSrcImage.GetBaseData()) % 320 << std::endl;
+	//std::wcout << " y: " << (src_scanline - inSrcImage.GetBaseData()) / 320 << std::endl;
+
+
+	flt_x -= gFloor(flt_x);
+	flt_y -= gFloor(flt_y);
+
+	for (int y = intersected.mTop; y < intersected.mBottom; y++)
+	{
+		const DIBColor* src = src_scanline;
+		DIBColor* dst = dst_scanline;
+		for (int x = intersected.mLeft; x < intersected.mRight; x++)
+		{
+			if ((src->mIntValue & 0xFFFFFF) != (inKey.mIntValue & 0xFFFFFF))
+			{
+				*dst = *src;
+			}
+	
+			dst++;
+			flt_x += src_dest_scale.x;
+			src += int(flt_x);
+			flt_x -= int(flt_x);
+		}
+
+		dst_scanline = gOffsetPointer(dst_scanline, GetPitch());
+		//std::wcout << flt_x << ',' << src_scanline - inSrcImage.GetBaseData() << std::endl;
+		flt_y += src_dest_scale.y;
+		scanlines += int(flt_y);
+		src_scanline = gOffsetPointer(src_scanline, inSrcImage.GetPitch() * int(flt_y));
+		flt_y -= int(flt_y);
+
+		//std::wcout << flt_x << " now " << src_scanline - inSrcImage.GetBaseData() << std::endl;
+		//std::wcout << " x: " << (src_scanline - inSrcImage.GetBaseData()) % 320 << std::endl;
+		//std::wcout << " y: " << (src_scanline - inSrcImage.GetBaseData()) / 320 << std::endl;
+
+	}
+}
+
+/*
+
+void DIB::DrawImageColoredKeyStretched(const IRect& inDest, const DIB& inSrcImage, const IRect& inSource, const DIBColor &inKey)
+{
+fvec2 src_dest_scale = fvec2(inSource.GetDimensions()) / fvec2(inDest.GetDimensions());
+
+IRect intersected = inDest.GetIntersect(IRect(0, 0, GetWidth(), GetHeight()));
+
+if (intersected.GetSurfaceArea() == 0) return;
+
+// left upper corner
+
+for (int y = intersected.mTop; y < intersected.mBottom; y++)
+{
+float src_x = inSource.mLeft + float(intersected.mLeft - inDest.mLeft) * src_dest_scale.x;
+float src_y = inSource.mTop + float(y - inDest.mTop) * src_dest_scale.y;
+
+const DIBColor* src = &(inSrcImage.Get(src_x, src_y));
+DIBColor* dst = &(Get(intersected.mLeft, y));
+
+for (int x = intersected.mLeft; x < intersected.mRight; x++)
+{
+
+DIBColor c = inSrcImage.Get(int(src_x), int(src_y));
+if (!c.EqualsIgnoreAlpha(inKey))
+Set(x, y, c);
+src_x += src_dest_scale.x;
+}
+}
+}
+*/
+
+
+void DIB::DrawImageStretched(const IRect& inDest, const DIB& image, const IRect& inSource)
+{
+	DrawImageStretched(inDest.mLeft, inDest.mTop, inDest.GetWidth(), inDest.GetHeight(), image, inSource.mLeft, inSource.mTop, inSource.GetWidth(), inSource.GetHeight());
+}
 
 void DIB::DrawImageStretched(int inDestX, int inDestY, int inDestWidth, int inDestHeight, const DIB& image, int inSrcX, int inSrcY, int inSrcWidth, int inSrcHeight)
 {

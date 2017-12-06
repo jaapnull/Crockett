@@ -3,14 +3,16 @@
 #include <CCore/Assert.h>
 #include <CMath/Math.h>
 
+#include <iostream>
+
 template <class T, int I> class BaseVector
 {
 	T mField[I];
 
 	inline void Fill(const T* data)
 	{
-		for (unsigned int x = 0; x < I; x++)
-		mField[x] = data[x];
+		for (unsigned int n = 0; n < i; n++)
+		mField[n] = data[n];
 	}
 
 };
@@ -140,8 +142,8 @@ public:
 	template <class S>
 	explicit Vector(const Vector<S, i>& other)
 	{		
-		for (int x = 0; x < i; x++)
-			mField[x] = (T) other.mField[x];
+		for (int n = 0; n < i; n++)
+			mField[n] = (T) other.mField[n];
 	}
 
 	Vector(const T& x, const T& y, const T& z, const T& w)
@@ -182,33 +184,33 @@ public:
 
 	BaseVector<T, i>& AddScalar(const T& other)
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			mField[x] += other.mField[x];
+			mField[n] += other.mField[n];
 		}
 		return *this;
 	}
 
 	bool IsNear(const BaseVector<T, i>& other) const
 	{
-		for (unsigned int x = 0; x < i; x++)
-			if (!gIsNear(other.mField[x], mField[x])) return false;
+		for (unsigned int n = 0; n < i; n++)
+			if (!gIsNear(other.mField[n], mField[n])) return false;
 		return true;
 	}
 
 	bool IsNearZero() const
 	{
-		for (unsigned int x = 0; x < i; x++)
-			if (!gIsNear(0.0f, mField[x])) return false;
+		for (unsigned int n = 0; n < i; n++)
+			if (!gIsNear(0.0f, mField[n])) return false;
 		return true;
 	}
 
 	T GetDot(const BaseVector<T, i>& other) const
 	{
 		T accum = 0;
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			accum += other.mField[x] * mField[x];
+			accum += other.mField[n] * mField[n];
 		}
 		return accum;
 	}
@@ -216,9 +218,9 @@ public:
 	T GetLengthSquared() const
 	{
 		T accum = 0;
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			accum += mField[x]*mField[x];
+			accum += mField[n]*mField[n];
 		}
 		return accum;
 	}
@@ -226,9 +228,9 @@ public:
 	float GetLength() const
 	{
 		T accum = 0;
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			accum += mField[x]*mField[x];
+			accum += mField[n]*mField[n];
 		}
 		return sqrtf((float)accum);
 	}
@@ -259,54 +261,54 @@ public:
 
 	bool operator==(const BaseVector<T,i>& other) const
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			if (mField[x] != other.mField[x]) return false;
+			if (mField[n] != other.mField[n]) return false;
 		}
 		return true;
 	}
 
 	bool operator!=(const BaseVector<T,i>& other) const
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			if (mField[x] != other.mField[x]) return true;
+			if (mField[n] != other.mField[n]) return true;
 		}
 		return false;
 	}
 
 	Vector<T,i>& operator+=(const BaseVector<T,i>& other)
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			mField[x] += other.mField[x];
+			mField[n] += other.mField[n];
 		}
 		return *this;
 	}
 
 	Vector<T,i>& operator-=(const BaseVector<T,i>& other)
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			mField[x] -= other.mField[x];
+			mField[n] -= other.mField[n];
 		}
 		return *this;
 	}
 
 	Vector<T,i>& operator/=(const T& other)
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			mField[x] /= other;
+			mField[n] /= other;
 		}
 		return *this;
 	}
 
 	Vector<T,i>& operator/=(Vector<T,i>& other)
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			mField[x] /= other.mField[x];
+			mField[n] /= other.mField[n];
 		}
 		return *this;
 	}
@@ -314,8 +316,8 @@ public:
 	Vector<T,i> operator-() const
 	{
 		Vector<T,i> temp;
-		for (unsigned int x = 0; x < i; x++)
-			temp.mField[x] = -mField[x];
+		for (unsigned int n = 0; n < i; n++)
+			temp.mField[n] = -mField[n];
 		return temp;
 	}
 
@@ -332,33 +334,34 @@ public:
 
 	Vector<T,i>& operator*=(const T& other)
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			mField[x] *= other;
+			mField[n] *= other;
 		}
 		return *this;
 	}
 
 		void SetZero()
 	{
-		for (unsigned int x = 0; x < i; x++) mField[x] = 0;
+		for (unsigned int n = 0; n < i; n++) 
+			mField[n] = 0;
 	}
 
 	Vector<T,i> GetMultiply(const Vector<T,i>& other) const
 	{
 		Vector<T, i> v = *this;
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			v[x] *= other[x];
+			v[n] *= other[n];
 		}
 		return v;
 	}
 
 	Vector<T,i>& Multiply(const Vector<T,i>& other)
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			mField[x] *= other[x];
+			mField[n] *= other[n];
 		}
 		return *this;
 	}
@@ -379,19 +382,39 @@ public:
 	template <class S>
 	Vector<T,i> operator=(const Vector<S, i>& other)
 	{		
-		for (int x = 0; x < i; x++)
-			mField[x] = (T) other.mField[x];
+		for (int n = 0; n < i; n++)
+			mField[n] = (T) other.mField[n];
 		return *this;
 	}
 
 
 	void Lerp(const Vector<T,i>& other, float inValue)
 	{
-		for (unsigned int x = 0; x < i; x++)
+		for (unsigned int n = 0; n < i; n++)
 		{
-			mField[x] *= (1.0f - inValue);
-			mField[x] += other.mField[x] * inValue;
+			mField[n] *= (1.0f - inValue);
+			mField[n] += other.mField[n] * inValue;
 		}
+	}
+
+	const T GetMaxAxis() const
+	{
+		T max = mField[0];
+		for (int n = 1; n < i; n++)
+		{
+			max = gMax<T>(mField[n], max);
+		}
+		return max;
+	}
+
+	const T GetMinAxis() const
+	{
+		T max = mField[0];
+		for (int n = 1; n < i; n++)
+		{
+			max = gMin<T>(mField[n], max);
+		}
+		return max;
 	}
 
 	Vector<T,i> operator*(const T& other) const
@@ -404,6 +427,15 @@ public:
 	{
 		Vector<T,i> v = *this;
 		v/= other;
+		return v;
+	}
+	Vector<T, i> operator/(const Vector<T, i>& other) const
+	{
+		Vector<T, i> v = *this;
+		for (int n = 0; n < i; n++)
+		{
+			v.mField[n] /= other.mField[n];
+		}
 		return v;
 	}
 	Vector<T,i> operator+(const BaseVector<T,i>& other) const
@@ -421,14 +453,14 @@ public:
 
 	Vector<T,i>& operator=(const BaseVector<T,i>& other)
 	{
-		for (unsigned int x = 0; x < i; x++)
-			mField[x] = other.mField[x];
+		for (unsigned int n = 0; n < i; n++)
+			mField[n] = other.mField[n];
 	}
 
 	bool IsRational() const
 	{
-		for (unsigned int x = 0; x < i; x++)
-			if (isnan(mField[x])) return false;
+		for (unsigned int n = 0; n < i; n++)
+			if (isnan(mField[n])) return false;
 		return true;
 	}
 
@@ -439,8 +471,8 @@ public:
 	template <class T2>
 	Vector(const BaseVector<T2,i>& other)
 	{
-		for (unsigned int x = 0; x < i; x++)
-			mField[x] = (T) other.mField[x];
+		for (unsigned int n = 0; n < i; n++)
+			mField[n] = (T) other.mField[n];
 	}
 
 
@@ -448,8 +480,8 @@ public:
 	void Set(const BaseVector<T2,i>& other)
 	{
 		mField[0] = 1;
-		for (unsigned int x = 0; x < i; x++)
-			mField[x] = (T) other.mField[x];
+		for (unsigned int n = 0; n < i; n++)
+			mField[n] = (T) other.mField[n];
 	}
 
 
@@ -490,7 +522,27 @@ public:
 	float GetCross(const fvec2 inOther)															{ return x*inOther.y - inOther.x*y; }
 };
 
-#include <iostream>
+template <class T, unsigned int i>
+inline const  Vector<T, i> gMin(const Vector<T, i>& A, const Vector<T, i>& B)
+{
+	Vector<T, i> v;
+	for (int n = 0; n < i; n++)
+	{
+		v.mField[n] = gMin<T>(A.mField[n], B.mField[n]);
+	}
+	return v;
+}
+
+template <class T, unsigned int i>
+inline const  Vector<T, i> gMax(const Vector<T, i>& A, const Vector<T, i>& B)
+{
+	Vector<T, i> v;
+	for (int n = 0; n < i; n++)
+	{
+		v.mField[n] = gMax<T>(A.mField[n], B.mField[n]);
+	}
+	return v;
+}
 
 inline std::ostream& operator<<(std::ostream& os, const fvec2& vec)
 {
@@ -500,7 +552,7 @@ inline std::ostream& operator<<(std::ostream& os, const fvec2& vec)
 
 class fvec3 : public Vector<float, 3>
 {
-
+public:
 	fvec3() {}
 	fvec3(const Vector<float, 3>& inBase) : Vector<float, 3>(inBase) {}
 	fvec3(const Vector<int, 3>& inBase) : Vector<float, 3>((float)inBase.x, (float) inBase.y) {}	

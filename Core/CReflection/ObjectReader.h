@@ -1,3 +1,8 @@
+#pragma once
+/**
+(c)2016 Jaap van Muijden - simple LL1 based JSON(ish) parser
+**/
+
 #include <CCore/String.h>
 #include <CStreams/Streams.h>
 #include <CReflection/Reflection.h>

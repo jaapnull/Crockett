@@ -19,207 +19,13 @@
 #include <WCommon/Mouse.h>
 #include <WCommon/Keyboard.h>
 
+#include <ClipGeo.h>
 
 #ifdef WIN32_IS_INCLUDED
 #error Windows Header Slip
 #endif
 
-
-struct Node;
-struct NodeIndex
-{
-	NodeIndex() {}
-	NodeIndex(uint inIndex) : mIndex(inIndex) {}
-	bool operator==(const NodeIndex& inIndex) const		{ return mIndex == inIndex.mIndex; }
-	bool operator<(const NodeIndex& inIndex) const		{ return mIndex < inIndex.mIndex; }
-	bool operator!=(const NodeIndex& inIndex) const		{ return mIndex != inIndex.mIndex; }
-	bool IsValid() const								{ return mIndex != 0xFFFFFFFF; }
-	const Node* operator->() const;
-	Node* operator->();
-
-	uint32 mIndex = 0xFFFFFFFF;
-};
-
-struct Edge;
-struct EdgeIndex
-{
-	EdgeIndex() {}
-	EdgeIndex(uint inIndex) : mIndex(inIndex) {}
-	bool operator==(const EdgeIndex& inIndex) const		{ return mIndex == inIndex.mIndex; }
-	bool operator<(const EdgeIndex& inIndex) const		{ return mIndex < inIndex.mIndex; }
-	bool operator!=(const EdgeIndex& inIndex) const		{ return mIndex != inIndex.mIndex; }
-	bool IsValid() const								{ return mIndex != 0xFFFFFFFF; }
-	const Edge* operator->() const;
-	Edge* operator->();
-
-	uint32 mIndex;
-};
-
-struct Node
-{
-	Node() {}
-	Node(const fvec2& inPos) : mPosition(inPos) {}
-	fvec2				mPosition;
-	Array<EdgeIndex>	mEdges;
-};
-
-Array<Node>			gNodes;
-const Node* NodeIndex::operator->() const	{ return gNodes.GetData() + mIndex; }
-Node* NodeIndex::operator->()				{ return gNodes.GetData() + mIndex; }
-
-
-struct Edge
-{
-	Edge() {}
-	Edge(NodeIndex inNodeA, NodeIndex inNodeB)
-	{
-		mNodes.Append(inNodeA);
-		mNodes.Append(inNodeB);
-		mHalfSpace = HalfSpace2::sCreateBetweenPoints(inNodeA->mPosition, inNodeB->mPosition);
-	}
-
-	void AddNode(NodeIndex inNode)
-	{
-		gAssert(mNodes.Find(inNode) == cMaxSize64);
-		mNodes.Append(inNode);
-	}
-
-	HalfSpace2			mHalfSpace;
-	Array<NodeIndex>	mNodes;
-};
-
-Array<Edge>			gEdges;
-const Edge* EdgeIndex::operator->() const	{ return gEdges.GetData() + mIndex; }
-Edge* EdgeIndex::operator->()				{ return gEdges.GetData() + mIndex; }
-
-
-NodeIndex gCreateNodeFromPoint(const fvec2& inPoint)
-{
-	gNodes.Append(Node(inPoint)); 
-	return NodeIndex((uint) gNodes.GetLength()-1); 
-}
-
-
-NodeIndex gFindOrCreateNodeFromPoint(const fvec2& inPoint)
-{
-	for (uint n = 0; n < gNodes.GetLength(); n++)
-	{
-		if (gNodes[n].mPosition == inPoint) 
-			return NodeIndex(n);
-	}	
-	return gCreateNodeFromPoint(inPoint);
-}
-
-
-NodeIndex gFindOrCreateEdgeIntersection(EdgeIndex inEdgeA, EdgeIndex inEdgeB)
-{
-
-	uint inHitA = 0xFFFFFFFF;
-	uint inHitB = 0xFFFFFFFF;
-	for (NodeIndex n0 : inEdgeA->mNodes)
-	for (NodeIndex n1 : inEdgeB->mNodes)
-	{
-		if (n0 == n1)
-			return n0;
-	}
-
-	fvec2 intersection;
-	if (inEdgeA->mHalfSpace.GetIntersect(inEdgeB->mHalfSpace, intersection))
-	{
-		NodeIndex new_intersection = gFindOrCreateNodeFromPoint(intersection);
-		new_intersection->mEdges.Append(inEdgeA);
-		new_intersection->mEdges.Append(inEdgeB);
-		inEdgeA->AddNode(new_intersection);
-		inEdgeB->AddNode(new_intersection);
-		return new_intersection;
-	}
-	else
-	{
-		return 0xFFFFFFFF;
-	}
-}
-
-
-EdgeIndex gCreateEdgeFromNodes(NodeIndex inNodeA, NodeIndex inNodeB)
-{
-	EdgeIndex ei((uint) gEdges.GetLength());
-	inNodeA->mEdges.Append(ei);
-	inNodeB->mEdges.Append(ei);
-	gEdges.Append(Edge(inNodeA, inNodeB));
-
-	for (uint i = 0; i < gEdges.GetLength()-1; i++)
-	{
-		gFindOrCreateEdgeIntersection(EdgeIndex(i), EdgeIndex(ei));
-	}
-
-	return ei;
-}
-
-EdgeIndex gFindOrCreateEdgeFromNodes(NodeIndex inNodeA, NodeIndex inNodeB)
-{
-	for (EdgeIndex e : inNodeA->mEdges)
-	{
-		if (e->mNodes.Find(inNodeB) != cMaxSize64)
-		{
-			return e;
-		}
-	}
-	return gCreateEdgeFromNodes(inNodeA, inNodeB);
-}
-
-
-EdgeIndex gCreateEdgeFromPoints(const fvec2& inPointA, const fvec2& inPointB)
-{
-	NodeIndex n0 = gFindOrCreateNodeFromPoint(inPointA);
-	NodeIndex n1 = gFindOrCreateNodeFromPoint(inPointB);
-	return gFindOrCreateEdgeFromNodes(n0, n1);
-}
-
-EdgeIndex gGetSharedEdge(NodeIndex inNodeA, NodeIndex inNodeB)
-{
-	for (EdgeIndex ei : inNodeA->mEdges)
-	{
-		if (ei->mNodes.Find(inNodeB))
-		{
-			return ei;
-		}
-	}
-	return 0xFFFFFFFF;
-}
-
-
-struct Ring
-{
-
-	Ring(Array<fvec2>& inPoints)
-	{
-		if (inPoints.IsEmpty()) return;
-
-		NodeIndex prev_n = gFindOrCreateNodeFromPoint(inPoints.Back());
-		for (fvec2& f : inPoints)
-		{
-			NodeIndex n = gFindOrCreateNodeFromPoint(f);
-			mNodes.Append(n);
-			mEdges.Append(gFindOrCreateEdgeFromNodes(prev_n, n));
-			prev_n = n;
-		}
-	}
-
-
-	void AddNode(NodeIndex inNode, EdgeIndex inEdge)
-	{
-		gAssert(mNodes.IsEmpty() || gGetSharedEdge(mNodes.Back(), inNode).IsValid());
-		mNodes.Append(inNode);
-		mEdges.Append(inEdge);
-	}
-
-	Array<NodeIndex> mNodes;
-	Array<EdgeIndex> mEdges;
-};
-Array<Ring> gRings;
-
-
-Array<fvec2> gPoints;
+Array<fvec2> gUserPoints;
 
 void gSetupScene()
 {
@@ -246,24 +52,47 @@ void gSetupScene()
 		prev = p;
 	}
 
+	gRings.Clear();
+
+
+
+
+	//gRings.Append(Ring(points));
+
+
+
+
 	
-	gRings.Append(Ring(points));
-
-
-	for (fvec2& p : gPoints)
+	for (int p = 1; p < gUserPoints.GetLength(); p++)
 	{
-		NodeIndex n_p = gFindOrCreateNodeFromPoint(p);
+		NodeIndex n_p0 = gFindOrCreateNodeFromPoint(gUserPoints[p-1]);
+		NodeIndex n_p1 = gFindOrCreateNodeFromPoint(gUserPoints[p]);
 
-		for (fvec2& c : corners)
-		{
-			NodeIndex n_c = gFindOrCreateNodeFromPoint(c);
-			EdgeIndex e = gFindOrCreateEdgeFromNodes(n_p, n_c);
-
+		gFindOrCreateEdgeFromNodes(n_p0, n_p1);
+		
+		//for (fvec2& c : corners)
+		//{
+		//	NodeIndex n_c = gFindOrCreateNodeFromPoint(c);
+		//	EdgeIndex e = gFindOrCreateEdgeFromNodes(n_p, n_c);
+		//}
+	}
 //			for (uint ie = 0; ie < gEdges.GetLength(); ie++)
 //				gFindOrCreateEdgeIntersection(e, EdgeIndex(ie));
-		}
+		//
+		//	Array<Ring> new_rings;
+		//	for (Ring& r : gRings)
+		//	{
+		//		
+		//		Ring inner, outer;
+		//		r.Split(e, inner, outer);
+		//		if (inner.mNodes.GetLength() > 2) new_rings.Append(inner);
+		//		if (outer.mNodes.GetLength() > 2) new_rings.Append(outer);
+		//		gAssert(!new_rings.IsEmpty());
+		//	}
+		//	gRings = new_rings;
+		// }
 
-	}
+	
 
 }
 
@@ -281,7 +110,7 @@ public:
 		AddHandler(&mKeyboard);
 	}
 
-	virtual void OnSize(const ivec2& inNewSize) override
+	virtual void OnSized(const ivec2& inNewSize) override
 	{
 		Redraw();
 	}
@@ -305,15 +134,15 @@ public:
 	{
 		fvec2 pos = TransformScreenToClip(inPosition);
 		mLastMouse = pos;
-		Redraw();
+		//Redraw();
 	}
 
 	virtual void OnMouseRightDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
 	{
 		fvec2 pos = TransformScreenToClip(inPosition);
-		if (!gPoints.IsEmpty())
+		if (!gUserPoints.IsEmpty())
 		{
-			gPoints.Pop();
+			gUserPoints.Pop();
 			gSetupScene();
 		}
 		Redraw();
@@ -323,7 +152,7 @@ public:
 	{
 		fvec2 pos = TransformScreenToClip(inPosition);
 
-		gPoints.Append(mLastMouse);
+		gUserPoints.Append(mLastMouse);
 		gSetupScene();
 		Redraw();
 
@@ -346,8 +175,10 @@ public:
 		};
 
 		Array<Text> texts;
+		Array<Text> texts_large;
 		Array<LineSegment2> lines				= mLines;
 		Array<fvec2> points_selected			= mMarkers;
+		Array<fvec2> points_selected_large;
 		Array<fvec2> points_unselected;
 		Array<LineSegment2> lines_selected;
 		Array<LineSegment2> lines_unselected;
@@ -358,32 +189,38 @@ public:
 		int n_id = 0;
 		for (Node& n : gNodes)
 		{
-			points_unselected.Append(n.mPosition);
+			points_unselected.Append(n.GetPosition());
 			fvec2 avg_normal(0, 0);
-			for (EdgeIndex e : n.mEdges)
+			for (EdgeIndex e : n.GetEdges())
 			{
-				lines_unselected.Append(LineSegment2(n.mPosition - e->mHalfSpace.mNormal.GetPerp() * 0.1f, n.mPosition + e->mHalfSpace.mNormal.GetPerp() * 0.1f));
-				avg_normal += e->mHalfSpace.mNormal;
+				lines_unselected.Append(LineSegment2(n.GetPosition() - e->GetHalfSpace().mNormal.GetPerp() * 0.1f, n.GetPosition() + e->GetHalfSpace().mNormal.GetPerp() * 0.1f));
+				avg_normal += e->GetHalfSpace().mNormal;
 			}
 			//texts.Append(Text(avg_normal.GetSafeNormalized() * 0.1f + n.mPosition, gToString(n_id++)));
 		}
 
-		mVisibleRange = 1.0f;
+		mVisibleRange = 8.0f;
 
+		int r_id = 0;
 		for (Ring& r : gRings)
 		{
-			if (r.mNodes.IsEmpty())
-				continue;
-
-			fvec2 prev = r.mNodes.Back()->mPosition;
-			for (NodeIndex n : r.mNodes)
-			{
-				fvec2 p = n->mPosition;
-				points_selected.Append(p);
-				lines_selected.Append(LineSegment2(prev, p));
-				prev = p;
-				mVisibleRange = gMax(mVisibleRange, gMax(gAbs(p.x), gAbs(p.y)));
-			}
+			//if (r.mNodes.IsEmpty())
+			//	continue;
+			//fvec2 avg = fvec2::sZero();
+			//fvec2 prev = r.mNodes.Back()->GetPosition();
+			//for (NodeIndex n : r.mNodes)
+			//{
+			//	fvec2 p = n->GetPosition();
+			//	points_selected.Append(p);
+			//	lines_selected.Append(LineSegment2(prev, p));
+			//	prev = p;
+			//	mVisibleRange = gMax(mVisibleRange, gMax(gAbs(p.x), gAbs(p.y)));
+			//	avg += p;
+			//}
+			//avg /= float(r.mNodes.GetLength());
+			//
+			//points_selected_large.Append(avg);
+			//texts_large.Append(Text(avg + fvec2(0.05f,0), gToString(r_id++)));
 		}
 		mVisibleRange *= 1.1f;
 		mVisibleRangeRcp = 1.0f / mVisibleRange;
@@ -391,12 +228,15 @@ public:
 
 		for (Edge& e : gEdges)
 		{
-			for (NodeIndex n : e.mNodes)
-				points_unselected.Append(n->mPosition);
+			for (NodeIndex n : e.GetNodes())
+			{
+				points_unselected.Append(n->GetPosition());
+				texts.Append(Text(n->GetPosition() + e.GetHalfSpace().mNormal.GetPerp()*0.2f, gToString(e.GetInterpolant(n))));
+			}
 
-			fvec2 m = e.mHalfSpace.mNormal * e.mHalfSpace.mOffset;
-			fvec2 p0 = m + e.mHalfSpace.mNormal.GetPerp() * mVisibleRange * 2.0f;
-			fvec2 p1 = m - e.mHalfSpace.mNormal.GetPerp() * mVisibleRange * 2.0f;
+			fvec2 m = e.GetHalfSpace().mNormal * e.GetHalfSpace().mOffset;
+			fvec2 p0 = m + e.GetHalfSpace().mNormal.GetPerp() * mVisibleRange * 2.0f;
+			fvec2 p1 = m - e.GetHalfSpace().mNormal.GetPerp() * mVisibleRange * 2.0f;
 			lines_dotted.Append(LineSegment2(p0, p1));
 		}
 
@@ -435,7 +275,28 @@ public:
 			pen.DrawLine(ps + fvec2( 1,-1), ps + fvec2(-1,-1));
 		}
 
+		for (const fvec2& p : points_selected_large)
+		{
+			fvec2 ps = TransformClipToScreen(p);
+			pen.DrawLine(ps + fvec2(-2,-2), ps + fvec2(-2, 2));
+			pen.DrawLine(ps + fvec2(-2, 2), ps + fvec2( 2, 2));
+			pen.DrawLine(ps + fvec2( 2, 2), ps + fvec2( 2,-2));
+			pen.DrawLine(ps + fvec2( 2,-2), ps + fvec2(-2,-2));
+		}
+
 		for (const Text& t : texts)
+		{
+			gDrawDebugFontText<DIBColor, 1>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(-1, -1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 1>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(-1, 0), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 1>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(-1, 1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 1>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(1, -1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 1>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(1, 0), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 1>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(1, 1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 1>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(0, 1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 1>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(0, -1), DIBColor(0, 0, 0));
+			gDrawDebugFontText<DIBColor, 1>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(0, 0), DIBColor(255, 255, 255));
+		}
+		for (const Text& t : texts_large)
 		{
 			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(-1, -1), DIBColor(0, 0, 0));
 			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(-1, 0), DIBColor(0, 0, 0));
@@ -447,6 +308,7 @@ public:
 			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(0, -1), DIBColor(0, 0, 0));
 			gDrawDebugFontText<DIBColor, 2>(t.mText, dib, ivec2(TransformClipToScreen(t.mPos)) + ivec2(0, 0), DIBColor(255, 255, 255));
 		}
+
 	}
 
 	void Redraw()

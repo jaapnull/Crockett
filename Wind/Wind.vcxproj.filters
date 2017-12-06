@@ -23,6 +23,12 @@
     <ClCompile Include="WWin32\Font.cpp">
       <Filter>WWin32</Filter>
     </ClCompile>
+    <ClCompile Include="WWin32\Menu.cpp">
+      <Filter>WWin32</Filter>
+    </ClCompile>
+    <ClCompile Include="WWin32\OpenFileDialog.cpp">
+      <Filter>WWin32</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PCHWind.h" />
@@ -54,6 +60,12 @@
       <Filter>WCommon</Filter>
     </ClInclude>
     <ClInclude Include="WCommon\Font.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="WCommon\Menu.h">
+      <Filter>WCommon</Filter>
+    </ClInclude>
+    <ClInclude Include="WCommon\OpenFileDialog.h">
       <Filter>WCommon</Filter>
     </ClInclude>
   </ItemGroup>

@@ -202,7 +202,7 @@ public:
 
 	BaseString<T> operator+(const BaseString<T>& inOther) const
 	{
-		String s = *this;
+		BaseString<T> s = *this;
 		s.Append(inOther);
 		return s;
 	}
@@ -249,7 +249,8 @@ protected:
 typedef BaseString<char> String;
 typedef BaseString<wchar_t> WString;
 
-inline std::ostream& operator<<(std::ostream& ioStream, const WString& inWstr)
+
+inline std::wostream& operator<<(std::wostream& ioStream, const WString& inWstr)
 {
 	return ioStream << inWstr.GetCString();
 }
@@ -258,8 +259,6 @@ inline std::ostream& operator<<(std::ostream& ioStream, const String& inStr)
 {
 	return ioStream << inStr.GetCString();
 }
-
-
 
 template <typename T>
 struct std::hash<BaseString<T>>

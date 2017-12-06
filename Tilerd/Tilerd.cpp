@@ -9,9 +9,10 @@
 #include <CReflection/ObjectWriter.h>
 #include <CFile/File.h>
 #include <CUtils/Sort.h>
+#include <CUtils/Trace.h>
+#include <CUtils/Perf.h>
 
 #include <unordered_map>
-
 #include <WCommon/Window.h>
 #include <WCommon/Canvas.h>
 #include <WCommon/ColorPen.h>
@@ -20,154 +21,20 @@
 #include <WCommon/Keyboard.h>
 
 
+#include "Document.h"
+#include "PaletteWindow.h"
+
+
+Document gCurrentDocument;
+Array<Palette*> gPalettes;
+
+
 #ifdef WIN32_IS_INCLUDED
 #error Windows Header Slip
 #endif
 
+PaletteWindow gPaletteWindow;
 
-
-struct Palette
-{
-	WString				mPaletteBitmap;
-};
-
-
-struct TileImage
-{
-	Palette				mPalette;
-	ivec2				mTileDimensions;
-	DataFrame<ivec2>	mMap;
-} gCurrentImage;
-
-static void sSetBg(DIB& inDib)
-{
-	//DIBColor* dc = inDib.GetBaseData();
-
-
-	for (uint y = 0; y < inDib.GetHeight(); y++)
-	{
-		for (uint x = 0; x < inDib.GetWidth(); x++)
-		{
-			uint t = ((x + y) & 31);
-			inDib.Set(x,y,DIBColor(128 + t, 128 + t, 128 + t));
-		}
-		//gOffsetPointer(dc, inDib.GetPitch());
-	}
-}
-
-class PaletteWindow : public Window, public IPaintHandler, IMouseHandler, IKeyHandler
-{
-public:
-	PaletteWindow() : Window(), mCanvas(*this), mMouseHandler(*this), mKeyboard(*this)
-	{
-		AddHandler(&mCanvas);
-		mCanvas.SetDefaultColor(DIBColor(255, 255, 255));
-		AddHandler(&mMouseHandler);
-		AddHandler(&mKeyboard);
-	}
-
-	virtual void OnSize(const ivec2& inNewSize) override
-	{
-		if (mDrawnScale != GetScale())
-			Invalidate();
-	}
-
-	virtual void OnMouseLeave() override
-	{
-		mMouseOverIdx = mSelectedIdx;
-	}
-
-	IRect GetDrawRectFromIndex(ivec2 inIndex)
-	{
-		ivec2 tile_dim = gCurrentImage.mTileDimensions;
-		return IRect(	inIndex.x * tile_dim.x * mDrawnScale,
-						inIndex.y * tile_dim.y* mDrawnScale,
-						(inIndex.x * tile_dim.x + tile_dim.x) * mDrawnScale,
-						(inIndex.y * tile_dim.y + tile_dim.y) * mDrawnScale);
-	}
-
-	virtual void OnMouseMove(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
-	{
-		if (mDrawnScale == 0)
-			return; 
-
-		ivec2 prev_idx = mMouseOverIdx; 
-		mMouseOverIdx.x = inPosition.x / (gCurrentImage.mTileDimensions.x * mDrawnScale);
-		mMouseOverIdx.y = inPosition.y / (gCurrentImage.mTileDimensions.y * mDrawnScale);
-		Invalidate(GetDrawRectFromIndex(prev_idx));
-		Invalidate(GetDrawRectFromIndex(mMouseOverIdx));
-	}
-
-	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
-	{
-		if (mDrawnScale == 0)
-			return;
-
-		ivec2 prev_idx = mSelectedIdx;
-		mSelectedIdx.x = inPosition.x / (gCurrentImage.mTileDimensions.x * mDrawnScale);
-		mSelectedIdx.y = inPosition.y / (gCurrentImage.mTileDimensions.y * mDrawnScale);
-		Invalidate(GetDrawRectFromIndex(prev_idx));
-		Invalidate(GetDrawRectFromIndex(mSelectedIdx));
-	}
-
-	virtual void OnUpdate(DIB& inDib, const IRect& inRegion)
-	{
-		mDrawnScale = GetScale();
-		sSetBg(inDib);
-
-		IRect r = inRegion;
-
-
-		r.mLeft = gMin<uint>((inRegion.mLeft / mDrawnScale) * mDrawnScale, mLoadedPaletteBitmap.GetWidth() * mDrawnScale);
-		r.mTop = gMin<uint>((inRegion.mTop / mDrawnScale) * mDrawnScale, mLoadedPaletteBitmap.GetHeight() * mDrawnScale);
-
-		r.mRight = gMin<uint>((inRegion.mRight / mDrawnScale) * mDrawnScale, mLoadedPaletteBitmap.GetWidth() * mDrawnScale);
-		r.mBottom = gMin<uint>((inRegion.mBottom / mDrawnScale) * mDrawnScale, mLoadedPaletteBitmap.GetHeight() * mDrawnScale);
-
-		gAssert(r.mLeft % mDrawnScale == 0);
-		gAssert(r.mRight % mDrawnScale == 0);
-		gAssert(r.mTop % mDrawnScale == 0);
-		gAssert(r.mBottom % mDrawnScale == 0);
-		inDib.DrawImageStretched(r.mLeft, r.mTop, r.GetWidth(), r.GetHeight(), mLoadedPaletteBitmap, r.mLeft / mDrawnScale, r.mTop / mDrawnScale, r.GetWidth()/mDrawnScale, r.GetHeight() / mDrawnScale);
-		
-		ColorPen<DIBColor> pen(inDib);
-		
-		IRect selec = GetDrawRectFromIndex(mMouseOverIdx);
-		pen.SetColor(DIBColor(0, 0, 0));
-		pen.DrawSquare(selec.GetGrown(-1));
-		pen.SetColor(DIBColor(255, 255, 255));
-		pen.DrawSquare(selec.GetGrown(-2));
-
-		selec = GetDrawRectFromIndex(mSelectedIdx);
-		pen.SetColor(DIBColor(255, 0, 0));
-		pen.DrawSquare(selec.GetGrown(-1));
-
-	}
-
-	void SetPalette(const Palette& inPalette)
-	{
-		mCurrentPalette = inPalette;
-		mLoadedPaletteBitmap.LoadFromFile(inPalette.mPaletteBitmap);
-		Resize(mLoadedPaletteBitmap.GetWidth(), mLoadedPaletteBitmap.GetHeight());
-		mCanvas.GetDib() = mLoadedPaletteBitmap;
-		
-	}
-
-	uint GetScale()
-	{
-		return gMax<uint>(1, gMin<uint>(GetWidth() / mLoadedPaletteBitmap.GetWidth(), GetHeight() / mLoadedPaletteBitmap.GetHeight()));
-	}
-
-private:
-	uint						mDrawnScale = 0;
-	KeyboardHandler				mKeyboard;
-	MouseHandler				mMouseHandler;
-	Canvas						mCanvas;
-	DIB							mLoadedPaletteBitmap;
-	Palette						mCurrentPalette;
-	ivec2						mMouseOverIdx;
-	ivec2						mSelectedIdx;
-};
 
 
 class TilerdWindow : public Window, public IPaintHandler, IMouseHandler, IKeyHandler
@@ -183,54 +50,102 @@ public:
 		AddHandler(&mKeyboard);
 	}
 
-	virtual void OnSize(const ivec2& inNewSize) override
+	virtual void OnSized(const ivec2& inNewSize) override
 	{
+		Invalidate();
+	}
+
+
+	virtual void OnUpdate(DIB& inDib, const IRect& inRegion) override
+	{
+
+		inDib.SetAll(DIBColor(255, 255, 255));
+
+		HexCoordBase b = gCurrentDocument.GetCoordBase();
+		IRect r = GetVisibleRange();
 
 	}
 
-	virtual void OnMouseLeftUp(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
+	virtual void OnMouseDrag(const ivec2& inDragStart, const ivec2& inDragDelta) override
 	{
-	}
-
-	virtual void OnMouseLeave() override
-	{
+		mOffsetPixelSpace += inDragDelta;
+		Invalidate();
 	}
 
 	virtual void OnMouseMove(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
 	{
+		
 	}
 
 	virtual void OnMouseRightDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
 	{
+		mZoomFactor++;
+		Invalidate();
 	}
 
-	virtual void OnMouseLeftDown(const ivec2& inPosition, EnumMask<MMouseButtons> inButtons) override
-	{
-	}
+	ivec2 ClientPixelToWorldPixel(const ivec2& inClientPixel) const			{ return inClientPixel + mOffsetPixelSpace; }
+	ivec2 WorldPixelToClientPixel(const ivec2& inWorldPixel) const			{ return inWorldPixel - mOffsetPixelSpace; }
+	IRect GetVisibleRange() const											{ return IRect(ClientPixelToWorldPixel(ivec2(0,0)), ClientPixelToWorldPixel(GetDimensions())); }
 
 private:
-
 	KeyboardHandler				mKeyboard;
 	MouseHandler				mMouseHandler;
 	Canvas						mCanvas;
-	ivec2						mTileSize	= ivec2(0,0);
+
+	ivec2						mOffsetPixelSpace = ivec2(0, 0);
+	uint						mZoomFactor = 1;
 
 } gMainWindow;
 
 int main()
 {
-	gCurrentImage.mPalette.mPaletteBitmap = L".\\palette.bmp";
-	gCurrentImage.mTileDimensions = ivec2(16, 16);
-	gCurrentImage.mMap.Resize(32, 32);
+	TimeLine timeline(4000);
 
-	PaletteWindow w;
-	w.Create(L"Palette", 100, 100);
-	w.SetPalette(gCurrentImage.mPalette);
-	w.Show(true);
+	timeline.Start();
 
-	//gMainWindow.Create(L"Tilerd", 1024, 1024);
-	//gMainWindow.Show(true);
-	//
+	timeline.PushTimedEvent(TimedEventText("test"));
+	TraceStream<char>::sHookStream(std::cout);
+	TraceStream<wchar_t>::sHookStream(std::wcout);
+
+	timeline.PushTimedEvent(TimedEventInteger(100));
+	timeline.PushTimedEvent(TimedEventText("test2"));
+
+	gPalettes.Append(Palette::sCreateFromFile(L".\\palette.bmp", ivec2(32,32)));
+
+
+	gCurrentDocument.Resize(100, 100);
+	for (int x = 0; x < 100; x++)
+		for (int y = 0; y < 100; y++)
+		{
+			gCurrentDocument.GetMap().Get(x,y) = TileEntry(gPalettes.Back(), ivec2(gRandRange(0, 4), gRandRange(0, 4)));
+		}
+
+
+	timeline.PushTimedEvent(TimedEventInteger(100));
+	timeline.PushTimedEvent(TimedEventText("test3"));
+
+	gPaletteWindow.Create(L"Palette", 500, 500);
+	gPaletteWindow.Show(true);
+	gMainWindow.Create(L"Main", 500, 500);
+	gMainWindow.Show(true);
+	//gMainWindow.SetFocus({ 500, 500 });
+
+
+	timeline.PushTimedEvent(TimedEventText("testbeforeleep"));
+	Sleep(1000);
+	timeline.PushTimedEvent(TimedEventText("testaftersleep"));
+
+
+	timeline.Stop();
+	Array<TimedEventBase*> events;
+	timeline.GetPushedEvents(events);
+
+	for (TimedEventBase* e : events)
+	{
+		std::cout << timeline.GetTimeInSeconds(*e) << " : " << std::endl;
+	}
+
+
 	while (gDoMessageLoop(true))
 	{
 	}

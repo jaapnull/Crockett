@@ -18,7 +18,7 @@ public:
 	DIB&				GetDib()									{ return mDib; }
 	void				SetDefaultColor(const DIBColor& inColor)	{ mDefaultColor = inColor; }
 
-	MessageReturnCode	HandleMessage(Window* inParent, uint inMessage, MessageParam inParamA, MessageParam  inParamB);	// implementation outside in CPP
+	virtual MessageReturnCode	HandleMessage(Window* inParent, uint inMessage, MessageParam inParamA, MessageParam  inParamB) override;	// implementation outside in CPP
 
 private:
 	DIB					mDib;

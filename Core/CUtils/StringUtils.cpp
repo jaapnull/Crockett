@@ -66,7 +66,7 @@ String gToString(double inDouble)
 
 String gToString(float inFloat)
 {
-	char buffer[10];
+	char buffer[11];
 	sprintf_s(buffer, 10, "%.2f", inFloat);
 	return String(buffer);
 }
@@ -92,6 +92,18 @@ size64 gFindInString(const String& inCorpus, const String& inSearchTerm, size64 
 static char sToLower(char c)			{ return c >= 'A' && c <= 'Z' ? c + ('A' - 'a') : c; }
 static bool sIsWhiteSpace(char c)		{ return c == ' ' || c == '\t' || c == '\n' || c == '\r'; }
 
+
+int gOrderString(const String& inA, const String& inB)
+{
+	for (uint i = 0; i < inA.GetLength(); i++)
+	{
+		if (inB.GetLength() <= i)
+			return 256;
+		else if (inA[i] != inB[i])
+			return inA[i] - inB[i];
+	}
+	return inA.GetLength() == inB.GetLength() ? 0 : -256;
+}
 
 bool gCompareStringsIgnoreCase(const String& inA, const String& inB)
 {

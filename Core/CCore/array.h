@@ -1,15 +1,16 @@
-// ------------------------------------------------------------------------------------------------------------
-// Standard Array implementation
-// ------------------------------------------------------------------------------------------------------------
 #pragma once
+
+/**
+Array.h - Standard Array implementation
+(c)2017 Jaap van Muijden
+**/
+
 #include <CCore/Memory.h>
 #include <CHash/MurmurHash3.h>
 #include <CUtils/EnumMask.h>
 
-// -----------------------------------------------------------------------------------------------------------
 // Array is the base linear array implementation with all the default stuff like resizing etc.
 // Uses the LinearAllocator static functions
-// -----------------------------------------------------------------------------------------------------------
 template<typename T, class TAllocator = LinearAllocator<T>>
 class Array
 {
@@ -74,10 +75,8 @@ public:
 		return true;
 	}
 
-	// --------------------------------------------------------------------------------------------------------
 	// Clear entire array of elements
 	// In constrast to a Resize(0), this also releases memory if inKeepMemory is false
-	// --------------------------------------------------------------------------------------------------------
 	void Clear(bool inKeepMemory = false)
 	{
 		if (inKeepMemory)
@@ -101,10 +100,8 @@ public:
 		}
 	}
 
-	// --------------------------------------------------------------------------------------------------------
 	// Resizes and copies data from [inData] of length [inLength] into buffer
 	// Resizes entire array to size [inLength] (but does not shrink allocation length)
-	// --------------------------------------------------------------------------------------------------------
 	void Set(const T* inData, size64 inLength)
 	{
 		if (inLength == 0)
@@ -135,10 +132,8 @@ public:
 		mEndValid = mData + inLength;											// All entries up to [inLength] are now valid
 	}
 
-	// --------------------------------------------------------------------------------------------------------
 	// Reserves a minimum of [inNewAllocCount] in the buffer, copying over any created elements to 
 	// a new buffer if needed
-	// --------------------------------------------------------------------------------------------------------
 	void Reserve(size64 inNewReserveCount)
 	{
 		if (mData == nullptr)																	// if there is no buffer yet, make a new one
@@ -159,10 +154,8 @@ public:
 		gAssert(GetReserved() == inNewReserveCount);											// This should always be true if we did our job
 	}
 
-	// --------------------------------------------------------------------------------------------------------
 	// Resizes the actual allocated data inside the buffer; it will (void) construct and destruct
 	// elements if needed(!)
-	// --------------------------------------------------------------------------------------------------------
 	void Resize(size64 inNewElementCount)
 	{
 		if (inNewElementCount == GetLength()) return;										// No resize needed
@@ -224,23 +217,18 @@ public:
 		}
 	}
 
-	// --------------------------------------------------------------------------------------------------------
 	// Adds an empty T at the end of the buffer
 	// Resizes/Reallocs the buffer if needed.
-	// --------------------------------------------------------------------------------------------------------
 	void AppendEmpty()
 	{
 		Resize(GetLength()+1);
 	}
 
-	// --------------------------------------------------------------------------------------------------------
 	// Appends data of length [inElementCount] from [inData] to the end of the existing elements.
 	// Resizes the buffer if needed.
-	// --------------------------------------------------------------------------------------------------------
 	void Append(const T* inAppendData, size64 inAppendElementCount)
 	{
 		Grow(GetLength() + inAppendElementCount + 1);					// grow/prealloc to the size needed
-		size64 first_free_element = GetLength();						// copy construct new elements
 		for (size64 c = 0; c < inAppendElementCount; c++)				// Iterate over all elements in append buffer
 		{
 			new (mEndValid++) T(inAppendData[c]);	// Copy-construct new data into data buffer
@@ -248,11 +236,9 @@ public:
 		}
 	}
 
-	// --------------------------------------------------------------------------------------------------------
 	// Grows the data buffer as needed.
 	// In contrast to Reserve() this actually uses a doubling prealloc strategy(!)
 	// Also this accepts a minimum size instead of an exact size like Reserve()
-	// --------------------------------------------------------------------------------------------------------
 	void Grow(size64 inMinimumAllocCount)
 	{
 		if (inMinimumAllocCount <= GetReserved()) return;		// If the current buffer is big enough, early out

@@ -30,6 +30,8 @@ public:
 	
 	void		CopyFrom(const DIB& inOther);
 	void		DrawImage(int inDestX, int inDestY, const DIB& image, int inSrcX, int inSrcY, int inWidth, int inHeight);
+	void		DrawImageColoredKeyStretched(const IRect& inDest, const DIB& image, const IRect& inSource, const DIBColor &key);
+	void		DrawImageStretched(const IRect& inDest, const DIB& image, const IRect& inSource);
 	void		DrawImageStretched(int inDestX, int inDestY, int inDestWidth, int inDestHeight, const DIB& image, int inSrcX, int inSrcY, int inSrcWidth, int inSrcHeight);
 	void		DrawImageColoredKey(int inDestX, int inDestY, const DIB& image, int inSrcX, int inSrcY, int inWidth, int inHeight, const DIBColor &key);
 

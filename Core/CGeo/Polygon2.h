@@ -60,12 +60,12 @@ public:
 			if ((prev_side == HalfSpace2::esInside && new_side == HalfSpace2::esOutside) || (prev_side == HalfSpace2::esOutside && new_side == HalfSpace2::esInside))
 			{
 				fvec2 intersect_point;
-				bool intersected = LineSegment2(prev_vert, v).Intersect(inSplitPlane, intersect_point);
-				if (!intersected)
-				{
-					float f0 = inSplitPlane.SignedDistance(prev_vert);
-					float f1 = inSplitPlane.SignedDistance(v);
-				}
+//				bool intersected = LineSegment2(prev_vert, v).Intersect(inSplitPlane, intersect_point);
+//				if (!intersected)
+//				{
+//					float f0 = inSplitPlane.SignedDistance(prev_vert);
+//					float f1 = inSplitPlane.SignedDistance(v);
+//				}
 				outOuter.AppendVertex(intersect_point);
 				outInner.AppendVertex(intersect_point);
 			}

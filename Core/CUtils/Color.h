@@ -156,6 +156,7 @@ public:
 	template <class T_ColorType>	bool	EqualsIgnoreAlpha(const T_ColorType& inOther)		const	{ return (mBlue == inOther.mBlue && mGreen == inOther.mGreen && mRed == inOther.mRed); }
 	template <class T_ColorType>	void	Add(const T_ColorType& other)								{ mRed += other.mRed; mBlue += other.mBlue; mGreen += other.mGreen; }
 	template <class T_ColorType>	bool	operator==(const T_ColorType& inOther)				const	{ return Equals(inOther); }
+	template <class T_ColorType>	bool	operator!=(const T_ColorType& inOther)				const	{ return !EqualsIgnoreAlpha(inOther); }
 
 	template <class T_ColorType>
 	void AddSaturate(const T_ColorType& other)

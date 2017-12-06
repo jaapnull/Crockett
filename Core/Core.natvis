@@ -16,5 +16,15 @@
   <Type Name="fvec2">
     <DisplayString>[{x,g}, {y,g}]</DisplayString>
   </Type>
+
+  <Type Name="ivec2">
+    <DisplayString>[{x,g}, {y,g}]</DisplayString>
+  </Type>
+
   
+  <Type Name="IRect">
+    <DisplayString>[{mLeft,g}, {mTop,g} - {mRight,g}, {mBottom,g}]</DisplayString>
+  </Type>
+
+
 </AutoVisualizer>

@@ -1,4 +1,9 @@
 #pragma once
+/**
+(c)2017 Jaap van Muijden - Reflection Type declaration (templated type deduction)
+**/
+
+
 #include <CCore/types.h>
 #include <CCore/string.h>
 #include <CCore/array.h>
@@ -13,6 +18,7 @@ public:
 	explicit ClassName(const String& inString) : String(inString) {}
 	explicit ClassName(const type_info& inTypeInfo)
 	{
+		/// Use string hashing to store type_info in map; newer versions of C++ now provide hashable interface TODO update
 		String temp(inTypeInfo.name());
 		assert(temp.Substring(0, 6) == "class ");
 		Set(temp.Substring(6, temp.GetLength() - 6));
@@ -30,6 +36,7 @@ struct std::hash<ClassName>
 
 struct CompoundReflectionInfo;
 
+///@brief TypeDecl defines a full type with decorations, so Tree** or Array<Car*>
 struct TypeDecl
 {
 	class DecorationStack
@@ -39,7 +46,7 @@ struct TypeDecl
 		ETypeDecoration				Outer()								const { return ETypeDecoration(mData & 0x3); }
 		ETypeDecoration				operator[](uint inIndex)			const { return ETypeDecoration((mData >> (inIndex * 2)) & 0x3); }
 		bool						operator==(const DecorationStack& s)const { return mData == s.mData; }
-		bool						IsOnly(ETypeDecoration inContainer)	const { return (mData == inContainer); }
+		bool						IsOnly(ETypeDecoration inContainer)	const { return (mData == uint32(inContainer)); }
 		bool						IsEmpty()							const { return mData == 0; }
 		void						Pop() { mData >>= 2; }
 		void						Push(ETypeDecoration inContainer) { gAssert(inContainer != ctNone); mData <<= 2; mData |= uint32(inContainer); }
@@ -98,14 +105,17 @@ struct TypeDecl
 	DecorationStack					mModifiers;					// stack of modifieds like pointer-to, array-of etc.
 };
 
+
+///@brief a member of a compound (class)
 struct ClassMember
 {
 	TypeDecl						mType;
 	String							mName;
-	size64						mOffset;
+	size64							mOffset;
 };
 
 
+///@brief full reflection info on compound; it's members, size, alignment etc
 struct CompoundReflectionInfo
 {
 public:

@@ -1,22 +1,51 @@
 #pragma once
 #include <CMath/Vector.h>
 
+
+enum class ERectEdge
+{
+	reInvalid = 0,
+	reLeft = 0b0001,
+	reTop = 0b0010,
+	reBottom = 0b0100,
+	reRight = 0b1000,
+	reTopLeft = reLeft | reTop,
+	reTopRight = reRight | reTop,
+	reBottomLeft = reLeft | reBottom,
+	reBottomRight = reRight | reBottom,
+};
+
 template <class T>
 class Rect
 {
 public:
-	T mLeft;
-	T mTop;
-	T mRight;
-	T mBottom;
-	T GetWidth() const {return mRight - mLeft;}
-	T GetHeight() const {return mBottom - mTop;}
 
+	union
+	{
+		Vector<T, 2> mMin;
+		struct
+		{
+			T mLeft;
+			T mTop;
+		};
+	};
+
+	union
+	{
+		Vector<T,2> mMax;
+		struct
+		{
+			T mRight;
+			T mBottom;
+		};
+	};
+
+	T GetWidth() const		{return mRight - mLeft;}
+	T GetHeight() const		{return mBottom - mTop;}
+	
 	Rect() {}
-	Rect(const Vector<T, 2>& inMin, const Vector<T, 2>& inMax) : mLeft(inMin.x), mTop(inMin.y), mRight(inMax.x), mBottom(inMax.y) {}
+	Rect(const Vector<T, 2>& inMin, const Vector<T, 2>& inMax) : mMin(inMin), mMax(inMax) {}
 	Rect(const T& inLeft, const T& inTop, const T& inRight, const T& inBottom) : mLeft(inLeft), mTop(inTop), mRight(inRight), mBottom(inBottom) {}
-	Rect(const T& inWidth, const T& inHeight) : mLeft(0), mTop(0), mRight(inWidth), mBottom(inHeight) {}
-
 
 	const Rect<T> GetGrown(T inGrow) const
 	{
@@ -175,11 +204,6 @@ public:
 		return temp;
 	}
 	
-	Vector<T, 2> GetMin() const
-	{
-		return Vector<T, 2>(mLeft, mTop);
-	}
-
 	Rect<T> Widened(T inOffset)
 	{
 		Rect<T> t = *this;
@@ -190,11 +214,15 @@ public:
 		return t;
 	}
 
-	Vector<T, 2> GetMax() const
+	Rect<T> Widened(Vector<T,2> inOffset)
 	{
-		return Vector<T, 2>(mRight, mBottom);
+		Rect<T> t = *this;
+		t.mLeft -= inOffset.x;
+		t.mRight += inOffset.x;
+		t.mTop -= inOffset.y;
+		t.mBottom += inOffset.y;
+		return t;
 	}
-
 
 	Vector<T, 2> GetSpan() const
 	{
@@ -295,6 +323,11 @@ public:
 		return Rect<T>(	mLeft * inOther, mTop * inOther, mRight * inOther, mBottom * inOther);
 	}
 
+	Rect<T> operator/(const T& inOther) const
+	{
+		return Rect<T>(mLeft / inOther, mTop / inOther, mRight / inOther, mBottom / inOther);
+	}
+
 	Rect<T> operator+(const Vector<T, 2>& inOffset) const
 	{
 		return GetTranslated(inOffset);
@@ -337,7 +370,7 @@ class FRect : public Rect<float>
 	// copy of constructors of Rect<float>
 	FRect() {}
 	FRect(const float inLeft, const float inTop, const float inRight, const float inBottom) : Rect<float>(inLeft, inTop, inRight, inBottom) {}
-	FRect(const float inWidth, const float inHeight) : Rect<float>(inWidth, inHeight) {}
+	FRect(const float inWidth, const float inHeight) : Rect<float>(0, 0, inWidth, inHeight) {}
 };
 
 

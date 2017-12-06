@@ -19,7 +19,7 @@ public:
 private:
 	String			mName;
 	float			mSize		= 0.0f;
-	_Handle			mHandle	= nullptr;
+	_Handle			mHandle	=									0;
 };
 
 class FontDrawer

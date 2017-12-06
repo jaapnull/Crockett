@@ -9,10 +9,10 @@ Font::Font()
 
 Font::~Font()
 {
-	if (mHandle != nullptr)
+	if (mHandle != 0)
 	{
 		DeleteObject(gHandleToHANDLE(mHandle));
-		mHandle = nullptr;
+		mHandle = 0;
 	}
 
 }

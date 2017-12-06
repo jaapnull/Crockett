@@ -38,6 +38,7 @@ class MouseHandler : public IMessageHandler<Window>
 private:
 	IMouseHandler*		mTarget;			// target we call our callbacks on
 	ivec2				mDragStart;			// start position of a dragging action
+	ivec2				mDragPrevious;		// previous position of a dragging action
 	bool				mDragging;			// are we dragging at this moment
 	bool				mMouseLeaveTracking;// are we monitoring for mouse_leave events
 public:

@@ -67,3 +67,4 @@ private:
 	String	mSystemRoot;
 	String	mDeviceName;
 };
+

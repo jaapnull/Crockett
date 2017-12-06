@@ -1,4 +1,8 @@
-// Memory util functions; at the moment builds upon RTL malloc functions
+/**
+Memory.h - Base memory functions
+(c)2016 Jaap van Muijden
+**/
+
 #pragma once
 #include <CCore/types.h>
 #include <CCore/Assert.h>
@@ -20,7 +24,7 @@ T* gAllocAligned(size64 inElementCount)
 template<typename T>
 T* gReallocAligned(void* inPointer, uint inCount)
 {
-	return _aligned_realloc(inPointer, inCount*size(T), __alignof(T));
+	return (T*) _aligned_realloc(inPointer, inCount*sizeof(T), __alignof(T));
 }
 
 /// Frees aligned allocation of buffer [inPointer]
@@ -31,7 +35,7 @@ inline void gFreeAligned(void* inPointer)
 
 /// Checks of a buffer is aligned to [inAlignment] (uses templates to allow compiler to optimize out 2^n alignment checks)
 template <uint64 inAlignment>
-inline bool gIsAlignedTo(void* inPointer)
+inline bool gIsAlignedTo(const void* inPointer)
 {
 	return size64(inPointer) % inAlignment == 0;
 }
@@ -161,9 +165,9 @@ public:
 		gAssert(inInitData != 0 || inInitCount == 0);		// previous elements should be zero only when 
 
 		T* new_array = sRawAlloc(inNewAllocCount);			// allocate array of bytes with appropriate size
-		for (size64 c = 0; c < inInitCount; c++)				// Initalize elements
+		for (size64 c = 0; c < inInitCount; c++)			// Initalize elements
 		{
-			new (new_array + c) T(inInitData[c]);				// Placement new copy-constructor, faster than seperate construct and assign
+			new (new_array + c) T(inInitData[c]);			// Placement new copy-constructor, faster than seperate construct and assign
 		}
 		return new_array;									// return new data block
 	}

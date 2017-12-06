@@ -116,13 +116,14 @@ public:
 	}
 
 
-	virtual void OnSize(const ivec2& inNewSize)
+
+	virtual void OnSized(const ivec2& inNewSize) override
 	{
 		Invalidate();
 	}
 	
 
-	virtual void OnUpdate(DIB& inDib, const IRect& inRegion)
+	virtual void OnUpdate(DIB& inDib, const IRect& inRegion) override
 	{
 
 		ColorPen<DIBColor> pen(inDib);
@@ -200,6 +201,7 @@ public:
 	virtual void OnKeyDown(const uint inKeyCode) 
 	{
 		if (inKeyCode >= '0' && inKeyCode <= '9') mColor = inKeyCode - '0';
+		if (inKeyCode >= '!' && inKeyCode <= '/') mColor = 8 + inKeyCode - '!';
 		if (inKeyCode == ' ')
 		{
 			mShowDither = !mShowDither;

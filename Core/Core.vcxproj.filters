@@ -98,6 +98,15 @@
     <ClInclude Include="CUtils\Region2.h">
       <Filter>CUtils</Filter>
     </ClInclude>
+    <ClInclude Include="CUtils\Perf.h">
+      <Filter>CUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="CUtils\Atomics.h">
+      <Filter>CUtils</Filter>
+    </ClInclude>
+    <ClInclude Include="CUtils\StreamUtils.h">
+      <Filter>CUtils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
@@ -136,6 +145,9 @@
     </ClCompile>
     <ClCompile Include="CStreams\Streams.cpp">
       <Filter>CStreams</Filter>
+    </ClCompile>
+    <ClCompile Include="CUtils\Perf.cpp">
+      <Filter>CUtils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

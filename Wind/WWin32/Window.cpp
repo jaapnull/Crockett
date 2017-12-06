@@ -15,7 +15,8 @@ static LRESULT CALLBACK gDispatchMessage(HWND hwnd, UINT uMsg, WPARAM wParam, LP
 	{
 		Window* window = ((Window*)(((CREATESTRUCT*)lParam)->lpCreateParams));
 		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)window);
-		window ->SetHandle(hwnd);
+		window->SetHandle(gHWNDToHandle(hwnd));
+		window->OnCreate();
 	}
 	if (uMsg == WM_CLOSE)
 	{
@@ -75,15 +76,15 @@ void Window::Create(const WString inTitle, unsigned int inWidth, unsigned int in
 	DWORD d = GetLastError();
 	assert(h);
 	// do an early handle set so that the window object already has a proper handle, todo: set WindowLongPtr already here instead of in WM_CREATE?
-	mHandle = h;	
+	mHandle = gHWNDToHandle(h);	
 }
-
 
 void Window::Invalidate()
 {
 	HWND hwnd = gHandleToHWND(mHandle);
 	InvalidateRect(hwnd, 0, false);
 }
+
 void Window::Invalidate(const IRect& inQuad)
 {
 	HWND hwnd = gHandleToHWND(mHandle);
@@ -91,20 +92,71 @@ void Window::Invalidate(const IRect& inQuad)
 	InvalidateRect(hwnd, &r, false);
 }
 
+void Window::SetResizeable(bool inIsResizeable)
+{
+	LONG style = GetWindowLong(gHandleToHWND(mHandle), GWL_STYLE);
+	if(!inIsResizeable)
+		style &= ~(WS_THICKFRAME);
+	else
+		style |= WS_THICKFRAME;
+	SetWindowLong(gHandleToHWND(mHandle), GWL_STYLE, style);
+}
 
 MessageReturnCode Window::HandleMessage(Window* inParent, uint inMessage, MessageParam inParamA, MessageParam inParamB)
 {
 	MessageReturnCode rc = MessageSource<Window>::HandleMessage(inParent, inMessage, inParamA, inParamB);
 
 	// internal messages
+	if (inMessage == WM_CLOSE)
+	{
+		OnClose();
+	}
+
 	if (inMessage == WM_SIZE)
 	{
 		if (uint((size64) inParamA) != SIZE_MINIMIZED)
 		{
 			uint new_width = LOWORD(inParamB);
 			uint new_height = HIWORD(inParamB);
-			OnSize(ivec2(new_width, new_height));
+			OnSized(ivec2(new_width, new_height));
 		}
+		else
+		{
+			OnSized(ivec2(0, 0));
+		}
+	}
+	else if (inMessage == WM_SIZING)
+	{
+		// int corner = inParamA (wparam);
+		RECT* window_rect = (RECT*)inParamB;
+		IRect our_rect = { window_rect->left, window_rect->top, window_rect->right, window_rect->bottom };
+
+		RECT r = { 0,0,0,0 };
+		BOOL b = AdjustWindowRectEx(&r, GetWindowLong(gHandleToHWND(mHandle), GWL_STYLE), false, GetWindowLong(gHandleToHWND(mHandle), GWL_EXSTYLE));
+
+		our_rect.mLeft		-= r.left;
+		our_rect.mTop		-= r.top;
+		our_rect.mRight		-= r.right;
+		our_rect.mBottom	-= r.bottom;
+
+		ERectEdge edge =	inParamA == WMSZ_BOTTOM ? ERectEdge::reBottom :
+							inParamA == WMSZ_LEFT ? ERectEdge::reLeft :
+							inParamA == WMSZ_TOP ? ERectEdge::reTop:
+							inParamA == WMSZ_RIGHT ? ERectEdge::reRight:
+							inParamA == WMSZ_BOTTOMLEFT ? ERectEdge::reBottomLeft :
+							inParamA == WMSZ_BOTTOMRIGHT ? ERectEdge::reBottomRight :
+							inParamA == WMSZ_TOPLEFT ? ERectEdge::reTopLeft :
+							inParamA == WMSZ_TOPRIGHT ? ERectEdge::reTopRight : ERectEdge::reInvalid;
+
+		OnSizing(EnumMask<ERectEdge>(edge), our_rect);
+		window_rect->left = our_rect.mLeft			+ r.left;
+		window_rect->top = our_rect.mTop			+ r.top;
+		window_rect->right = our_rect.mRight		+ r.right;
+		window_rect->bottom = our_rect.mBottom		+ r.bottom;
+
+		//BOOL b = AdjustWindowRectEx(window_rect, GetWindowLong(gHandleToHWND(mHandle), GWL_STYLE), false, GetWindowLong(gHandleToHWND(mHandle), GWL_EXSTYLE));
+
+
 	}
 	return rc;
 }
