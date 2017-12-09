@@ -107,6 +107,12 @@
     <ClInclude Include="CUtils\StreamUtils.h">
       <Filter>CUtils</Filter>
     </ClInclude>
+    <ClInclude Include="CCore\BitField.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
+    <ClInclude Include="CCore\Integers.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
@@ -148,6 +154,9 @@
     </ClCompile>
     <ClCompile Include="CUtils\Perf.cpp">
       <Filter>CUtils</Filter>
+    </ClCompile>
+    <ClCompile Include="CCore\BitField.cpp">
+      <Filter>CCore</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

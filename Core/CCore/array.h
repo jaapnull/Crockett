@@ -27,6 +27,7 @@ public:
 	~Array()												{ if (mData) LinearAllocator<T>::sFreeAndDestruct(mData, GetLength()); }
 
 	size64 GetLength()								const	{ return mEndValid - mData; }						// Amount of active/initialized elements	
+	size64 GetLastIndex()							const	{ return (mEndValid - mData) - 1; }					// Last valid index of the array
 	size64 GetReserved()							const	{ return mEndReserved - mData; }					// Get Allocated elements (data size is sizeof(T)*GetReserved())
 	T* GetData()											{ return mData; }									// Getter to raw data block
 	const T* GetData()								const	{ return mData; }									// Const getter to raw data block
@@ -43,6 +44,7 @@ public:
 	T& Front()												{ gAssert(IsValid()); return mData[0]; }			// Getter to first element
 	const T& Front()								const	{ gAssert(IsValid()); return mData[0]; }			// Const getter to first element
 
+	void SetAll(const T& inValue)							{ for (int c = 0; c < GetLength(); c++) mData[c] = inValue; }
 	bool IsEmpty()									const	{ return mEndValid == mData; }						// returns true is element count is zero
 	bool IsValid()									const	{ return (mData == nullptr) == (mEndValid == nullptr) && (mData == nullptr) == (mEndReserved == nullptr); }
 

@@ -131,7 +131,9 @@
   <ItemGroup>
     <ClInclude Include="CCore\Array.h" />
     <ClInclude Include="CCore\Assert.h" />
+    <ClInclude Include="CCore\BitField.h" />
     <ClInclude Include="CCore\Frame.h" />
+    <ClInclude Include="CCore\Integers.h" />
     <ClInclude Include="CCore\Memory.h" />
     <ClInclude Include="CCore\RefCount.h" />
     <ClInclude Include="CCore\String.h" />
@@ -167,6 +169,7 @@
     <ClInclude Include="CUtils\Trace.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CCore\BitField.cpp" />
     <ClCompile Include="CFile\File.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CorePCH.h</PrecompiledHeaderFile>

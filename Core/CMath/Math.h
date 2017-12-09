@@ -71,14 +71,14 @@ inline float gFloor(float inFloat)
 	return floorf(inFloat);
 }
 
-inline int gRandRange(int inMin, int inMax)
+inline int gRandRange(int inMinInclusive, int inMaxInclusive)
 {
-	return (rand()%(inMax-inMin+1)) + inMin;
+	return (rand()%(inMaxInclusive - inMinInclusive +1)) + inMinInclusive;
 }
 
 inline uint32 gRand()
 {
-	return (uint32) rand();
+	return (uint32) rand() | (rand() << 16);
 }
 
 inline float gPowF(float inBase, float inPower)

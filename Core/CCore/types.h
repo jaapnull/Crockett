@@ -44,3 +44,11 @@ template <>					inline int gMaxValue<int>()		{ return INT_MAX; }
 template <>					inline int gMinValue<int>()		{ return INT_MIN; }
 
 
+template<typename TFirst, typename TSecond>
+struct Tuple
+{
+	TFirst		mFirst;
+	TSecond		mSecond;
+};
+
+

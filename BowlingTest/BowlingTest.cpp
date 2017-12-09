@@ -16,10 +16,13 @@ extern int gAdvent3b();
 extern int gAdvent4();
 extern int gAdvent5();
 extern int gAdvent6();
+extern int gAdvent7();
+extern int gAdvent8();
+
 
 int main()
 {
-	int i = gAdvent6();
+	int i = gAdvent8();
 	return i;
 }
 
