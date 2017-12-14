@@ -90,7 +90,6 @@ public:
 
 int main()
 {
-
 	Test_Sort();
 
 	gDevices.RegisterDevice(new FileDevice("data", "."));
@@ -111,7 +110,7 @@ int main()
 	for (int x = 0; x < 10; x++)
 	{
 		Node* node = new LeafNode(String("leaf_text") + gToString(x));
-		node->mLocation = String("data@outputfile") + gToString(gRand() % 4) + String(".txt");
+		node->mLocation = String("data@outputfile") + gToString(gRand16() % 4) + String(".txt");
 		node->mName = String("L") + gToString(idx++);
 		nodes.Append(node);
 	}
@@ -120,11 +119,11 @@ int main()
 	for (int x = 0; x < 20; x++)
 	{
 		BranchNode* branch = new BranchNode(String("branch_text") + gToString(x));
-		branch->mLocation = String("data@outputfile") + gToString(gRand() % 4) + String(".txt");
+		branch->mLocation = String("data@outputfile") + gToString(gRand16() % 4) + String(".txt");
 		branch->mName = String("B") + gToString(idx++);
 
-		branch->mChildA = (Node*) nodes[gRand()%nodes.GetLength()];
-		branch->mChildB = (Node*) nodes[gRand()%nodes.GetLength()];
+		branch->mChildA = (Node*) nodes[gRand32()%nodes.GetLength()];
+		branch->mChildB = (Node*) nodes[gRand32()%nodes.GetLength()];
 		nodes.Append(branch);
 	}
 

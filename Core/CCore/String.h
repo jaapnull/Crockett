@@ -260,6 +260,9 @@ inline std::ostream& operator<<(std::ostream& ioStream, const String& inStr)
 	return ioStream << inStr.GetCString();
 }
 
+
+
+
 template <typename T>
 struct std::hash<BaseString<T>>
 {

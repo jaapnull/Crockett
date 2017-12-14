@@ -31,8 +31,10 @@ typedef unsigned char		byte;
 // large types	
 typedef uintptr_t			size64;		// Size of arrays/buffers/etc
 
-const size64				cMaxSize64 = size64(-1);
-const uint					cMaxUint = uint(-1);
+constexpr size64			cMaxSize64 = size64(-1);
+constexpr uint				cMaxUint = uint(-1);
+constexpr int				cMaxInt = 0x7FFFFFFF;
+constexpr int				cMinInt = 0x80000000;
 
 
 template<typename T> T		 gMaxValue();
@@ -47,6 +49,9 @@ template <>					inline int gMinValue<int>()		{ return INT_MIN; }
 template<typename TFirst, typename TSecond>
 struct Tuple
 {
+	Tuple(const TFirst& inFirst, const TSecond& inSecond) : mFirst(inFirst), mSecond(inSecond) {}
+	Tuple() {}
+
 	TFirst		mFirst;
 	TSecond		mSecond;
 };

@@ -13,6 +13,11 @@
     </Expand>
   </Type>
 
+
+  <Type Name="BaseString&lt;*&gt;">
+    <DisplayString>{{ text={mData} }}</DisplayString>
+  </Type>
+
   <Type Name="fvec2">
     <DisplayString>[{x,g}, {y,g}]</DisplayString>
   </Type>

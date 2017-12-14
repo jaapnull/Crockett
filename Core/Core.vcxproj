@@ -133,6 +133,7 @@
     <ClInclude Include="CCore\Assert.h" />
     <ClInclude Include="CCore\BitField.h" />
     <ClInclude Include="CCore\Frame.h" />
+    <ClInclude Include="CCore\HashMap.h" />
     <ClInclude Include="CCore\Integers.h" />
     <ClInclude Include="CCore\Memory.h" />
     <ClInclude Include="CCore\RefCount.h" />
@@ -147,6 +148,7 @@
     <ClInclude Include="CMath\Math.h" />
     <ClInclude Include="CMath\Vector.h" />
     <ClInclude Include="CorePCH.h" />
+    <ClInclude Include="CCoreTest.h" />
     <ClInclude Include="CReflection\ObjectReader.h" />
     <ClInclude Include="CReflection\ObjectWriter.h" />
     <ClInclude Include="CReflection\Reflection.h" />
@@ -169,7 +171,6 @@
     <ClInclude Include="CUtils\Trace.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CCore\BitField.cpp" />
     <ClCompile Include="CFile\File.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CorePCH.h</PrecompiledHeaderFile>
@@ -200,6 +201,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CorePCH.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="CCoreTest.cpp" />
     <ClCompile Include="CReflection\ObjectReader.cpp" />
     <ClCompile Include="CReflection\ObjectWriter.cpp" />
     <ClCompile Include="CReflection\Reflection.cpp">
@@ -212,7 +214,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Use</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">CorePCH.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="CReflection\Serializing.cpp" />
     <ClCompile Include="CReflection\Tokenizer.cpp" />
     <ClCompile Include="CReflection\TypeDecl.cpp" />
     <ClCompile Include="CReflection\TypedPointer.cpp" />

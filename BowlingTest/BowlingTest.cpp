@@ -1,5 +1,5 @@
 
-
+#include <CCoreTest.h>
 
 #ifdef WIN32_IS_INCLUDED
 #error Windows Header Slip
@@ -18,11 +18,20 @@ extern int gAdvent5();
 extern int gAdvent6();
 extern int gAdvent7();
 extern int gAdvent8();
+extern int gAdvent9();
+extern int gAdvent10();
+extern int gAdvent11();
+extern int gAdvent12();
+extern int gAdvent13();
+extern int gAdvent14();
 
 
 int main()
 {
-	int i = gAdvent8();
+
+	gCoreUnitTest();
+
+	int i = gAdvent14();
 	return i;
 }
 

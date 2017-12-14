@@ -113,6 +113,10 @@
     <ClInclude Include="CCore\Integers.h">
       <Filter>CCore</Filter>
     </ClInclude>
+    <ClInclude Include="CCoreTest.h" />
+    <ClInclude Include="CCore\HashMap.h">
+      <Filter>CCore</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CorePCH.cpp" />
@@ -127,9 +131,6 @@
     </ClCompile>
     <ClCompile Include="CUtils\StringUtils.cpp">
       <Filter>CUtils</Filter>
-    </ClCompile>
-    <ClCompile Include="CReflection\Serializing.cpp">
-      <Filter>CReflection</Filter>
     </ClCompile>
     <ClCompile Include="CReflection\TypedPointer.cpp">
       <Filter>CReflection</Filter>
@@ -155,9 +156,7 @@
     <ClCompile Include="CUtils\Perf.cpp">
       <Filter>CUtils</Filter>
     </ClCompile>
-    <ClCompile Include="CCore\BitField.cpp">
-      <Filter>CCore</Filter>
-    </ClCompile>
+    <ClCompile Include="CCoreTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="CHash">

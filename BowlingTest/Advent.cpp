@@ -470,137 +470,376 @@ int gAdvent7()
 
 
 
-template<class TKey, class TValue>
-class HashMap
-{
-
-
-	Array<Tuple<TKey, TValue> >		mEntries;
-	Array<uint8>					mEntryUsedFlags;			// [n] = 1 means that mEntries[n] is used
-	Array<uint8>					mHashPresentFlags;			// [n] = 1 means that at least one hash value [n] is in the map
-	Array<uint8>					mLastOverflowFlags;			// [n] = 1 means that all entries[k] where hash(key[k]) == hash(key[n]) between hash(key[n]) and [n]
-};
-
-
-#include <CCore/Integers.h>
-#include <CCore/Bitfield.h>
+#include <CCore/HashMap.h>
 
 int gAdvent8()
 {
-	for (int x = 0; x < 1000; x++)
-	{
-		uint64 c = gRand() + (uint64(gRand()) << 32);
-		int highest_bit = gRandRange(0, 63);
-
-		c >>= (63 - highest_bit);
-		c |= (1ll << highest_bit);
-
-		gAssert(highest_bit == gGetHighestBitSet(c));
-		//std::wcout << highest_bit << " , " << gGetHighestBitSet(c) <<  " : " << std::hex << c << std::endl;
-	}
-
-
-	for (int x = 0; x < 1000; x++)
-	{
-		uint64 c = gRand() + (uint64(gRand()) << 32);
-		int lowest_bit = gRandRange(0, 63);
-
-		c <<= lowest_bit;
-		c |= (1ll << lowest_bit);
-
-		gAssert(lowest_bit == gGetLowestBitSet(c));
-		//std::wcout << std::dec << lowest_bit << " , " << gGetLowestBitSet(c) << " : " << std::hex << c << std::endl;
-	}
-
-	BitField bf;
-	bf.Resize(123);
-
-	gAssert(bf.FindFirstOne(0) == cMaxUint);
-
-
-	for (int x = 0; x < 1000; x++)
-	{
-		bf.Clear();
-		uint first_bit = gRandRange(0, bf.GetBitCount()-1);
-		uint first_test = gRandRange(0, bf.GetBitCount()-1);
-
-		bf.SetBit(first_bit);
-		for (uint b = first_bit + 1; b < bf.GetBitCount(); b++)
-		{
-			bf.SetBit(b);
-		}
-
-		for (uint b = 0; b < bf.GetBitCount(); b++)
-		{
-			gAssert(bf.GetBit(b) == (b >= first_bit));
-		}
-
-		gAssert(bf.FindFirstOne(first_test) == gMax(first_bit, first_test));
-		bf.Invert();
-		gAssert(bf.FindFirstZero(first_test) == gMax(first_bit, first_test));
-
-		for (uint b = 0; b < bf.GetBitCount(); b++)
-		{
-			gAssert(bf.GetBit(b) != (b >= first_bit));
-		}
-
-	}
-
-
-	return 0;
-}
-/*	
-
-	Array<Entry> entries;
-	entries.Reserve(100000);
-
 	File f;
-	f.Open(".\\advent_7_input.txt", fomRead);
+	f.Open(".\\advent_8_input.txt", fomRead);
 	LineReader line_reader(f);
 	String line;
-
+	HashMap<String, int> variables(1024);
+	int all_time_max = cMinInt;
 	while (line_reader.ReadLine(line))
 	{
-		Array<String> parts;
-		gExplodeString(parts, line, String(" "));
-		Entry e;
-		e.mName = parts[0];
-		size64 idx = entries.Find(e);
-		if (idx == cMaxSize64)
+		Array<String> line_bits;
+		gExplodeString(line_bits, line, String(" "));
+		HashMap<String, int>::Entry* assignment_var		= variables.FindOrCreate(line_bits[0], 0);
+		bool is_inc										= line_bits[1] == String("inc");
+		int delta_val									= gStringToInt(line_bits[2]);
+		gAssert(line_bits[3] == "if");
+		HashMap<String, int>::Entry* test_var			= variables.FindOrCreate(line_bits[4], 0);
+		String comperator								= line_bits[5];
+		int test_val									= gStringToInt(line_bits[6]);
+		
+		bool test_result = false;
+		if		(comperator == ">" )	{ test_result = (test_var->mSecond >  test_val); }
+		else if (comperator == "<" )	{ test_result = (test_var->mSecond <  test_val); }
+		else if (comperator == "==")	{ test_result = (test_var->mSecond == test_val); }
+		else if (comperator == ">=")	{ test_result = (test_var->mSecond >= test_val); }
+		else if (comperator == "<=")	{ test_result = (test_var->mSecond <= test_val); }
+		else if (comperator == "!=")	{ test_result = (test_var->mSecond != test_val); }
+		else { gAssert(false); }
+		if (test_result)
 		{
-			entries.Append(e);
-			idx = entries.GetLastIndex();
-		}
-		gAssert(entries[idx].mChildren.IsEmpty());
-		gAssert(entries[idx].mWeight == 0);
-		entries[idx].mWeight = gStringToUInt(parts[1]);
-		for (uint c = 2; c < parts.GetLength(); c++)
-		{
-			Entry ce;
-			ce.mName = parts[c];
-			size64 cidx = entries.Find(ce);
-			if (cidx == cMaxSize64)
-			{
-				entries.Append(ce);
-				cidx = entries.GetLastIndex();
-			}
-			entries[cidx].mParent = &entries[idx];
-			entries[idx].mChildren.Append(&entries[cidx]);
+			assignment_var->mSecond += (is_inc ? delta_val : -delta_val);	
+			all_time_max = gMax(all_time_max, assignment_var->mSecond);
 		}
 	}
+	int max_value = cMinInt;
+	for (HashMap<String, int>::Entry it : variables)
+		max_value = gMax(it.mSecond, max_value);
+
+	// return max_value;		A
+	return all_time_max;	//	B
+}
 
 
-	for (Entry& e : entries)
+int gAdvent9()
+{
+	File f;
+	f.Open(".\\advent_9_input.txt", fomRead);
+	
+	char c;
+	int indent = 0;
+	int score = 0;
+	bool intrash = 0;
+	int trash = 0;
+	while (f.GetBytes(&c, 1))
 	{
-		if (e.mParent == nullptr)
-		{
-			uint v = e.CheckWeights();
-			std::cout << e.mName << " <<<< root : " << v << std::endl;
+		
+		if (c == '>' && intrash)	{ intrash = false; }
+		if (c == '!' && intrash)	{ f.GetBytes(&c, 1); continue; }
 
+		if (intrash) trash++;
+
+		if (c == '<' && !intrash)	{ intrash = true; }		
+		if (c == '{' && !intrash)	{ indent++; }
+		if (c == '}' && !intrash)	{ score += indent;indent--; }
+	}
+	gAssert(indent == 0);
+	return trash; // A = score
+}
+
+
+
+
+
+template <uint TSize>
+struct KnotHash
+{
+	KnotHash()
+	{ 
+		for (int c = 0; c < TSize; c++) 
+			mKnots[c] = c; 
+	}
+
+	void Shift(uint inShift)
+	{
+		inShift %= TSize;
+		Array<int> k;
+		for (uint i = 0; i < inShift; i++)			k.Append(mKnots[i]);
+		for (uint i = 0; i < TSize - inShift; i++)	mKnots[i] = mKnots[i + inShift];
+		for (uint i = 0; i < inShift; i++)			mKnots[i + TSize - inShift] = k[i];
+		mShift += inShift;
+		mShift %= TSize;
+	}
+
+	void HashString(const String& inString)
+	{
+		String z = inString;
+		z.Append(String("\x11\x1F\x49\x2f\x17"));
+		int skip = 0;
+		int cur = 0;
+		for (int rounds = 0; rounds < 64; rounds++)
+			for (int c = 0; c < z.GetLength(); c++)
+			{
+				Swap(cur, (uchar)z[c]);
+				cur += skip + (uchar)z[c];
+				skip++;
+			}
+	}
+
+	void Swap(uint inOffset, uint inLength)
+	{
+		for (uint c = 0; c < inLength / 2; c++)
+			gSwap(mKnots[(c+ inOffset)%TSize], mKnots[(inLength - 1 - c+ inOffset) % TSize]);
+	}
+
+	void Swap(uint inLength)
+	{
+		for (uint c = 0; c < inLength / 2; c++)
+			gSwap(mKnots[c], mKnots[inLength - 1 - c]);
+	}
+
+	void Print()
+	{
+		for (int c = 0; c < TSize; c++)
+		{
+			std::cout << '[' << std::hex << (int) mKnots[c] << ']';
+		}
+		std::cout << ">> " << mShift << std::endl;
+	}
+
+	void PrintDenseHash()
+	{
+		for (int s = 0; s < 16; s++)
+		{
+			int dense_hash = 0;
+			for (int d = 0; d < 16; d++)
+				dense_hash ^= mKnots[d + s * 16];
+			std::cout << std::hex << dense_hash;
 		}
 	}
+
+
+	void Straighten()
+	{
+		Shift(TSize - mShift);
+	}
+
+	int		mShift = 0;
+	int		mKnots[TSize];
+};
+
+int gAdvent10()
+{
+	//"\x17\x31\x73\x47\x23"
+	String data("83,0,193,1,254,237,187,40,88,27,2,255,149,29,42,100\x11\x1F\x49\x2f\x17");// { 83, 0, 193, 1, 254, 237, 187, 40, 88, 27, 2, 255, 149, 29, 42, 100 };
+	KnotHash<256> r;
+	r.Print();
+
+	int skip = 0;
+	for (int rounds = 0; rounds < 64; rounds++)
+	for (int c = 0; c < data.GetLength(); c++)
+	{
+		r.Swap((uchar) data[c]);
+		r.Shift(skip + (uchar)data[c]);
+		skip++;
+	}
+	r.Straighten();
+
+	for (int s = 0; s < 16; s++)
+	{
+		int dense_hash = 0;
+		for (int d = 0; d < 16; d++)
+			dense_hash ^= r.mKnots[d + s * 16];
+		std::cout << std::hex << dense_hash;
+	}
+	std::cout << std::endl;
+
+
+	//String data("83,0,193,1,254,237,187,40,88,27,2,255,149,29,42,100\x11\x1F\x49\x2f\x17");// { 83, 0, 193, 1, 254, 237, 187, 40, 88, 27, 2, 255, 149, 29, 42, 100 };
+	String data2("83,0,193,1,254,237,187,40,88,27,2,255,149,29,42,100");
+	KnotHash<256> r2;
+	r2.HashString(data2);
+//
+//	skip = 0;
+//	int cur = 0;
+//	for (int rounds = 0; rounds < 64; rounds++)
+//		for (int c = 0; c < data.GetLength(); c++)
+//		{
+//			r2.Swap(cur, (uchar)data[c]);
+//			//r.Shift(skip + (uchar)data[c]);
+//			cur += skip + (uchar)data[c];
+//			skip++;
+//
+//		}
+	//r.Straighten();
+
+	for (int s = 0; s < 16; s++)
+	{
+		int dense_hash = 0;
+		for (int d = 0; d < 16; d++)
+			dense_hash ^= r2.mKnots[d + s * 16];
+		std::cout << std::hex << dense_hash;
+	}
+	std::cout << std::endl;
+
 
 	return 0;
 }
 
-*/
+
+
+int gAdvent11()
+{
+
+	/*
+	
+	  \ n  /
+	nw +--+ ne
+	  /    \
+	-+      +-
+	  \    /
+	sw +--+ se
+	  / s  \
+
+	*/
+
+	File f;
+	f.Open(".\\advent_11_input.txt", fomRead);
+	size64 len = f.GetLength();
+	String str = "se,sw,se,sw,sw";
+	
+	str. Resize(len); f.GetBytes(str.GetData(), len);
+
+	Array<String> directions; gExplodeString(directions, str, String(",\r\n"));
+	
+	ivec2 pos(0, 0);
+
+	int max = 0;
+
+	for (String d : directions)
+	{
+		if (d == "s")			{ pos.y += 2; }
+		else if (d == "n")		{ pos.y -= 2; }
+		else if (d == "ne")		{ pos.y -= 1; pos.x += 1; }
+		else if (d == "nw") { pos.y -= 1; pos.x -= 1; }
+		else if (d == "se") { pos.y += 1; pos.x += 1; }
+		else if (d == "sw") { pos.y += 1; pos.x -= 1; }
+		else gAssert(false);
+
+		int steps = 0;
+		int x = gAbs(pos.x);
+		int y = gAbs(pos.y);
+		if (x > y)
+		{
+			steps = x;
+		}
+		else
+		{
+			int hrz = x;
+			int vert_todo = y - hrz;
+			steps = hrz + vert_todo / 2;
+		}
+		max = gMax(max, steps);
+	}
+
+
+
+
+	return max; //steps = A
+}
+
+
+
+int gAdvent12()
+{
+	File f;
+	f.Open(".\\advent_12_input.txt", fomRead);
+	LineReader reader(f);
+	Array < Array<int> > entries;
+	entries.Resize(2000);
+
+	String line;
+	while (reader.ReadLine(line))
+	{
+		Array<String> parts;
+		gExplodeString(parts, line, String("<-> ,"));
+		int idx = gStringToInt(parts[0]);
+		for (int n = 1; n < parts.GetLength(); n++)
+			entries[idx].Append(gStringToInt(parts[n]));
+	}
+
+	BitField visited;
+	visited.Resize(2000);
+
+	int g = 0;
+	for (uint first = 0; first != cMaxUint; first = visited.FindFirstZero(first + 1))
+	{
+		std::cout << "Group " << g << " starts with " << first << std::endl;
+		Array<int> stack;
+		stack.Append(first);
+		for (int c = 0; c < stack.GetLength(); c++)
+		{
+			gAssert(visited[stack[c]] == false);
+			visited.SetBit(stack[c], true);
+			for (int e : entries[stack[c]])
+			{
+				if (visited[e] == false)
+				{
+					stack.Append(e);
+				}
+			}
+		}
+		std::cout << "Group " << g << " had " << stack.GetLength() << " entries " << std::endl;
+		g++;
+	}
+	return g; // <- answ for B; A = length of group 0
+}
+
+
+
+
+int gAdvent13()
+{
+	File f;
+	f.Open(".\\advent_13_input.txt", fomRead);
+	LineReader reader(f);
+	String line;
+
+	typedef Tuple<int, int> Gate;
+	Array<Gate> gates;
+	while (reader.ReadLine(line))
+	{
+		Array<String> parts;
+		gExplodeString(parts, line, String(": "));
+		gates.Append(Gate(gStringToInt(parts[0]), gStringToInt(parts[1])));
+	}
+
+	int level = 0;
+	int delay = 0;
+	bool caught = 0;
+	do
+	{
+		caught = false;
+		level = 0;
+		delay++;
+		for (Gate g : gates)
+		{
+			int cycle = (g.mSecond * 2 - 2);
+			if ((g.mFirst + delay) % cycle == 0)
+			{
+				level += g.mSecond * g.mFirst;
+				caught = true;
+			}
+		}
+	} while (caught);
+
+	return delay; // delay for B, level for A
+}
+
+
+int gAdvent14()
+{
+	KnotHash<256> knot;
+	knot.HashString("flqrgnkx-0");
+
+	knot.PrintDenseHash();
+
+	return 0;
+}
+
+
+

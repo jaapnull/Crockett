@@ -71,19 +71,29 @@ inline float gFloor(float inFloat)
 	return floorf(inFloat);
 }
 
-inline int gRandRange(int inMinInclusive, int inMaxInclusive)
+inline uint16 gRand16()
 {
-	return (rand()%(inMaxInclusive - inMinInclusive +1)) + inMinInclusive;
+	return (uint16)rand();
 }
 
-inline uint32 gRand()
+inline uint32 gRand32()
 {
-	return (uint32) rand() | (rand() << 16);
+	return (uint32)gRand16() | (((uint32)gRand16()) << 16);
+}
+
+inline uint64 gRand64()
+{
+	return (uint64)gRand32() | (((uint64)gRand32()) << 32);
 }
 
 inline float gPowF(float inBase, float inPower)
 {
 	return powf(inBase, inPower);
+}
+
+inline int32 gRandRange(int32 inMinInclusive, int32 inMaxInclusive)
+{
+	return (int32(gRand32()) % (inMaxInclusive - inMinInclusive + 1)) + inMinInclusive;
 }
 
 template<typename T>

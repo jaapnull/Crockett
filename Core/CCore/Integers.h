@@ -35,3 +35,9 @@ inline uint gGetLowestBitSet(uint64 inValue)
 	}
 	return lowest_bit;
 }
+
+inline bool gIsPowerOf2(uint64 inValue)
+{
+	return ((inValue - 1) & inValue) == 0;
+}
+

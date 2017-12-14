@@ -14,7 +14,7 @@ MessageReturnCode Canvas::HandleMessage(Window* inWindow, uint inMessage, Messag
 		if (!mDib.IsValid())
 		{
 			mDib.Resize(inWindow->GetWidth(), inWindow->GetHeight());
-			mDib.SetAll(DIBColor(100, 200, gRand() & 0xFF));
+			mDib.SetAll(DIBColor(100, 200, gRand16() & 0xFF));
 		}
 
 		HWND hwnd = gHandleToHWND(inWindow->GetHandle());

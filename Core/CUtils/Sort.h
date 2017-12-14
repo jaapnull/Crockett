@@ -129,7 +129,7 @@ void Test_Sort()
 		Array<uint32> sorts;
 		sorts.Reserve(sort_size);
 
-		sort_range = gRand()%200 + 1;
+		sort_range = gRand32()%200 + 1;
 
 		for (int i = 0; i < sort_size; i++)
 		{
