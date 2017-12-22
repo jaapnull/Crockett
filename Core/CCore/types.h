@@ -32,7 +32,7 @@ typedef unsigned char		byte;
 typedef uintptr_t			size64;		// Size of arrays/buffers/etc
 
 constexpr size64			cMaxSize64 = size64(-1);
-constexpr uint				cMaxUint = uint(-1);
+constexpr uint				cMaxUInt = uint(-1);
 constexpr int				cMaxInt = 0x7FFFFFFF;
 constexpr int				cMinInt = 0x80000000;
 

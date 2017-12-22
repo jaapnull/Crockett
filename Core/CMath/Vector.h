@@ -205,6 +205,16 @@ public:
 		return true;
 	}
 
+	T GetManhattanLength() const
+	{
+		T accum = 0;
+		for (unsigned int n = 0; n < i; n++)
+		{
+			accum += gAbs(mField[n]);
+		}
+		return accum;
+	}
+
 	T GetDot(const BaseVector<T, i>& other) const
 	{
 		T accum = 0;

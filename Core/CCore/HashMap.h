@@ -67,7 +67,7 @@ public:
 		void operator++()										
 		{
 			mHash = mMap->mFilled.FindFirstOne(mHash+1);
-			if(mHash == cMaxUint) 
+			if(mHash == cMaxUInt) 
 				mHash = (uint)mMap->mEntries.GetLength(); 
 		}
 	private:
@@ -103,8 +103,11 @@ public:
 		if (mPresent.GetBit(index) == false)
 			return nullptr;
 
-		for (uint ovf_index = index; ovf_index != cMaxUint; ovf_index = mOverflow.FindFirstOne(ovf_index + 1, index))
+		uint32 first = mFilled[index] ? index : mOverflow.FindFirstOne(index, index);
+		for (uint ovf_index = first; ovf_index != cMaxUInt; ovf_index = mOverflow.FindFirstOne(ovf_index + 1, index))
 		{
+			gAssert(mFilled[ovf_index]);
+
 			if (inKey == mEntries[ovf_index].mFirst)
 			{
 				return &mEntries[ovf_index];
@@ -133,9 +136,66 @@ public:
 	}
 
 
-	void Remove(const TKey& inKey)
+	bool Remove(const TKey& inKey)
 	{
-		gAssert(false);
+		uint32 index = GetIndex(inKey);
+		if (!mPresent[index]) // value not in map
+			return false;
+
+		uint prev_hash_match = cMaxUInt;
+		uint match_index = cMaxUInt;
+		if (mFilled[index] && !mOverflow[index]) // value right here
+		{
+			if (mEntries[index].mFirst == inKey)
+			{
+				match_index = index;
+				if (mLastEntry[index])
+					mPresent.SetBit(index, false); // only entry, so killing it
+			}
+			else if (mLastEntry[index])
+			{
+				return false;
+			}
+		}
+		if (match_index == cMaxUInt)
+		{
+			// go over all overflow entries and find where the key is hiding
+			for (uint overflow = mOverflow.FindFirstOne(index + 1, index); overflow != cMaxUInt; overflow = mOverflow.FindFirstOne(overflow + 1, index))
+			{
+				gAssert(mFilled[overflow]);
+
+				if (mEntries[overflow].mFirst == inKey)
+				{
+					match_index = overflow;
+
+					if (mLastEntry[overflow] && prev_hash_match != cMaxUInt)
+					{
+						mLastEntry.SetBit(prev_hash_match, true);
+					}
+					if (mLastEntry[overflow] && prev_hash_match == cMaxUInt)
+					{
+						mPresent.SetBit(index, false); // only entry, so killing it
+					}
+					break;
+				}
+				else if (GetIndex(mEntries[overflow].mFirst) == index)
+				{
+					prev_hash_match = overflow;
+					if (mLastEntry[overflow])
+					{
+						return false;
+					}
+				}
+
+			}
+		}
+
+		gAssert(match_index != cMaxUInt);
+		mEntryCount--;
+		mLastEntry.SetBit(match_index, false);
+		mOverflow.SetBit(match_index, false);
+		mFilled.SetBit(match_index, false);
+		return true;
 	}
 
 
@@ -159,7 +219,7 @@ public:
 			gAssert(mOverflow.GetBit(index));
 			// loop around zero lookup
 			uint free_overflow_idx = mFilled.FindFirstZero(index + 1, index);
-			if (free_overflow_idx == cMaxUint)
+			if (free_overflow_idx == cMaxUInt)
 				return nullptr; // map full!
 
 			mPresent.SetBit(index, true);
@@ -179,7 +239,7 @@ public:
 
 			// first: find our target spot to add our entry
 			uint free_overflow_idx = mFilled.FindFirstZero(index + 1, index);
-			if (free_overflow_idx == cMaxUint)
+			if (free_overflow_idx == cMaxUInt)
 				return nullptr; // map full
 			gAssert(mFilled.GetBit(free_overflow_idx) == false);
 
@@ -193,7 +253,7 @@ public:
 			{
 				// search until we arrive at our new entry or until the end if we are looping
 				// we are looking for L =1;O = 1 entries; we iterate over the most sparse one (overflow)
-				for (uint overflow = index + 1; overflow != cMaxUint; overflow = mOverflow.FindFirstOne(overflow + 1, free_overflow_idx))
+				for (uint overflow = index + 1; overflow != cMaxUInt; overflow = mOverflow.FindFirstOne(overflow + 1, free_overflow_idx))
 				{
 					if (mLastEntry.GetBit(overflow))
 					{
@@ -216,6 +276,7 @@ public:
 			mOverflow.SetBit(index, true);
 		}
 
+		mEntryCount++;
 		mEntries[index].mFirst = inKey;
 		mEntries[index].mSecond = inValue;
 		return &mEntries[index];
@@ -224,12 +285,15 @@ public:
 	Iterator begin()	{ return Iterator(*this, mFilled.FindFirstOne(0)); }
 	Iterator end()		{ return Iterator(*this, (uint) mEntries.GetLength()); }
 
+	uint				GetFilledEntryCount() const { gAssert(mFilled.GetOneCount() == mEntryCount); return mEntryCount; }
+
 private:
 
 	BitField		mFilled;				// Fn == 1 means that mEntries[n] is used
 	BitField		mLastEntry;				// Ln == 1 means that all entries[k] where hash(key[k]) == hash(key[n]) between hash(key[n]) and [n]
 	BitField		mOverflow;				// On == 1 means that entries[n] holds an overflow entry, not a direct entry
 	BitField		mPresent;				// Pn == 1 means that at least one hash value [n] is in the map
+	uint			mEntryCount = 0;
 	Array<Entry>	mEntries;
 };
 

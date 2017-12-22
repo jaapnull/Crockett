@@ -24,6 +24,12 @@ extern int gAdvent11();
 extern int gAdvent12();
 extern int gAdvent13();
 extern int gAdvent14();
+extern int gAdvent15();
+extern int gAdvent16();
+extern int gAdvent17();
+extern int gAdvent18();
+extern int gAdvent20();
+
 
 
 int main()
@@ -31,7 +37,7 @@ int main()
 
 	gCoreUnitTest();
 
-	int i = gAdvent14();
+	int i = gAdvent20();
 	return i;
 }
 

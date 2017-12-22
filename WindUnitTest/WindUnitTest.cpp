@@ -12,8 +12,8 @@
 struct AnchorRestriction
 {
 			AnchorRestriction(int inPos) :
-				mP0(cMaxUint),
-				mP1(cMaxUint),
+				mP0(cMaxUInt),
+				mP1(cMaxUInt),
 				mMin(0),
 				mMax(0),
 				mPercentage(0.0f),
@@ -98,7 +98,7 @@ public:
 
 		for (AnchorRestriction& p : mRestrictionsHorz)
 		{
-			if (p.mP0 == cMaxUint) continue;
+			if (p.mP0 == cMaxUInt) continue;
 			int p0 = mRestrictionsHorz[p.mP0].mResolvedPosition;
 			int p1 = mRestrictionsHorz[p.mP1].mResolvedPosition;
 			if (p0 < p1)
@@ -112,7 +112,7 @@ public:
 		}
 		for (AnchorRestriction& p : mRestrictionsVert)
 		{
-			if (p.mP0 == cMaxUint) continue;
+			if (p.mP0 == cMaxUInt) continue;
 			int p0 = mRestrictionsVert[p.mP0].mResolvedPosition;
 			int p1 = mRestrictionsVert[p.mP1].mResolvedPosition;
 			if (p0 < p1)
@@ -188,7 +188,7 @@ public:
 
 		for (const AnchorRestriction& a : mLayout.GetRestrictionsVert())
 		{
-			if (a.mP0 != cMaxUint)
+			if (a.mP0 != cMaxUInt)
 			{
 				pen.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcBlack));
 				pen.DrawLine(ivec2(0, a.mResolvedPosition), ivec2(GetWidth() - 1, a.mResolvedPosition));
@@ -202,7 +202,7 @@ public:
 
 		for (const AnchorRestriction& a : mLayout.GetRestrictionsHorz())
 		{
-			if (a.mP0 != cMaxUint)
+			if (a.mP0 != cMaxUInt)
 			{
 				pen.SetColor(DIBColor::sCreateDefaultPaletteColor(dpcBlack));
 				pen.DrawLine(ivec2(a.mResolvedPosition, 0), ivec2(a.mResolvedPosition, GetHeight()-1));

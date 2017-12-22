@@ -5,6 +5,17 @@ class LineReader
 {
 public:
 	LineReader(Stream& inStream) : mInStream(inStream) { }
+
+
+	void ReadAllLines(Array<String>& outLines)
+	{
+		String line;
+		while (ReadLine(line))
+		{
+			outLines.Append(line);
+		}
+	}
+
 	bool ReadLine(String& outString)
 	{
 		if (!mInStream.IsValid())
@@ -19,14 +30,20 @@ public:
 			if (c == '\r') continue;
 			if (c == '\n')
 			{
+				mLinesRead++;
 				return true;
 			}
 			outString.Append(c);
 		}
+		if (read_something) mLinesRead++;
 		return read_something;
 	}
+
+	uint GetLinesRead() const { return mLinesRead; }
+
 private:
-	String mBuffer;
-	Stream& mInStream;
+	uint32		mLinesRead = 0;
+	String		mBuffer;
+	Stream&		mInStream;
 };
 

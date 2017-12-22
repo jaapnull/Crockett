@@ -68,7 +68,12 @@ public:
 		Set(inX, inY, inValue);
 	}
 
-	inline void Set(int inX, int inY, T inValue)
+	inline void Set(ivec2 inPos, const T& inValue)
+	{
+		Set(inPos.x, inPos.y, inValue);
+	}
+
+	inline void Set(int inX, int inY, const T& inValue)
 	{
 		size64 byte_addres = ((size64 ) GetBaseData());
 		byte_addres += ((size64)(mHeight-1)*-mPitch) * (mPitch < 0); // shifts the pointer to the last scanline when mPitch < 0
@@ -118,6 +123,12 @@ public:
 		if (mData) delete[] mData;
 		mData = new T[w*h];
 		BaseFrame::Resize(w, h, inPitch);
+	}
+
+	DataFrame(uint inWidth, uint inHeight, const T& inInitValue) : mWrapped(false)
+	{
+		Resize(inWidth, inHeight);
+		SetAll(inInitValue);
 	}
 
 	DataFrame() : mWrapped(false)

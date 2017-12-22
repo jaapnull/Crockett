@@ -44,6 +44,8 @@ public:
 	T& Front()												{ gAssert(IsValid()); return mData[0]; }			// Getter to first element
 	const T& Front()								const	{ gAssert(IsValid()); return mData[0]; }			// Const getter to first element
 
+	void PopUnder()											{ gAssert(!IsEmpty()); size64 l = GetLength() - 1; for (size64 c = 0; c < l; c++) mData[c] = mData[c+1]; mEndValid--; }
+
 	void SetAll(const T& inValue)							{ for (int c = 0; c < GetLength(); c++) mData[c] = inValue; }
 	bool IsEmpty()									const	{ return mEndValid == mData; }						// returns true is element count is zero
 	bool IsValid()									const	{ return (mData == nullptr) == (mEndValid == nullptr) && (mData == nullptr) == (mEndReserved == nullptr); }
@@ -265,8 +267,8 @@ public:
 
 	// Operators
 	Array<T>&		operator=(const Array<T>& inOther)			{ Set(inOther); return *this; }	// Assignment operator. similar to [Set()]
-	T&				operator[](size64 inIndex)					{ return mData[inIndex]; }		// Const getter to element
-	const T&		operator[](size64 inIndex)			const	{ return mData[inIndex]; }		// Const getter to element
+	T&				operator[](size64 inIndex)					{ gAssert(inIndex < GetLength()); return mData[inIndex]; }		// Const getter to element
+	const T&		operator[](size64 inIndex)			const	{ gAssert(inIndex < GetLength()); return mData[inIndex]; }		// Const getter to element
 
 	const T*		begin() const								{ return mData; }
 	const T*		end() const									{ return mEndValid; }

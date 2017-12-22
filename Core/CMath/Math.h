@@ -27,28 +27,6 @@ inline float gFloatRandSymmetric()
 	return (float(rand())-float(RAND_MAX/2)) / float((RAND_MAX+1)/2); // the +1 creates a shift-division
 }
 
-inline uint gCountBits(uint32 inValue)
-{
-	uint32 r = inValue;
-	r			= (r&0x55555555) + ((r&0xAAAAAAAA) >> 1);
-	r			= (r&0x33333333) + ((r&0xCCCCCCCC) >> 2);
-	r			= (r&0x0F0F0F0F) + ((r&0xF0F0F0F0) >> 4);
-	r			= (r&0x00FF00FF) + ((r&0xFF00FF00) >> 8);
-	r			= (r&0x0000FFFF) + ((r&0xFFFF0000) >> 16);
-	return r;
-}
-
-inline uint gCountBits(uint64 inValue)
-{
-	uint64 r = inValue;
-	r			= (r&0x5555555555555555) + ((r&0xAAAAAAAAAAAAAAAA) >> 1);
-	r			= (r&0x3333333333333333) + ((r&0xCCCCCCCCCCCCCCCC) >> 2);
-	r			= (r&0x0F0F0F0F0F0F0F0F) + ((r&0xF0F0F0F0F0F0F0F0) >> 4);
-	r			= (r&0x00FF00FF00FF00FF) + ((r&0xFF00FF00FF00FF00) >> 8);
-	r			= (r&0x0000FFFF0000FFFF) + ((r&0xFFFF0000FFFF0000) >> 16);
-	r			= (r&0x00000000FFFFFFFF) + ((r&0xFFFFFFFF00000000) >> 32);
-	return (uint) r;
-}
 
 template <typename T>
 inline const T gAbs(T inValue) 

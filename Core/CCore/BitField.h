@@ -6,20 +6,29 @@
 class BitField
 {
 public:
-	void			Resize(uint inBitCount)							{ mBlocks.Resize(sBitCountToBlockCount(inBitCount)); mBlocks.SetAll(0); mBitCount = inBitCount; }
-	void			Clear()											{ mBlocks.SetAll(0); }
-	bool			GetBit(uint inBit) const						{ gAssert(inBit < mBitCount); return (mBlocks[inBit / 64] & (1ll << (inBit & 63))) != 0; }
+	void			Resize(uint inBitCount)							{ mData.Resize(sBitCountToBlockCount(inBitCount)); mData.SetAll(0); mBitCount = inBitCount; }
+	void			Clear()											{ mData.SetAll(0); }
+	bool			GetBit(uint inBit) const						{ gAssert(inBit < mBitCount); return (mData[inBit / 64] & (1ll << (inBit & 63))) != 0; }
 	bool			operator[](uint inIndex) const					{ return GetBit(inIndex); }
-	void			SetBit(uint inBit, bool inValue)				{ gAssert(inBit < mBitCount); if (inValue) mBlocks[inBit / 64] |= (1ll << (inBit & 63)); else mBlocks[inBit / 64] &= (~(1ll << (inBit & 63))); }
-	void			Invert()										{ for (uint c = 0; c < sBitCountToBlockCount(mBitCount); c++) mBlocks[c] = ~mBlocks[c]; }
+	void			SetBit(uint inBit, bool inValue)				{ gAssert(inBit < mBitCount); if (inValue) mData[inBit / 64] |= (1ll << (inBit & 63)); else mData[inBit / 64] &= (~(1ll << (inBit & 63))); }
+	void			Invert()										{ for (uint c = 0; c < sBitCountToBlockCount(mBitCount); c++) mData[c] = ~mData[c]; }
 	uint			GetBitCount() const								{ return mBitCount; }
 	uint			FindFirstOne(uint inStart) const				{ return FindFirstOneInRange(inStart, mBitCount); }
 	uint			FindFirstZero(uint inStart) const				{ return FindFirstZeroInRange(inStart, mBitCount); }
+	uint			GetOneCount() const
+	{
+		int ones = 0;
+		for (const uint64& i : mData)
+		{
+			ones += gCountBits(i);
+		}
+		return ones;
+	}
+
+	Array<uint64>&	GetData()										{ return mData; }
 
 	uint FindFirstOne(uint inStart, uint inStop) const
 	{
-		if (inStart == inStop)
-			return cMaxUint;
 		if (inStart < inStop)
 		{
 			// normal range
@@ -29,7 +38,7 @@ public:
 		{
 			// wrapping range
 			uint t = FindFirstOneInRange(inStart, mBitCount);
-			if (t == cMaxUint)
+			if (t == cMaxUInt)
 				return FindFirstOneInRange(0, inStop);
 			else
 				return t;
@@ -38,7 +47,7 @@ public:
 	uint FindFirstZero(uint inStart, uint inStop) const
 	{
 		if (inStart == inStop)
-			return cMaxUint;
+			return cMaxUInt;
 		if (inStart < inStop)
 		{
 			// normal range
@@ -48,7 +57,7 @@ public:
 		{
 			// wrapping range
 			uint t = FindFirstZeroInRange(inStart, mBitCount);
-			if (t == cMaxUint)
+			if (t == cMaxUInt)
 				return FindFirstZeroInRange(0, inStop);
 			else
 				return t;
@@ -64,7 +73,7 @@ public:
 		uint first_bit_offset = (inStart & 63);
 		for (uint curr_block = (inStart / 64); curr_block < sBitCountToBlockCount(inStop); curr_block++)
 		{
-			uint64 b = mBlocks[curr_block];
+			uint64 b = mData[curr_block];
 			if ((b >> first_bit_offset) != 0)
 			{
 				// shift out any leading bits if inStart is not multiple of 64
@@ -75,7 +84,7 @@ public:
 			}
 			first_bit_offset = 0;
 		}
-		return cMaxUint;
+		return cMaxUInt;
 	}
 
 	uint FindFirstZeroInRange(uint inStart, uint inStop) const
@@ -86,7 +95,7 @@ public:
 		uint first_bit_offset = (inStart & 63);
 		for (uint curr_block = (inStart / 64); curr_block < sBitCountToBlockCount(inStop); curr_block++)
 		{
-			uint64 b = ~(mBlocks[curr_block]); // here is the invert!
+			uint64 b = ~(mData[curr_block]); // here is the invert!
 			if ((b >> first_bit_offset) != 0)
 			{
 				// shift out any leading bits if inStart is not multiple of 64
@@ -100,14 +109,14 @@ public:
 			}
 			first_bit_offset = 0;
 		}
-		return cMaxUint;
+		return cMaxUInt;
 	}
 
 
 
 private:
 	static uint		sBitCountToBlockCount(uint inBit)				{ return (inBit+63) / 64; }
-	Array<uint64>	mBlocks;										/// lsb = lowest index, msb = highest index
+	Array<uint64>	mData;										/// lsb = lowest index, msb = highest index
 	uint			mBitCount;										/// amount of available bits (not rounded to 64)
 };
 

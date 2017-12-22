@@ -26,32 +26,60 @@ uint gHashMapTest()
 
 	HashMap<String, int> map(cMapSize);
 
-
-	for (int c = 0; c < cMapSize; c++)
+	for (int loop = 1; loop < 32; loop++)
 	{
-		if ((c % 15) == 0) // don't add every 16th value
-			continue;
-
-		String s = gToString(c);
-		s.Append("_testkey");
-		map.Add(s, map.GetIndex(s));
-		gAssert(map.Find(s) != nullptr);
-	}
-
-
-	for (int c = 0; c < cMapSize; c++)
-	{
-		String s = gToString(c);
-		s.Append("_testkey");
-		HashMap<String, int>::Entry* e = map.Find(s);
-		if ((c % 15) == 0)
+		gAssert(map.GetFilledEntryCount() == 0);
+		for (int c = 0; c < cMapSize; c++)
 		{
-			gAssert(e == nullptr);
+			if ((c % loop) == 0) // don't add every nth value
+				continue;
+
+			String s = gToString(c);
+			s.Append("_testkey");
+			map.Add(s, map.GetIndex(s));
+			gAssert(map.Find(s) != nullptr);
 		}
-		else
+
+
+		for (int c = 0; c < cMapSize; c++)
 		{
-			gAssert(e != nullptr);
-			gAssert(e->mSecond == map.GetIndex(s));
+			String s = gToString(c);
+			s.Append("_testkey");
+			HashMap<String, int>::Entry* e = map.Find(s);
+			if ((c % loop) == 0)
+			{
+				gAssert(e == nullptr);
+			}
+			else
+			{
+				gAssert(e != nullptr);
+				gAssert(e->mSecond == map.GetIndex(s));
+			}
+		}
+
+
+		// removing itmes
+		for (int c = 0; c < cMapSize; c++)
+		{
+			String s = gToString(c);
+			s.Append("_testkey");
+			HashFunctor<String> hf;
+			int hash = hf(s);
+			HashMap<String, int>::Entry* e = map.Find(s);
+			if ((c % loop) == 0)
+			{
+				gAssert(e == nullptr);
+				bool was_there = map.Remove(s);
+				gAssert(!was_there);
+				gAssert(!map.Find(s));
+			}
+			else
+			{
+				gAssert(e != nullptr);
+				bool was_there = map.Remove(s);
+				gAssert(was_there);
+				gAssert(!map.Find(s));
+			}
 		}
 	}
 	return 0;
@@ -86,7 +114,7 @@ void gBitRangeTest()
 	BitField bf;
 	bf.Resize(123);
 
-	gAssert(bf.FindFirstOne(0) == cMaxUint);
+	gAssert(bf.FindFirstOne(0) == cMaxUInt);
 
 
 	for (int x = 0; x < 1000; x++)

@@ -52,6 +52,13 @@ public:
 
 
 template<typename T, typename SmallerThanFunctor = SimpleFunctor<T>>
+void gSort(Array<T>& inArray, SmallerThanFunctor& inFunctor = SmallerThanFunctor())
+{
+	return gSort(inArray.begin(), inArray.end(), inFunctor);
+}
+
+
+template<typename T, typename SmallerThanFunctor = SimpleFunctor<T>>
 void gSort(T* inBegin, T* inEnd, SmallerThanFunctor& inFunctor = SmallerThanFunctor())
 {
 	if (inBegin == inEnd) 
